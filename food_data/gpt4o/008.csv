@@ -1,0 +1,132 @@
+Unnamed: 0,picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+0,001.jpg,2014:10:01 12:21:59,10,75,20,15,5,500,"Simple sugars (g): 10
+Complex sugars (g): 75
+Proteins (g): 20
+Fats (g): 15
+Dietary fibers (g): 5
+Weight (g): 500
+Explanation: The meal comprises a significant portion of pasta with a creamy sauce and a sprinkle of cheese. Using the 1 Swiss Franc coin (23.22 mm diameter) as a scale reference, the pasta dish appears to occupy a standard dinner plate, estimating its weight to be around 500 grams. The pasta contributes primarily to complex sugars and some dietary fibers. The creamy sauce suggests fats and proteins, with a smaller contribution from cheese. Simple sugars are estimated to be low, reflective of the nature of the creamy sauce rather than a sugar-rich one."
+1,002.jpg,2014:10:01 12:22:06,5,70,25,15,10,450,"Simple sugars (g): 5
+Complex sugars (g): 70
+Proteins (g): 25
+Fats (g): 15
+Dietary fibers (g): 10
+Weight (g): 450
+Explanation: The meal includes a portion of pasta, a small portion of salad, and a bowl of soup. The pasta is the primary source of complex sugars (starch), while the salad contributes to dietary fiber and a small amount of simple sugars from any dressing that might be added. The soup possibly contains some proteins and fats depending on its ingredients. The pasta and potentially some proteins from the soup contribute to the protein content. The 1 Swiss Franc coin helps estimate the sizes: the pasta plate appears to be roughly 200 grams, the salad around 100 grams, and the soup approximately 150 grams."
+2,003.jpg,2014:10:01 12:22:15,2,90,20,20,5,400,"- Simple sugars (g): 2
+- Complex sugars (g): 90
+- Proteins (g): 20
+- Fats (g): 20
+- Dietary fibers (g): 5
+- Weight (g): 400
+- Explanation: The meal consists predominantly of pasta, which is a rich source of complex carbohydrates. The presence of sauce, potentially cream-based, and cheese suggests notable amounts of fats and proteins, considering they add richness and flavor to the dish. The small side salad adds dietary fibers but is limited in quantity. By using the Swiss Franc coin as a reference, it's estimated that the pasta serving is approximately 300 grams, with the sauce and cheese contributing around 100 grams. The salad is minor, around 50 grams, affecting the fiber content modestly."
+3,005.jpg,2014:10:01 12:22:31,5,50,10,15,5,350,"Simple sugars (g): 5
+Complex sugars (g): 50
+Proteins (g): 10
+Fats (g): 15
+Dietary fibers (g): 5
+Weight (g): 350
+Explanation: The provided meal consists of a creamy soup, a side of pasta, and a small portion of salad. Using the 1 Swiss Franc coin to estimate size, the portion sizes are moderate.
+
+- The soup seems to be creamy and likely contains fats (e.g., from cream or butter) and a small amount of simple sugars possibly from lactose. 
+- The pasta is the primary source of complex sugars due to its carbohydrate content, with a small amount of protein.
+- The creaminess of the soup and possible dressing on the salad contribute to the fat content.
+- The salad contains dietary fibers and possibly a small amount of simple sugars from the dressing.
+- The salad also provides a notable amount of dietary fibers, enhancing the nutritional profile.
+
+Overall, the meal weight and nutrient distribution are estimated based on visual portion sizes compared to the coin and typical food composition for similar meals."
+4,006.jpg,2014:10:01 21:20:45,5,35,30,45,10,500,"Simple sugars (g): 5
+Complex sugars (g): 35
+Proteins (g): 30
+Fats (g): 45
+Dietary fibers (g): 10
+Weight (g): 500
+Explanation: The meal consists of sausages, chips, and a side of salad with tomatoes and carrots. The presence of the 1 Swiss Franc coin helps to estimate the area of the meal. The sausages contribute significantly to the protein and fat content. The chips add complex sugars and fats, while the salad contributes dietary fiber from the vegetables. Simple sugars are likely minimal, originating from the tomatoes and possibly the salad dressing. Estimating the individual portions and considering the whole meal, the total weight seems to be around 500 grams."
+5,007.jpg,2014:10:02 13:05:33,25,60,20,30,10,800,"Simple sugars (g): 25
+Complex sugars (g): 60
+Proteins (g): 20
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 800
+Explanation: The meal consists of a vegetable soup, a plate with boiled potatoes, zucchini, a creamy sauce, a piece of baguette, and a slice of cake. The 1 Swiss Franc coin, with its known diameter of 23.22 mm, is used to scale the components.
+
+- The cake likely contains simple sugars from the added sugar and the powdered sugar on top.
+- The potatoes and baguette are high in complex sugars due to their starchy nature.
+- Proteins come from the vegetables, any eggs in the cake, and potentially the creamy sauce.
+- Fats are inferred from the creamy sauce and the cake.
+- Dietary fibers are found in the vegetables (zucchini).
+- The total weight combines the substantial portions of each food item, estimated through visual scaling with the coin.
+
+Overall, this meal is balanced but tilted towards carbs and fats due to the cake and creamy sauce."
+7,011.jpg,2014:10:02 20:56:36,5,60,25,20,8,500,"Simple sugars (g): 5
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 20
+Dietary fibers (g): 8
+Weight (g): 500
+Explanation: The meal in the image is a plate of spaghetti with meat sauce and some fresh herbs on top. The 1 Swiss Franc coin is used to gauge the portion size. Considering the size of the coin, the portion of spaghetti seems to be about 300-350 grams. The meat sauce, likely containing ground meat (likely beef or pork), tomato sauce, and possibly some vegetables (like onions and tomatoes), appears to weigh around 150-200 grams. 
+
+Based on typical nutritional values:
+- Simple sugars are present mainly in the tomato sauce.
+- Complex sugars come from the spaghetti, which is rich in starch.
+- Proteins are provided by the ground meat.
+- Fats are contributed by the meat and possibly oils used in cooking.
+- Dietary fibers are found in the tomato sauce, vegetables, and fresh herbs.
+
+The total weight estimate of 500 grams is based on the visual volume comparison to the coin."
+8,012.jpg,2014:10:03 10:07:46,10,50,8,7,2,180,"Simple sugars (g): 10
+Complex sugars (g): 50
+Proteins (g): 8
+Fats (g): 7
+Dietary fibers (g): 2
+Weight (g): 180
+Explanation: The meal consists of a piece of bread and a cup of yogurt. The bread accounts for most of the complex sugars, while the yogurt contains simple sugars. The bread provides some dietary fiber, and the yogurt adds proteins and fats. With no visible Swiss Franc coin for precise scaling, these estimates are based on typical portion sizes: likely a small bread roll (approximately 100g) and a standard single-serving yogurt cup (approximately 80g)."
+9,013.jpg,2014:10:03 14:07:24,5,30,20,20,5,350,"Simple sugars (g): 5
+Complex sugars (g): 30
+Proteins (g): 20
+Fats (g): 20
+Dietary fibers (g): 5
+Weight (g): 350
+Explanation: The meal consists of seasoned minced meat and a side of crinkle-cut fries. The minced meat likely contributes proteins and fats, while the fries provide primarily complex sugars and fats due to starch content and cooking oil. Considering the visible portion sizes and using the 1 Swiss Franc coin for scale, the weight is close to 350 grams. Simple sugars are likely low, dietary fibers mostly originate from the fries' skin and onion pieces visible in the meat."
+10,014.jpg,2014:10:03 20:36:17,0,40,15,10,10,150,"Simple sugars (g): 0
+Complex sugars (g): 40
+Proteins (g): 15
+Fats (g): 10
+Dietary fibers (g): 10
+Weight (g): 150
+Explanation: The meal appears to contain sweet potato slices and pieces of meat. Sweet potatoes are rich in complex carbohydrates and dietary fibers. The meat provides proteins and fats. The presence of the 1 Swiss Franc coin helps determine the size of the meal components, giving an estimate of the overall weight and portion sizes. There is no indication of additional ingredients loaded with simple sugars like industrial sugar or honey."
+11,015.jpg,2014:10:04 06:50:29,15,40,15,10,4,300,"Simple sugars (g): 15
+Complex sugars (g): 40
+Proteins (g): 15
+Fats (g): 10
+Dietary fibers (g): 4
+Weight (g): 300
+Explanation: The bowl contains what appears to be a serving of yogurt with honey nut cereal. The presence of the Swiss Franc coin helps to gauge the size of the bowl. The yogurt contributes to the proteins and fats, while the cereal adds complex sugars and dietary fibers. The honey in the cereal contributes to simple sugars. Overall, the meal is moderately balanced between carbohydrates, proteins, and fats, with a focus on simple and complex sugars from the cereal and yogurt."
+12,017.jpg,2014:10:04 11:05:38,2,35,8,4,2,80,"- Simple sugars (g): 2
+- Complex sugars (g): 35
+- Proteins (g): 8
+- Fats (g): 4
+- Dietary fibers (g): 2
+- Weight (g): 80
+- Explanation: The meal consists of a bread roll which appears to be about 10 cm in length, using the 1 Swiss Franc coin’s diameter of 23.22 mm as a reference. The bread roll likely contains flour as the main ingredient, contributing primarily complex carbohydrates. The protein content comes from gluten and possibly dairy or eggs used in the bread. Fats and simple sugars are minimal, as bread recipes often use small quantities of sugar and butter or oil. Dietary fiber comes from the flour, especially if it contains whole grains. The total weight estimation is based on the typical size and density of a bread roll this size."
+13,018.jpg,2014:10:04 16:06:20,0,60,30,25,5,300,"Simple sugars (g): 0
+Complex sugars (g): 60
+Proteins (g): 30
+Fats (g): 25
+Dietary fibers (g): 5
+Weight (g): 300
+Explanation: The meal consists of a chicken leg (protein and fats), a serving of plain spaghetti (complex sugars), and a portion of sweet potato (complex sugars and dietary fibers). The 1 Swiss Franc coin, with a diameter of 23.22 mm, is visible in the image, providing a scale reference. The pasta serving seems to be around 150 grams, the chicken leg approximately 100 grams, and the sweet potato about 50 grams. The meal has no obvious sources of simple sugars, focusing instead on complex carbohydrates, proteins, and fats."
+14,019.jpg,2014:10:04 21:15:15,20,50,30,35,5,450,"Simple sugars (g): 20
+Complex sugars (g): 50
+Proteins (g): 30
+Fats (g): 35
+Dietary fibers (g): 5
+Weight (g): 450
+Explanation: The meal consists of four slices of pizza. Using the 1 Swiss Franc coin for size reference, each slice seems to be about standard size. Pizza is rich in carbohydrates, fats, and proteins due to the crust, cheese, and toppings. The crust provides complex sugars, while the cheese and ham contribute to protein and fats. Pineapple adds simple sugars. The estimated nutritional values consider typical ingredients and sizes for such a pizza. The weight was approximated by considering the density and volume of a standard pizza slice and the number of slices, giving an overall weight close to 450 grams."
+15,020.jpg,2014:10:04 23:54:30,15,50,10,10,5,300,"Simple sugars (g): 15
+Complex sugars (g): 50
+Proteins (g): 10
+Fats (g): 10
+Dietary fibers (g): 5
+Weight (g): 300
+Explanation: The meal consists of a bowl of cereal with milk. Using the 23.22 mm Swiss Franc coin for scale, the bowl appears to be of standard size. Estimating the volume of both cereal and milk, the cereal likely provides significant complex carbs, proteins, and some fiber, while the milk adds simple sugars, fats, and proteins. The total estimated weight of the meal, factoring the densities of milk and cereal, is around 300 grams."

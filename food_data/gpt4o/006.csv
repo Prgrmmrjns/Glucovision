@@ -1,0 +1,61 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 07:50:07,30,50,5,2,3,250,"Simple sugars (g): 30
+Complex sugars (g): 50
+Proteins (g): 5
+Fats (g): 2
+Dietary fibers (g): 3
+Weight (g): 250
+Explanation: The image shows a bowl of cornflakes and a glass of fruit juice. Cornflakes have a significant amount of simple sugars added for taste, and they are primarily composed of complex carbohydrates (starch). The fruit juice primarily contributes to the simple sugar content. Both the cornflakes and juice have minimal protein and fats, with cornflakes offering some dietary fiber. Using the Swiss Franc coin (23.22 mm in diameter) as a reference for scale, I estimated the portion size and weight of each component. The bowl appears to hold around 100 grams of cornflakes, while the glass holds approximately 150 grams of juice."
+002.jpg,2014:10:01 12:10:03,25,40,15,20,5,500,"Simple sugars (g): 25
+Complex sugars (g): 40
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 5
+Weight (g): 500
+Explanation: The meal consists of a wrapped flatbread containing vegetables and possibly some meat or other protein fillings. The flatbread itself contributes to the complex sugars, while the vegetables add dietary fiber. The flatbread wrap appears fairly large compared to the 1 Swiss Franc coin, which is used to estimate the size. The protein source seems to be from the filling, potentially meat or legumes. The drink appears to be a sweetened beverage, contributing to the simple sugars. Fats are likely present in the filling and any dressing or sauce used in the wrap. The overall meal's estimated weight based on the visual size comparison and typical densities is around 500 grams."
+003.jpg,2014:10:02 12:59:58,5,70,20,15,10,350,"Simple sugars (g): 5
+Complex sugars (g): 70
+Proteins (g): 20
+Fats (g): 15
+Dietary fibers (g): 10
+Weight (g): 350
+Explanation: The sandwich, using the 1 Swiss Franc coin as a reference, seems substantial with its embedded lettuce, bread, and meat fillings. The bread contributes mainly to the complex sugars. The fillings, containing meat and vegetables, provide proteins and dietary fibers respectively. A moderate fat content is estimated due to potential sauces and the meat within the sandwich, and minimal simple sugars are expected owing to the lack of visible sweet elements."
+004.jpg,2014:10:02 20:32:29,2,5,15,20,1,200,"Simple sugars (g): 2
+Complex sugars (g): 5
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 1
+Weight (g): 200
+Explanation: The meal appears to be scrambled eggs with possibly some cheese and pieces of ham or bacon. Using the 1 Swiss Franc coin for scale, the coin being roughly 23.22 mm in diameter, the portion size can be estimated.
+- Simple sugars: There might be a small amount from added milk or cheese in the scrambled eggs.
+- Complex sugars: These are likely negligible, mostly coming from any possible additives.
+- Proteins: Eggs are a rich source of protein. Given the portion size, it appears to be about 15 grams of protein.
+- Fats: Eggs and cheese are high in fat, especially if cooked with oil or butter.
+- Dietary fibers: Very minimal, as there are no visible vegetables.
+
+Overall, the scramble's high fats and proteins are typical of egg-based dishes. The total weight is estimated to be around 200 grams, taking into account the density and volume of the meal in context with the size of the coin."
+005.jpg,2014:10:03 13:10:38,5,30,70,40,8,800,"Simple sugars (g): 5
+Complex sugars (g): 30
+Proteins (g): 70
+Fats (g): 40
+Dietary fibers (g): 8
+Weight (g): 800
+Explanation: The meal consists of a significant portion of roasted chicken and potatoes. Using the 1 Swiss Franc coin as a reference, the size of the meal is roughly estimated. The chicken provides the majority of the protein and fats. The potatoes contribute complex sugars and some fiber. The presence of simple sugars is minimal, likely from the natural sugars in the chicken and any potential seasoning or marinade. The overall weight and distribution of nutrients are based on common serving sizes and visual estimation relative to the size of the coin."
+006.jpg,2014:10:04 12:39:04,10,60,25,30,10,700,"Simple sugars (g): 10
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 700
+Explanation: The meal includes a baked pasta dish with cheese and tomato sauce alongside a salad composed of arugula and cherry tomatoes. The 1 Swiss Franc coin is used for size reference, approximating the serving in the dish to be around 500 grams and the salad approximately 200 grams. The pasta and possibly the sauce provide complex sugars, while the cheese likely adds both protein and fats. The vegetables in the salad provide dietary fibers, with simple sugars present in the tomato-based sauce."
+007.jpg,2014:10:04 20:28:07,3,40,25,30,10,450,"Simple sugars (g): 3
+Complex sugars (g): 40
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 450
+Explanation: The meal consists of fried fish sticks and a vegetable medley. Utilizing the 1 Swiss Franc coin for scale, it appears there are four fish sticks, each around 9 cm long and roughly 2.5 cm in diameter. Typically, these fish sticks will contain breading and fish meat contributing to complex sugars, proteins, and fats. The breading increases the complex sugars (starch from flour), while the fish accounts for proteins and fats.
+
+The vegetable medley in the container likely includes a mix of tomatoes, peppers, and possibly other veggies which contribute dietary fibers and a small amount of simple sugars. This mix appears to take up a significant portion of the container, suggesting a substantial weight for vegetables, known primarily for dietary fibers and low in carbs and fats.
+
+Overall, the meal has a cooked and processed breaded component providing complex carbs, fats, and proteins, while the vegetables provide mainly fiber and negligible simple sugars. The estimated total weight of the meal, including the fish sticks and vegetables, is around 450 grams combining the likely weights."

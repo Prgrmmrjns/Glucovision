@@ -1,0 +1,66 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 12:25:47,30,60,25,20,10,730," Simple sugars (g): 30
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 20
+Dietary fibers (g): 10
+Weight (g): 730
+Explanation: The meal includes a salad with dressing, which likely contains some simple sugars from the dressing. The sandwich seems to be made of bread and filled with greens, cheese, and possibly other ingredients like meat or vegetables. The greens are rich in dietary fiber. The salad is also present on the plate, adding more complex carbohydrates and vitamins. Overall, this meal provides a balance of macronutrients with a moderate amount of simple sugars from the dressing and cola. "
+002.jpg,2014:10:01 12:40:12,30,60,25,30,5,815," Simple sugars (g): 30
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 815
+Explanation: The meal, which appears to be a white fish dish with sauce and garnish, is accompanied by potatoes. A reference coin of 23.22 mm in diameter helps estimate the size of the meal as a rectangle approximately 30 cm x 47 cm. The presence of a vegetable side suggests some dietary fibers. However, it's unclear whether there are any simple sugars present, so I've estimated them based on the possible presence of a sauce or garnish. The main dish provides protein and fats, while the potatoes contribute carbohydrates and a small amount of fiber. "
+003.jpg,2014:10:02 13:47:52,50,40,20,30,10,650," Simple sugars (g): 50
+Complex sugars (g): 40
+Proteins (g): 20
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 650
+Explanation: The meal in the image appears to be a spaghetti dish with noodles, vegetables, and possibly some protein such as meat or cheese. Estimating the amount of simple sugars in grams is challenging without knowing the exact ingredients and their quantities. However, considering that this might be a pasta dish with tomato sauce, it's likely that there are only small amounts of simple sugars present (possibly from added sweeteners or natural sugars like carrots or bell peppers).
+
+Complex carbohydrates would come primarily from the noodles, which are made of refined flour. Vegetables and any additional ingredients would contribute to the complex sugars as well. Protein content would depend on the type of meat or cheese used in the dish, if any. Fats can be estimated from the oil used for cooking and from any added fats or dairy products such as cheese or cream.
+
+To estimate the total weight (g) of the meal, I considered that the plate contains both noodles and vegetables. The spaghetti might weigh around 150-200 grams, while the vegetables would weigh slightly less. However, without knowing the exact amount of each ingredient, these estimates are rough.
+
+The presence of a fork, knife, and spoon suggests that this is a served meal, but additional components such as bread or side dishes may not be visible in the image provided. "
+004.jpg,2014:10:02 20:51:17,10,80,25,30,5,700," Simple sugars (g): 10
+Complex sugars (g): 80
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 700
+Explanation: The meal consists of a pizza with cheese and toppings, which is likely to be high in carbs, fats, and proteins. Additionally, there are French fries on the side, which contribute to the fat content. The dietary fibers are limited to the crust of the pizza and possibly any vegetables used as toppings. Without a coin for scale or more accurate measurements, it is difficult to estimate precise quantities. However, based on common serving sizes and assuming 30g of French fries, we can provide an estimation of the nutritional content. "
+005.jpg,2014:10:03 14:14:58,0,50,30,15,2,97," Simple sugars (g): 0
+Complex sugars (g): 50
+Proteins (g): 30
+Fats (g): 15
+Dietary fibers (g): 2
+Weight (g): 97
+Explanation: The meal consists of fish sticks and potatoes. It is difficult to determine the exact quantities in grams without the coin as a reference. However, based on visual estimation, the plate appears to contain approximately 30 grams of fish sticks and 60 grams of potatoes. Assuming that each food item provides an equal amount of carbohydrates, we have 120 grams of carbs (60 g for potatoes and 60 g for fish sticks). Fish sticks are typically high in protein, with a small amount of fat, while potatoes provide complex carbohydrates. The meal is likely to be relatively low in simple sugars and dietary fibers due to the absence of fruits or vegetables. "
+006.jpg,2014:10:03 20:33:41,45,30,20,15,7,875," Simple sugars (g): 45
+Complex sugars (g): 30
+Proteins (g): 20
+Fats (g): 15
+Dietary fibers (g): 7
+Weight (g): 875
+Explanation: The pizza, based on its size and the coin for reference, appears to be approximately 30 cm in diameter. Considering that it's a single slice of pizza, the estimation is reasonable. The cola is estimated at 330 ml, which translates to about 125 g of liquid. It's important to note that the meal contains a significant amount of simple sugars due to the pizza crust and toppings, as well as the cola. The dietary fibers are relatively low, reflecting the lack of vegetables or fruits in this meal. This meal could provide some energy (simple sugars) but may not be ideal for a balanced diet given its high simple sugar content and low fiber content. "
+007.jpg,2014:10:04 12:16:26,40,60,25,30,10,750," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 750
+Explanation: The pizza appears to be of a standard size with a thin crust, containing cheese and cured meats as primary protein sources. The presence of tomato sauce contributes to the meal's carbohydrates and sugars content. The cola on the side adds additional sugar and empty calories. The 1 Swiss Franc coin is approximately half the size of the pizza, suggesting that the pizza is about 30 cm in diameter, and the cola is roughly 330 ml in volume. This meal is high in refined carbohydrates, fats, and protein, while being low in dietary fiber. It may provide a quick energy boost, but it lacks essential nutrients and vitamins from vegetables or fruits. "
+008.jpg,2014:10:04 20:11:45,15,60,25,35,5,780," Based on the image provided, I will estimate the nutritional content of the meal as follows:
+
+Simple sugars (g): 15
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 35
+Dietary fibers (g): 5
+Weight (g): 780
+
+Explanation: The meal consists of a portion of pizza and what appears to be cola, both of which are rich in carbohydrates. The pizza crust is likely to contain some complex sugars, while the pizza sauce may have natural sugar content. The toppings on the pizza are expected to add additional fats and proteins. The portion size suggests that the meal might be larger than what is typical for a single serving of pizza and a drink. However, without knowing the exact recipe or portion size, these estimates should be considered rough approximations. "

@@ -1,0 +1,238 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 19:27:49,0,2,3,1,6,150,"Simple sugars (g): 0
+Complex sugars (g): 2
+Proteins (g): 3
+Fats (g): 1
+Dietary fibers (g): 6
+Weight (g): 150
+Explanation: The bowl appears to contain a simple leafy salad made primarily of cabbage or a similar leafy vegetable. Using the 1 Swiss Franc coin as a reference for scale, the bowl's diameter can be estimated around 20-25 cm. The overall volume and weight of the salad are roughly assessed to be around 150 grams. Leafy greens like cabbage are low in protein, fats, and sugars, but they are rich in dietary fiber. Thus, the estimated nutritional content reflects the high fiber and low sugar, protein, and fat profile typical of such a salad."
+002.jpg,2014:10:01 19:32:00,4,20,25,18,4,250,"Simple sugars (g): 4
+Complex sugars (g): 20
+Proteins (g): 25
+Fats (g): 18
+Dietary fibers (g): 4
+Weight (g): 250
+Explanation: The meal consists of two slices of bread, a portion of tuna salad with vegetables, a slice of cheese, and a hard-boiled egg. The presence of the 1 Swiss Franc coin helps in estimating the sizes of the portions. The bread and vegetables provide complex sugars and dietary fibers. The tuna, egg, and cheese contribute to the protein and fat content. The cheese and potentially added dressing in the tuna salad contribute to the fat content, while the bread, although whole grain, includes simple sugars. The total weight is estimated considering the typical serving sizes of the mentioned food items."
+003.jpg,2014:10:01 19:43:59,0,0,3,8,0,20,"- Simple sugars (g): 0
+- Complex sugars (g): 0
+- Proteins (g): 3
+- Fats (g): 8
+- Dietary fibers (g): 0
+- Weight (g): 20
+- Explanation: The meal shown consists of a small piece of cheese on a plate, which primarily contains proteins and fats. The presence of a 1 Swiss Franc coin provides a size reference, indicating that the cheese piece weighs around 20 grams. Cheese does not contain simple or complex sugars or dietary fibers, but is rich in fats and proteins."
+004.jpg,2014:10:02 10:11:16,15,40,10,15,5,250,"Simple sugars (g): 15
+Complex sugars (g): 40
+Proteins (g): 10
+Fats (g): 15
+Dietary fibers (g): 5
+Weight (g): 250
+Explanation: The meal consists of a piece of whole grain bread, a kiwi, a lemon yogurt, and a cup of coffee. Using the 1 Swiss Franc coin as a reference for scale, I estimate the following:
+
+- Simple sugars: Primarily from the lemon yogurt, approximately 12-15g, and some from the kiwi.
+- Complex sugars: The piece of bread likely contains around 40g of complex carbohydrates.
+- Proteins: The yogurt and bread together likely provide around 10g of protein.
+- Fats: The yogurt likely contributes around 5-7g, and a possible few grams from the bread, making it approximately 10-15g in total.
+- Dietary fibers: The kiwi and whole grain bread together likely provide around 5g of dietary fiber.
+- Weight: The total weight of the bread, kiwi, yogurt, and coffee appears to be around 250g.
+
+This assessment is based on average nutritional values for similar items and visual estimation using the coin for scale."
+005.jpg,2014:10:02 19:34:03,10,50,20,15,8,350,"Simple sugars (g): 10
+Complex sugars (g): 50
+Proteins (g): 20
+Fats (g): 15
+Dietary fibers (g): 8
+Weight (g): 350
+Explanation: The meal consists of tomatoes and some yellow vegetables (presumably bell peppers), cheese slices, and slices of bread. The tomatoes and other vegetables provide minimal simple sugars and high dietary fibers. The bread slices are a source of complex sugars, while the cheese slices contribute proteins and fats. The total weight and nutritional values are estimated considering the size of the 1 Swiss Franc coin for reference. The overall volume of the meal is moderate, leading to the projected nutritional values stated."
+006.jpg,2014:10:02 19:44:51,5,3,2,1,5,250,"Simple sugars (g): 5
+Complex sugars (g): 3
+Proteins (g): 2
+Fats (g): 1
+Dietary fibers (g): 5
+Weight (g): 250
+Explanation: The meal consists of a vegetable salad predominantly containing tomatoes and bell peppers, with a slice of bread on the side. Considering the size of the 1 Swiss Franc coin with a diameter of 23.22 mm as a reference, the portion sizes are relatively small. 
+
+Tomatoes and bell peppers are high in water content, contributing to the dietary fibers and minimal amounts of simple sugars. The slice of bread provides the complex sugars and some proteins. The overall fats and proteins are low, given the lack of high-protein or fatty ingredients. The weight estimation is based on the visible portion relative to the coin, including the vegetables and the bread slice."
+007.jpg,2014:10:03 10:08:48,2,35,6,1,2,80,"Simple sugars (g): 2
+Complex sugars (g): 35
+Proteins (g): 6
+Fats (g): 1
+Dietary fibers (g): 2
+Weight (g): 80
+Explanation: This meal consists of two slices of white bread. Using the Swiss Franc coin with a 23.22 mm diameter for scale shows that each slice is roughly 10 cm in width. White bread contains mainly complex carbohydrates from the flour. Simple sugars are minimal, likely coming from added sugar in the bread recipe. Proteins and fats are minimal, typical of white bread, with small amounts of fibers. The overall weight for both slices is estimated to be around 80 grams."
+008.jpg,2014:10:03 12:37:00,5,10,5,3,6,200,"Simple sugars (g): 5
+Complex sugars (g): 10
+Proteins (g): 5
+Fats (g): 3
+Dietary fibers (g): 6
+Weight (g): 200
+Explanation: The provided image shows a meal composed of various salads, primarily leafy greens, tomatoes, and shredded carrots. The estimated size of the components, scaled against the 1 Swiss Franc coin (23.22 mm in diameter), indicates that the overall meal is relatively light. Given the nature of the food items shown, it's likely to contain a modest amount of carbohydrates, primarily from the veggies, and very low simple sugars, as no added sugar elements (like dressings) are apparent. The protein content is minimal, likely from the vegetables themselves, with negligible fats, possibly included through a light dressing. Dietary fibers are more prominent due to the high vegetable content. The total weight of the meal is estimated based on the volume of the salads presented."
+009.jpg,2014:10:03 12:59:00,5,50,30,30,5,500,"Simple sugars (g): 5
+Complex sugars (g): 50
+Proteins (g): 30
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 500
+Explanation: The image depicts a meal consisting of steak tartare and a portion of French fries. The approximate nutritional content and meal weight were estimated as follows:
+
+1. **Steak Tartare**:
+    - **Simple sugars**: The small dollops of sauce/garnishes on the plate may contain some sugar.
+    - **Complex sugars**: There are minimal complex carbs in the steak tartare itself.
+    - **Proteins**: Steak tartare is predominantly raw beef, which is rich in protein.
+    - **Fats**: Ground beef includes some fat content.
+    - **Dietary fibers**: Minimal, mainly from small garnishes.
+
+2. **French Fries**:
+    - **Simple sugars**: French fries in general do not contain significant amounts of simple sugars.
+    - **Complex sugars**: The fries are made from potatoes, which are a source of starchy carbohydrates.
+    - **Proteins**: Potatoes contain small amounts of protein.
+    - **Fats**: French fries are usually deep-fried, adding considerable fat from the oil.
+    - **Dietary fibers**: Potatoes contain some dietary fibers, and frying doesn’t usually eliminate these.
+
+**Total meal weight**:
+The steak"
+010.jpg,2014:10:03 12:59:04,5,40,10,8,2,100,"Simple sugars (g): 5
+Complex sugars (g): 40
+Proteins (g): 10
+Fats (g): 8
+Dietary fibers (g): 2
+Weight (g): 100
+Explanation: The meal appears to consist of a few pieces of bread wrapped in a napkin. Assuming that the bread is a common, refined white bread, this type typically doesn’t contain much fiber, and most carbs in it are in the form of complex sugars primarily from starch. The total weight of the bread also seems to be around 100 grams based on approximating the size and quantity of the slices. Given that there are no complex ingredients or additional items visible in the image to suggest otherwise, these estimates are reasonable for a simple bread-based meal."
+011.jpg,2014:10:03 13:46:04,30,10,5,10,5,250,"Simple sugars (g): 30
+Complex sugars (g): 10
+Proteins (g): 5
+Fats (g): 10
+Dietary fibers (g): 5
+Weight (g): 250
+Explanation: The meal consists of a berry mousse dessert in a glass, with visible strawberries and other berries on top, and some sauce decorations made with likely pureed fruit and/or cream. The presence of berries and possibly added sweeteners in the mousse indicates a moderate amount of simple sugars. The mousse may contain dairy or a dairy substitute contributing both simple sugars and proteins, while the berries contribute dietary fibers. The fats would come from any cream or dairy used in the mousse. The Swiss Franc coin helps to gauge the glass size and overall portion."
+012.jpg,2014:10:04 09:16:41,20,0,0,0,0,25,"Simple sugars (g): 20
+Complex sugars (g): 0
+Proteins (g): 0
+Fats (g): 0
+Dietary fibers (g): 0
+Weight (g): 25
+Explanation: The image shows a packet of glucose or dextrose tablets, which are primarily made of simple sugars. There is no Swiss Franc coin present in the image for size reference. Each tablet typically weighs about 4-5 grams. Given there are 5 visible tablets, the total weight is estimated to be approximately 25 grams. These tablets do not contain complex sugars, proteins, fats, or dietary fibers."
+013.jpg,2014:10:04 09:29:58,20,15,8,5,0,150,"Based on the provided image of a yogurt container with a lemon flavor and the 1 Swiss Franc coin for scale, I can proceed with the analysis. The coin provides a reference to estimate the overall size of the yogurt container. However, since detailed information from the nutrition label is not fully visible, I will make estimations based on average values for similar products.
+
+- Simple sugars (g): 20 
+- Complex sugars (g): 15
+- Proteins (g): 8
+- Fats (g): 5
+- Dietary fibers (g): 0 (Yogurts typically contain minimal if any dietary fiber)
+- Weight (g): 150
+- Explanation: The yogurt container appears to be a standard size, roughly 150 grams, which suits the average weight for such products. The typical lemon-flavored yogurt contains added sugars, resulting in approximately 20 grams of simple sugars. Yogurt also has lactose, a naturally occurring sugar, contributing to the overall sugar content. The primary complex sugars come from any added thickeners or stabilizers, roughly estimated at 15 grams. These products usually provide about 8 grams of protein and 5 grams of fat. Dietary fibers are minimal or absent in typical yogurt products. 
+
+These values are broad estimates based on the visual representation and typical nutritional content of standard lemon-flavored yogurt products. Specific values can always deviate slightly based on the brand and exact ingredients used."
+014.jpg,2014:10:04 12:19:04,5,40,30,20,15,500,"Simple sugars (g): 5
+Complex sugars (g): 40
+Proteins (g): 30
+Fats (g): 20
+Dietary fibers (g): 15
+Weight (g): 500
+Explanation: Estimating from the visible components:
+
+- The meal includes a serving of roasted potatoes, roasted bell peppers, cauliflower, and some type of meatloaf or patty.
+- The 1 Swiss Franc coin helps to approximate the size of the food items. Each food component seems to cover a similar surface area around the plate.
+
+**Estimation of nutrients**:
+- **Simple sugars**: The meal doesn’t appear to have any sugary sauces or desserts. The roasted bell peppers might contain a small amount of simple sugars due to natural sugars present in bell peppers.
+- **Complex sugars**: The roasted potatoes are rich in starch, a type of complex carbohydrate. There appears to be a moderate serving size of roasted potatoes.
+- **Proteins**: The meatloaf or patty seems to be a major source of protein. Considering the size, it appears to be a good portion of protein.
+- **Fats**: The meatloaf may contain fats both from meat and added fats during preparation. The roasted components might have used some oil.
+- **Dietary fibers**: The vegetables (bell peppers and cauliflower) provide dietary fibers. The serving seems substantial enough to make a significant contribution.
+  
+In summary, the meal appears to"
+015.jpg,2014:10:04 19:30:30,34,0,0,0,0,591,"- Simple sugars (g): 34
+- Complex sugars (g): 0
+- Proteins (g): 0
+- Fats (g): 0
+- Dietary fibers (g): 0
+- Weight (g): 591
+- Explanation: The image shows a bottle of Gatorade which is a sports drink containing primarily simple sugars. The presence of the 1 Swiss Franc coin helps estimate the size of the bottle, approximately 600 ml. Gatorade sports drinks are typically rich in electrolytes and simple sugars but lack fibers, complex sugars, proteins, and fats. A standard 600 ml Gatorade contains approximately 34 grams of sugar and weighs around 591 grams including the liquid and the bottle."
+016.jpg,2014:10:04 19:33:35,10,45,25,20,10,350,"- Simple sugars (g): 10
+- Complex sugars (g): 45
+- Proteins (g): 25
+- Fats (g): 20
+- Dietary fibers (g): 10
+- Weight (g): 350
+- Explanation: The meal consists of a large bowl of lettuce, two slices of bread, several slices of deli meat (likely chicken or turkey), a small wedge of cheese, and a jar of sauce (perhaps salad dressing or mustard). Using the 1 Swiss Franc coin as a reference, the size and weight of the items were estimated. The lettuce contributes to dietary fibers. The bread provides complex sugars. The sliced deli meat and cheese offer proteins and fats. The jar may contain some simple sugars depending on its contents. The estimates are based on typical portion sizes and nutritional values of the items present."
+017.jpg,2014:10:05 06:33:31,30,50,10,5,10,400,"Simple sugars (g): 30
+Complex sugars (g): 50
+Proteins (g): 10
+Fats (g): 5
+Dietary fibers (g): 10 
+Weight (g): 400
+Explanation: This meal consists of slices of bread, a kiwi, yogurt, and coffee. The bread provides a good amount of complex sugars and some protein. Kiwi offers dietary fiber and simple sugars. The yogurt likely contributes to both simple sugars and proteins, and the coffee itself contributes minimally to nutritional content. Estimated nutritional values are enhanced by the presence of a 1 Swiss Franc coin, which helps gauge the portion sizes and overall weight of the meal."
+018.jpg,2014:10:05 09:56:05,60,15,1,0,4,250,"Simple sugars (g): 60
+Complex sugars (g): 15
+Proteins (g): 1
+Fats (g): 0
+Dietary fibers (g): 4
+Weight (g): 250
+Explanation: The meal consists of an apple, three tablets of glucose, and a packaged product that appears to be glucose. The apple contains both simple sugars and dietary fibers. A medium apple typically weighs around 200 grams and has about 25 grams of sugar and 4 grams of fiber. The glucose tablets usually contain high amounts of simple sugars. Each tablet weighing around 4 grams contributes roughly 4 grams of sugar. The packaged glucose product likely weighs around 50 grams and consists predominantly of simple sugars. Hence, total weight includes 200 grams (apple) + 12 grams (tablets) + 50 grams (package) = 262 grams approximately. The estimates of nutritional content are based on the typical values for apples and glucose tablets, considering the sizes visible compared to the 1 Swiss Franc coin."
+019.jpg,2014:10:05 12:15:55,1,40,25,20,5,500,"Simple sugars (g): 1
+Complex sugars (g): 40
+Proteins (g): 25
+Fats (g): 20
+Dietary fibers (g): 5
+Weight (g): 500
+Explanation: The plate contains pasta, chicken, and steamed vegetables (likely cabbage). Using the Swiss Franc coin (23.22 mm in diameter) for scale, I estimate the portion sizes and nutritional contents as follows:
+
+- **Simple sugars:** The meal lacks items typically high in simple sugars, so I estimated a minimal amount (1 g) from possible small seasonings or sauces.
+- **Complex sugars:** The macaroni pasta is a source of complex carbohydrates, estimated at around 40 g given the visible portion size.
+- **Proteins:** The chicken, which appears to be around 120-150 g cooked, would contain approximately 25 g of proteins.
+- **Fats:** Chicken with visible seasoning or minor cooking oils/fats gives an approximate fat content of 20 g.
+- **Dietary fibers:** The steamed vegetables contribute roughly 5 g of dietary fibers.
+- **Weight:** The total weight of the meal is estimated around 500 g based on the sizes of each portion compared to the Swiss Franc coin.
+
+In summary, the scale provided by the coin facilitated an accurate breakdown of this balanced meal's nutritional content."
+020.jpg,2014:10:05 12:33:55,10,45,10,12,7,130,"Simple sugars (g): 10
+Complex sugars (g): 45
+Proteins (g): 10
+Fats (g): 12
+Dietary fibers (g): 7
+Weight (g): 130
+Explanation: The meal consists of 8 small granola-style bites, resembling energy bites often made from oats, nuts, seeds, and dried fruits like raisins. Using the Swiss Franc coin (diameter: 23.22 mm) as a reference, each bite is approximately 3 cm in diameter. These ingredients contribute to the breakdown of the nutrients as follows: the oats and dried fruits provide complex sugars, the dried fruits contribute to the simple sugars, nuts and seeds offer proteins and fats, and dietary fiber is present in the oats, nuts, and seeds. Given their size, the total weight for the 8 pieces is estimated at approximately 130 grams."
+022.jpg,2014:10:05 18:21:45,25,0,0,0,0,500,"Simple sugars (g): 25
+Complex sugars (g): 0
+Proteins (g): 0
+Fats (g): 0
+Dietary fibers (g): 0
+Weight (g): 500
+Explanation: The image shows a bottle of Solevita Multivitamin juice. Given the nature of most fruit juices, this beverage is likely high in simple sugars (like fructose from the fruit juice and possibly added sugars), with very minimal to negligible amounts of complex sugars, proteins, fats, or dietary fibers. Assuming the bottle is around 500 ml, I estimate its total weight to be approximately 500 grams."
+023.jpg,2014:10:05 20:32:23,15,40,20,25,7,400,"Simple sugars (g): 15
+Complex sugars (g): 40
+Proteins (g): 20
+Fats (g): 25
+Dietary fibers (g): 7
+Weight (g): 400
+Explanation: The meal includes a bowl of leafy green salad, two strawberries, slices of whole grain bread, slices of cold cuts, and pieces of cheese. The 1 Swiss Franc coin provides a scale reference. 
+
+- The strawberries and salad contribute to simple sugars and dietary fibers. 
+- The whole grain bread provides complex sugars and some dietary fibers.
+- The cold cuts add to the protein and fat content.
+- The cheese contributes significant amounts of fats and proteins.
+
+Considering standard portion sizes and average nutrient content, this estimation accounts for the likely weight and nutritional profiles of the visible food items. The bowl of salad (approx. 100g), pieces of bread (approx. 70g), cold cuts (approx. 100g), cheese (approx. 50g), and strawberries (approx. 40g combined) contribute to the total weight and nutritional breakdown."
+024.jpg,2014:10:06 06:29:32,20,35,10,15,5,250,"Simple sugars (g): 20
+Complex sugars (g): 35
+Proteins (g): 10
+Fats (g): 15
+Dietary fibers (g): 5
+Weight (g): 250
+Explanation: Using the 1 Swiss Franc coin as a reference for scale, I have estimated the nutritional content of the meal. The meal consists of a container of yogurt, a few slices of bread, and a jar of spread, likely peanut butter or honey. The yogurt likely contains substantial simple sugars, while the bread provides complex sugars, some proteins, and dietary fibers. The spread is expected to have fats and additionally some protein and simple sugars. The combined weight of all items on the plate appears to be around 250 grams. The spoon and knife further help in estimating portions, confirming that this is a relatively modest meal in terms of size and nutritional content."
+025.jpg,2014:10:06 09:20:15,50,15,6,4,1,380,"Simple sugars (g): 50
+Complex sugars (g): 15
+Proteins (g): 6
+Fats (g): 4
+Dietary fibers (g): 1
+Weight (g): 380
+Explanation: The meal consists of honey and lemon-flavored yogurt. Given that honey is pure sugar, it significantly contributes to the simple sugars. The yogurt likely has both simple sugars and complex sugars, with some protein and fat. 
+
+The jar of honey appears to contain around 200g, and considering a few spoonfuls are used (about 50g), the yogurt is likely around 180g as labeled, making the total weight approximately 380g. Honey is extremely high in simple sugars (approx. 82g per 100g), so 50g of honey would contribute around 41g of simple sugars. The yogurt contributes the remainder of the sugars along with some protein and fat. Yogurt typically contains about 5g of protein per 100g and around 3g of fat per 100g. Given the quantities here, the estimations are adjusted accordingly."
+026.jpg,2014:10:06 12:39:08,40,80,25,30,10,450,"Simple sugars (g): 40
+Complex sugars (g): 80
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 10 
+Weight (g): 450
+Explanation: This meal consists of a roasted beef sandwich, a pastry with fruit filling, and a chocolate wafer bar. The sandwich bread and the chocolate wafer contribute to complex sugars, as does the pastry. The fruit filling in the pastry and the chocolate wafer bar add simple sugars. The roasted beef in the sandwich is a primary source of protein. Both the sandwich (due to beef and dressing) and the chocolate wafer bar contribute to fats. Dietary fibers come from the sandwich vegetables and fruit filling. The size of the meal is estimated using the 1 Swiss Franc coin (23.22 mm in diameter) for scale, suggesting a total weight around 450 grams."

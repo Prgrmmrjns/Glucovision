@@ -1,0 +1,69 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 07:50:07,25,0,25,4,30,75," Simple sugars (g): 25
+Complex sugars (g): 0
+Proteins (g): 5
+Fats (g): 10
+Dietary fibers (g): 5
+Weight (g): 75
+Explanation: The image shows a bowl of cereal on the table. There is also a glass filled with juice next to it. To estimate the nutritional content, I need to make assumptions based on the visible items in the photo and their typical nutritional values. Since there are no fruits or vegetables in sight, I assume that the cereal contains whole grains and possibly some nuts for added complexity.
+
+The Swiss Franc coin serves as a reference point to estimate the size of the cereal bowl, which appears to be around 15 cm across. Considering the average serving size for a bowl of cereal is around 60 g, I would estimate this meal's weight at approximately 75 g.
+
+The simple sugars in the juice are around 4-8 g per 100 ml, and since the glass is only partially visible, I will estimate it at 200 ml of juice. This gives a total of 16 g to 32 g of simple sugars. However, considering that there might be some leftover cereal in the bowl, I estimate the simple sugars to be around 25 g.
+
+The complex sugars are minimal due to the whole grain cereal and the absence of any visible fruits or vegetables. As for proteins, fats, and dietary fibers, they will depend on the specific type of cereal present in the bowl. For example, oat-based cereals typically have around 25 g of protein, 4 g of fat, and 30 g of dietary fiber per serving. Therefore, I estimate these values as well:
+
+Simple sugars (g): 25
+Complex sugars (g): 0
+Proteins (g): 25
+Fats (g): 4
+Dietary fibers (g): 30
+Weight (g): 75
+Explanation: The cereal is likely oat-based, providing around 25 g of protein. However, there may be some leftover cereal in the bowl which could push this value higher. I also estimate the fats to be around 4 g due to the presence of a small amount of oil or butter that might have been used during preparation. The dietary fibers are estimated based on the assumption that the cereal contains some whole grains and nuts, typically providing around 30 g per serving. Since there is no coin in the picture and the meal is mostly covered, these estimates are based solely on my observations of the visible elements in the photo. "
+002.jpg,2014:10:01 12:10:03,50,40,10,20,3,700," Simple sugars (g): 50
+Complex sugars (g): 40
+Proteins (g): 10
+Fats (g): 20
+Dietary fibers (g): 3
+Weight (g): 700
+Explanation: Based on the image, the sandwich appears to be a wrap or gyro with a variety of fillings that might include proteins like meat or cheese and vegetables. The beverage is a carbonated drink, which may contain added sugars. The 1 Swiss Franc coin serves as a reference point for size estimation. However, without more specific information about the ingredients and portion sizes of each component in the meal, it is not possible to provide precise measurements of simple sugars, complex sugars, proteins, fats, or dietary fibers in grams. "
+003.jpg,2014:10:02 12:59:58,40,60,25,30,5,750," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 750
+Explanation: The pizza and cola meal, with its refined crust and toppings, is rich in carbs, fats, and proteins. The cola boosts the meal's simple sugars. The 1 Swiss Franc coin helps estimate the pizza at 30 cm diameter and the cola at 330 ml, indicating a significant blood sugar impact. The sandwich wrap, though small, contributes to the total carb intake as well. The protein content comes mostly from the meat in the sandwich, while fat is provided by the oil used during cooking and any additional ingredients. Dietary fibers are minimal due to the limited presence of fruits or vegetables in the meal. "
+004.jpg,2014:10:02 20:32:29,0,50,20,10,5,80," Simple sugars (g): 0
+Complex sugars (g): 50
+Proteins (g): 20
+Fats (g): 10
+Dietary fibers (g): 5
+Weight (g): 80
+Explanation: The meal appears to be a serving of scrambled eggs with cheese, and it's unclear if there is any form of simple sugar present. The eggs are likely to contain protein, and the cheese adds some fat and calcium. There may also be dietary fibers from the eggs themselves or any additions (like vegetables or a whole wheat base). However, without more specific information about the ingredients and quantities, it's not possible to provide precise numbers for each component. The meal looks to be relatively balanced with protein, fat, and some fiber, but the simple sugar content is low based on typical breakfast foods. "
+005.jpg,2014:10:03 13:10:38,20,50,50,10,3,640," Simple sugars (g): 20
+Complex sugars (g): 50
+Proteins (g): 50
+Fats (g): 10
+Dietary fibers (g): 3
+Weight (g): 640
+Explanation: In the image, there is a meal consisting of meat and potatoes. The size of the meal appears to be around 30 cm diameter. Using the coin as a reference, it seems like a serving of meat could weigh approximately 50 grams, while the potatoes might add another 100 grams or so. The vegetables in the dish are likely to contribute some dietary fiber and possibly a small amount of protein and fat. The total weight of the meal would be roughly 640 grams. However, it's important to note that without knowing the exact proportions of the different ingredients, this assessment is approximate. "
+006.jpg,2014:10:04 12:39:04,40,60,25,30,5,750," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5 
+Weight (g): 750
+Explanation: The pizza, with its white sauce and toppings, provides a good amount of simple sugars. The cola adds more, while the crust contributes some complex carbohydrates. The cheese on the pizza increases protein content slightly, along with a bit of fat. The pizza's crust also contains some fiber from whole wheat ingredients. Since I don't have specific measurements or knowledge about the ingredients in the pizza and cola, these are rough estimates based on typical pizza and soda nutritional profiles. "
+007.jpg,2014:10:04 20:28:07,50,80,20,10,2,370," Simple sugars (g): 50
+Complex sugars (g): 80
+Proteins (g): 20
+Fats (g): 10
+Dietary fibers (g): 2
+Weight (g): 370
+Explanation: The meal consists of fish sticks, French fries, salad with dressing and a can of Coke. To estimate the amounts, I'll break it down into each component:
+- Fish sticks: Based on their size and shape, they are likely to be breaded and fried, which would contribute to the fat content but not simple sugars or complex carbs. As there is no clear indication of protein or dietary fiber in the fish sticks, I'll estimate these values at 20g each.
+- French fries: The fries are likely a source of starch and some amount of fat from frying. Considering their size and texture, they may contain around 10g each of complex carbs and fat.
+- Salad with dressing: While the salad is mostly vegetables, which provide dietary fiber, vitamins, and minerals, the dressing can add simple sugars, fat, and calories to the meal. If we assume the dressing contains a moderate amount of sugar (10g) and fat (5g), and considering the portion size, it may weigh around 50g. The vegetables in the salad would contribute around 30g each of complex carbs and dietary fiber.
+- Coke: The can of Coke is likely to be a source of simple sugars, contributing around 40g.
+The meal appears to be relatively high in fats and carbohydrates, with moderate protein content. Keep in mind that these are rough estimates based on the visual information available. "

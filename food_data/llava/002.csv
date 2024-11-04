@@ -1,0 +1,67 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 19:43:25,40,60,25,30,5,780," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 780
+Explanation: The pizza slice appears to be approximately 15 cm in diameter, and the cola is in a small glass. Assuming similar amounts of ingredients in the meal, we can estimate that the pizza might have around 30 g of simple sugars, 60 g of complex carbohydrates, 25 g of proteins (from the chicken), 30 g of fats (from the cheese and crust), and 5 g of dietary fibers. The meal appears to be relatively balanced with a mix of macronutrients and some micronutrients from the veggies, but it is lacking in whole grains and fresh fruits and vegetables. "
+002.jpg,2014:10:02 12:32:47,40,60,25,30,5,750," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 750
+Explanation: The pizza is a major source of simple sugars and complex carbohydrates. However, it also contains some protein from the cheese and other ingredients. The cola provides additional simple sugars and possibly some vitamins and minerals. The breadsticks add to the complex carbohydrates and fiber content. The salad, likely to be a side dish or garnish, contributes minimal amounts of simple and complex sugars but does add some dietary fiber. The cheese and meats on the plate contribute protein and fat. "
+003.jpg,2014:10:02 19:47:17,20,50,30,20,10,700," Simple sugars (g): 20
+Complex sugars (g): 50
+Proteins (g): 30
+Fats (g): 20
+Dietary fibers (g): 10
+Weight (g): 700
+Explanation: The meal appears to consist of a plate with a sausage, a side salad with a dressing containing oil and vinegar, and a corn on the cob. Based on these visible components and the size of the coin as a reference, it is estimated that the meal consists mostly of carbohydrates (simple and complex sugars), proteins, and fats, with limited dietary fiber content. The salad's dressing contributes to the total fat content but is minimal. The sausage provides the majority of the protein, while the corn adds additional carbohydrates. The overall size of the meal, estimated from the coin reference, is approximately 700 grams. "
+004.jpg,2014:10:03 12:50:17,50,60,25,30,5,700," Simple sugars (g): 50
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 700
+Explanation: The image shows a plate with a piece of pizza, which is estimated to be a similar size to the Swiss Franc coin. Based on this reference, we can estimate that the piece of pizza is approximately 30 cm in diameter. Given the portion size and typical ingredients like cheese, tomato sauce, and dough, it's reasonable to assume that the complex sugars would come primarily from the crust and sauce. The cola appears to be a regular soda, which would contribute to simple sugar intake. Protein content is likely low due to the pizza's toppings and crust, with some contribution from the salad if it contains protein-rich ingredients like chickpeas or leafy greens. The fats in the meal come from the cheese and any added fat in the crust, as well as the dressing on the salad. Dietary fibers would be minimal due to the lack of whole grains or fiber-rich vegetables in this meal. "
+005.jpg,2014:10:03 19:08:00,50,30,15,20,5,700," Simple sugars (g): 50
+Complex sugars (g): 30
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 5 
+Weight (g): 700
+Explanation: The image shows a plate of spaghetti with sauce and a side salad. Since the coin is present, I can estimate the size of the meal by using it as a reference. The pizza appears to be approximately twice the diameter of the coin, which is 23.22 mm, so each slice of pizza would have a circumference of around 70mm. Assuming there are four slices, the total circumference would be about 280mm or roughly 9.5 inches in length. The plate with spaghetti appears to occupy an area slightly more than half of the pizza's circumference, suggesting that it is a smaller portion compared to the pizza.
+
+Based on this information and the appearance of the meal, I estimate the following nutritional content:
+- Simple sugars (g): 50 – The spaghetti sauce may contain some sugar, but since the spaghetti itself does not have any visible sugar coating, I will assume that the simple sugars are minimal.
+- Complex sugars (g): 30 – The spaghetti is likely to be made from wheat flour, which would provide complex carbohydrates as a primary source of energy.
+- Proteins (g): 15 – The sauce and cheese on the spaghetti may contain some protein, but given the size of the meal, I estimate a moderate amount of protein.
+- Fats (g): 20 – The spaghetti sauce may contain some oil or fat content, but it is not clearly visible, so I am estimating a smaller amount.
+- Dietary fibers (g): 5 – The green vegetable in the salad would contribute dietary fiber, but since the coin's size reference is limited to the pizza and does not provide information on the salad's volume, I can only estimate a small amount of fiber.
+- Weight (g): 700 – Considering the estimated sizes of both dishes and their proportions, I arrive at this weight estimate for the meal.
+
+Please note that these estimates are based on a visual assessment and may not be entirely accurate without additional information or measurements. "
+006.jpg,2014:10:04 11:45:05,60,75,15,25,3,940," Simple sugars (g): 60
+Complex sugars (g): 75
+Proteins (g): 15
+Fats (g): 25
+Dietary fibers (g): 3 
+Weight (g): 940
+Explanation: The meal includes a pizza with a variety of toppings, which is rich in refined carbohydrates and contains small amounts of protein. A cola accompanies the pizza, further contributing to simple sugars. The eggs on the plate add to the overall protein content, while the vegetables provide some fiber. It's important to note that this meal is high in calories and would not be considered a balanced meal due to its high calorie and sugar content. "
+007.jpg,2014:10:05 12:38:26,20,50,40,30,10,1600," Simple sugars (g): 20
+Complex sugars (g): 50
+Proteins (g): 40
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 1600
+Explanation: The meal appears to be well-balanced, with a variety of ingredients. The fish and vegetables provide protein and complex sugars, while the bread contributes carbohydrates and some fiber. The sauce might contain simple sugars, but it is not possible to estimate them accurately without knowing its composition. The overall size of the meal suggests that it may be heavy on carbohydrates and proteins, providing a substantial amount of energy for the body. However, the inclusion of vegetables and fish indicates a focus on nutrient-dense foods, which are beneficial for overall health. "
+008.jpg,2014:10:05 18:55:18,20,15,10,5,3,650," Simple sugars (g): 20
+Complex sugars (g): 15
+Proteins (g): 10
+Fats (g): 5
+Dietary fibers (g): 3
+Weight (g): 650
+Explanation: The meal consists of a salad and eggs, which are rich sources of protein and dietary fiber. The vegetables in the salad provide complex sugars, while the egg adds proteins and fats. The eggs also contain some vitamins and minerals. The scale provided by the Swiss Franc coin helps estimate the size of the meal, suggesting a smaller portion compared to the previous example. However, it is important to note that without knowing the exact ingredients in the salad and the amount of dressing used, it's difficult to accurately determine the amounts of simple and complex sugars, proteins, fats, and dietary fibers in grams. "

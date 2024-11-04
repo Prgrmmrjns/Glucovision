@@ -1,0 +1,81 @@
+,picture,description,calories,balance,quality,datetime,message,"- Simple sugars (g): 4
+- Complex sugars (g): 40
+- Proteins (g): 12
+- Fats (g): 10
+- Dietary fibers (g): 4
+- Glycemic index: 55
+- Glycemic load: 22
+- Weight (g): 300
+- Explanation: The visible portion of the meal includes a slice of pizza with tomatoes, cheese, and leafy greens, as well as a salad comprising leafy greens and cherry tomatoes. The pizza likely contains refined wheat flour, which contributes to its complex sugar content. The tomatoes on the pizza may add a small amount of simple sugars. The cheese adds protein and fat content. The salad provides additional fiber and negligible sugars and fats.
+
+The glycemic index is estimated to be moderate due to the presence of cheese and vegetables, which can lower the GI compared to a purely carbohydrate meal. Using the 1 Swiss Franc coin as a scale reference, which has a diameter of 23.22 mm, the size of the pizza slice and salad bowl can be approximated and thus their weight and nutritional content roughly gauged.
+
+For the glycemic load calculation, considering that the net carbohydrates (total carbs minus fibers) amount is around 36 grams (complex sugars 40g - dietary fibers 4g) and the estimated GI is 55, the GL is calculated as follows: (55 x 36) / 100 ≈ 22","Simple sugars (g): 5
+Complex sugars (g): 10
+Proteins (g): 20
+Fats (g): 25
+Dietary fibers (g): 3
+Glycemic index: 55
+Glycemic load: 8
+Weight (g): 400
+Explanation: The meal displayed consists of mixed foods, including eggs, cheese, sliced meat (which appears to be a form of cured ham), salad with leafy greens and tomato, cucumber slices, and potato salad. Here's an estimation of the nutritional content based on visual assessment:
+
+- The simple sugars are likely present in small amounts within the potato salad dressing and possibly from the tomato. This category includes sugars added in processing, dressings or sauces. 
+- The complex sugars (starchy carbohydrates) are mostly in the potato salad, with a minor contribution from the cucumbers and tomato. 
+- Proteins come from the eggs, cheese, and ham, all rich sources.
+- Fats are present in cheese, the dressing of the potato salad, and the sliced meat. 
+- Dietary fibers come from the vegetables, though they appear limited in quantity.
+- The glycemic index is an estimate considering the mixed ingredients with lower GI foods (like cheese, eggs, and vegetables) and moderate GI foods (like potato salad).
+- For the glycemic load, I've used the estimated amounts of carbohydrates (subtracting the estimated dietary fibers) multiplied by","- Simple sugars (g): 5
+- Complex sugars (g): 40
+- Proteins (g): 20
+- Fats (g): 25
+- Dietary fibers (g): 7
+- Glycemic index: 55
+- Glycemic load: 22
+- Weight (g): 600
+- Explanation: The meal includes a sausage, a portion of rice, a slice of tomato with herbs on top, some salad leaves, and a piece of corn on the cob. The rice and corn provide complex carbohydrates, while the sausage adds protein and fats. The tomato and salad contain some fibers and simple sugars, but in minimal amounts. The glycemic index is moderate due to the presence of complex carbs and dietary fibers which slow down digestion. The coin provides a reference for estimating the size of the plate and the portions. The overall weight is estimated considering the density and volume of each component on the plate, and the glycemic load reflects the moderate blood sugar impact of this balanced meal."
+0,001.jpg,"Margarita pizza and lettuce,tomatoes and cucumber salad",231,Balance,Medium quality,2014:10:01 19:43:25,0,"- Simple sugars (g): 4
+- Complex sugars (g): 40
+- Proteins (g): 12
+- Fats (g): 10
+- Dietary fibers (g): 4
+- Glycemic index: 55
+- Glycemic load: 22
+- Weight (g): 300
+- Explanation: The visible portion of the meal includes a slice of pizza with tomatoes, cheese, and leafy greens, as well as a salad comprising leafy greens and cherry tomatoes. The pizza likely contains refined wheat flour, which contributes to its complex sugar content. The tomatoes on the pizza may add a small amount of simple sugars. The cheese adds protein and fat content. The salad provides additional fiber and negligible sugars and fats.
+
+The glycemic index is estimated to be moderate due to the presence of cheese and vegetables, which can lower the GI compared to a purely carbohydrate meal. Using the 1 Swiss Franc coin as a scale reference, which has a diameter of 23.22 mm, the size of the pizza slice and salad bowl can be approximated and thus their weight and nutritional content roughly gauged.
+
+For the glycemic load calculation, considering that the net carbohydrates (total carbs minus fibers) amount is around 36 grams (complex sugars 40g - dietary fibers 4g) and the estimated GI is 55, the GL is calculated as follows: (55 x 36) / 100 ≈ 22",,
+1,002.jpg,"Potatoes salade, lettuce and cucumber,sausage,ham and boiled egg",1163,Unbalance,Good quality,2014:10:02 12:32:47,0,,"Simple sugars (g): 5
+Complex sugars (g): 10
+Proteins (g): 20
+Fats (g): 25
+Dietary fibers (g): 3
+Glycemic index: 55
+Glycemic load: 8
+Weight (g): 400
+Explanation: The meal displayed consists of mixed foods, including eggs, cheese, sliced meat (which appears to be a form of cured ham), salad with leafy greens and tomato, cucumber slices, and potato salad. Here's an estimation of the nutritional content based on visual assessment:
+
+- The simple sugars are likely present in small amounts within the potato salad dressing and possibly from the tomato. This category includes sugars added in processing, dressings or sauces. 
+- The complex sugars (starchy carbohydrates) are mostly in the potato salad, with a minor contribution from the cucumbers and tomato. 
+- Proteins come from the eggs, cheese, and ham, all rich sources.
+- Fats are present in cheese, the dressing of the potato salad, and the sliced meat. 
+- Dietary fibers come from the vegetables, though they appear limited in quantity.
+- The glycemic index is an estimate considering the mixed ingredients with lower GI foods (like cheese, eggs, and vegetables) and moderate GI foods (like potato salad).
+- For the glycemic load, I've used the estimated amounts of carbohydrates (subtracting the estimated dietary fibers) multiplied by",
+2,003.jpg,"Sausage with lettuce,corn salad and rice",757,Unbalance,Good quality,2014:10:02 19:47:17,0,,,"- Simple sugars (g): 5
+- Complex sugars (g): 40
+- Proteins (g): 20
+- Fats (g): 25
+- Dietary fibers (g): 7
+- Glycemic index: 55
+- Glycemic load: 22
+- Weight (g): 600
+- Explanation: The meal includes a sausage, a portion of rice, a slice of tomato with herbs on top, some salad leaves, and a piece of corn on the cob. The rice and corn provide complex carbohydrates, while the sausage adds protein and fats. The tomato and salad contain some fibers and simple sugars, but in minimal amounts. The glycemic index is moderate due to the presence of complex carbs and dietary fibers which slow down digestion. The coin provides a reference for estimating the size of the plate and the portions. The overall weight is estimated considering the density and volume of each component on the plate, and the glycemic load reflects the moderate blood sugar impact of this balanced meal."
+3,004.jpg,Eggplant with rice and lettuce with tomato,474,Unbalance,Good quality,2014:10:03 12:50:17,0,,,
+4,005.jpg,"Lettuce with tomato salad, spaguetti with pesto",619,Unbalance,Good quality,2014:10:03 19:08:00,0,,,
+5,006.jpg,"Tomatoes,potatoes, ham and egg and plum pie",699,Unbalance,Medium quality,2014:10:04 11:45:05,0,,,
+6,007.jpg,"Salmon and white fish, tomatoes and zuchinni,boiled rice",673,Unbalance,Good quality,2014:10:05 12:38:26,0,,,
+7,008.jpg,"Lettuce of tomatoes,boiled potatoeswith ham and dolmades and mayonaise",490,Unbalance,Good quality,2014:10:05 18:55:18,0,,,

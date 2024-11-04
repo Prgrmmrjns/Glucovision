@@ -1,0 +1,149 @@
+picture,datetime,simple_sugars,complex_sugars,proteins,fats,dietary_fibers,weight,message
+001.jpg,2014:10:01 12:21:59,20,15,10,30,5,750," Simple sugars (g): 20
+Complex sugars (g): 15
+Proteins (g): 10
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 750
+Explanation: The meal appears to be a simple pasta dish with tomato sauce. Given that the pasta is likely made from refined grains, we can estimate the complex sugars as around 15 grams. The presence of sauce suggests some carbohydrates in the form of starch. The protein content seems low, perhaps around 10 grams. Fat content might be around 30 grams, considering the sauce and pasta's preparation method. The fiber content is minimal, likely just a few grams from the pasta itself. The weight of the meal includes all these components, so we can estimate the total weight to be about 750 grams. "
+002.jpg,2014:10:01 12:22:06,20,30,5,10,2,750," Simple sugars (g): 20
+Complex sugars (g): 30
+Proteins (g): 5
+Fats (g): 10
+Dietary fibers (g): 2
+Weight (g): 750
+Explanation: The meal appears to consist of a sandwich-like item, possibly containing some vegetables. It's difficult to accurately estimate the amounts of simple sugars and complex sugars due to the lack of distinct components that are easily identifiable as sources of these nutrients. However, the sandwich is likely to contain refined grains, which would contribute to both simple and complex sugars. The protein content seems minimal, possibly derived from cheese or a protein filling. There's no clear indication of fat content in this meal. Dietary fiber content appears to be low due to the lack of visible vegetables in the sandwich. The weight estimation is based on the size of the sandwich, which is approximately 20 cm wide, including fillings and bread. The overall nutritional value of the meal seems to be relatively low, with minimal amounts of proteins, fats, and dietary fibers. "
+003.jpg,2014:10:01 12:22:15,50,100,20,30,10,540," Simple sugars (g): 50
+Complex sugars (g): 100
+Proteins (g): 20
+Fats (g): 30
+Dietary fibers (g): 10
+Weight (g): 540
+Explanation: The meal in the image is a plate of spaghetti with meat sauce, which appears to be a noodle dish with sauce and possibly some vegetables. It contains simple sugars from any pasta or noodles that are present, complex sugars from the tomato sauce and any added sweeteners, proteins mainly from the meat in the sauce, fats from the cooking oil and potentially some of the meat, and dietary fibers from any whole-grain pasta or vegetables that may be included. The scale of the meal is difficult to determine without a clear reference point, but using the Swiss Franc coin as a reference, the plate appears to have a diameter of approximately 20 cm, giving an estimated weight of around 500 grams for the meal. However, without more precise measurements or a better view of the contents of the dish, these estimates are based on general assumptions and should be considered rough approximations. "
+005.jpg,2014:10:01 12:22:31,60,120,15,20,3,200," Simple sugars (g): 60
+Complex sugars (g): 120
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 3
+Weight (g): 200
+Explanation: The image shows a meal that consists of a sandwich and a soup. Based on the coin, which is about 65mm in diameter, the sandwich appears to be around 13cm in width, while the bowl containing the soup has a diameter of approximately 95mm. The sandwich looks like it could have been made with white bread, and the soup is likely to contain vegetables and some kind of protein. Since there's no direct view of the sandwich fillings or the soup ingredients, I can only provide estimates. The sandwich may have around 12g of carbohydrates from the bread and a small amount of fat and protein if it contains meat or cheese. The soup might contain some vegetables that would add dietary fiber to the meal. Without more information, these numbers are speculative. "
+006.jpg,2014:10:01 21:20:45,50,60,20,30,5,1700," Simple sugars (g): 50
+Complex sugars (g): 60
+Proteins (g): 20
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 1700
+Explanation: The pizza has a thick crust, and the toppings include a variety of vegetables and cheese. The cola is in a glass, suggesting it might be a soft drink. To estimate the size of the meal, we use the Swiss Franc coin as a reference, assuming that its diameter corresponds to 23.22 mm. With this assumption, we can measure the pizza's diameter as approximately 750mm and the cola's volume as about 460 ml. This meal is likely to be high in carbohydrates and fats but moderate in proteins and dietary fibers. The significant amount of vegetables provides some fiber and vitamins, which is good. However, the presence of a soft drink can lead to an excessive intake of simple sugars, potentially affecting blood sugar levels. "
+007.jpg,2014:10:02 13:05:33,50,75,15,25,5,625," Simple sugars (g): 50
+Complex sugars (g): 75
+Proteins (g): 15
+Fats (g): 25
+Dietary fibers (g): 5 
+Weight (g): 625
+Explanation: The image shows a meal consisting of pizza, cola, and a pastry. Based on the size of the coin present in the picture, it is estimated that the pizza has a diameter of approximately 30 cm. Using this information, one can infer that the pizza occupies about half of the tray (156.25 g). The cola appears to be served in a cup with an average height of around 4 cm and a base diameter of 6 cm, which could suggest it is filled with liquid. Considering these dimensions and assuming that the drink has a similar volume as the cup itself, we can estimate that the drink contains approximately 375 ml (g).
+
+The pastry on the tray can be assumed to have a similar weight as a typical slice of bread (28 g), which is about 1/4th of the pizza's total weight. The simple sugars in the meal come from the pizza crust and the cola, while the complex sugars are found mainly in the pastry.
+
+The protein content comes from the toppings on the pizza, the pastry, and any additional ingredients like sauce or cheese that may contain small amounts of protein. The fats present in the meal come mostly from the pizza crust and possibly some added fat from the toppings or the pastry. Dietary fibers are found in the pastry and other possible components not visible in the image, such as a side salad or breadsticks.
+
+Finally, the total weight of the meal can be estimated by adding up all the individual components. The pizza weighs about 156 g (30 cm diameter), the cola weighs approximately 375 g, and the pastry weighs around 28 g. This results in a total meal weight of approximately 625 g (2 lb). However, given that the actual amount of each component might vary slightly from these estimates, one should consider this as an approximation rather than an exact measurement. "
+011.jpg,2014:10:02 20:56:36,50,120,35,15,8,700," Simple sugars (g): 50
+Complex sugars (g): 120
+Proteins (g): 35
+Fats (g): 15
+Dietary fibers (g): 8
+Weight (g): 700
+Explanation: The plate of spaghetti contains a generous serving of pasta, which is a source of complex carbohydrates. The sauce and any meat topping on the spaghetti provide some proteins and fats. The dietary fibers come from the vegetables in the dish, though it is not clear if there are any visible in this image. There is no sign of sugar or honey in the meal, so the simple sugars are zero. The total weight estimate includes the plate, fork, and any other items on the table, which is common when estimating food weights. "
+012.jpg,2014:10:03 10:07:46,50,70,20,10,5,650," Simple sugars (g): 50
+Complex sugars (g): 70
+Proteins (g): 20
+Fats (g): 10
+Dietary fibers (g): 5
+Weight (g): 650
+Explanation: The meal consists of a loaf of bread, which is likely to be refined wheat bread. A slice of this bread would be approximately 30 g in size. Assuming that the bread is about 80% carbohydrate by weight and contains some protein and fat, we can estimate the macronutrients as follows:
+
+- Simple sugars (g): The slice of bread will likely contain about 12 g of simple sugars. The cup of tea or coffee may also contribute a few grams of simple sugars, depending on its sweetener content.
+- Complex sugars (g): The bread contributes to the complex sugars, which would be approximately 16 g per slice.
+- Proteins (g): Roughly 3 g per slice for the bread.
+- Fats (g): Approximately 2 g per slice of bread.
+- Dietary fibers (g): The bread might contain about 1 g of dietary fiber per slice, although this can vary based on the type of flour used and the baking process.
+
+The weight of the meal would be approximately 30 g for the bread slice, plus an additional 75 g for the other components like tea or coffee, giving a total of about 650 g. This meal provides carbohydrates, proteins, and some fats, with minimal dietary fiber content. The simple sugars come mainly from the bread and any sweetener added to the beverage. "
+013.jpg,2014:10:03 14:07:24,40,60,25,30,5,750," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 750
+Explanation: The meal consists of a plate of food and a serving of fries. The plate has pizza with tomato sauce, cheese, and various toppings. The pizza is approximately 20 cm in diameter, so a reasonable estimate for the pizza's total weight is around 450g. Since there are no visible fruits or vegetables providing dietary fiber, we can assume the presence of some starch from the crust and potentially potatoes from the fries. However, without a direct measurement, it's challenging to provide an accurate estimate for the complex sugars and dietary fibers content. The overall calorie count for this meal would likely be high due to the carbohydrates and fats present. "
+014.jpg,2014:10:03 20:36:17,50,100,40,20,5,750," Simple sugars (g): 50
+Complex sugars (g): 100
+Proteins (g): 40
+Fats (g): 20
+Dietary fibers (g): 5 
+Weight (g): 750
+Explanation: The meal on the plate consists of two items: a baked potato and what appears to be some sort of meat. Using the coin as reference, the plate seems to cover an area of approximately 350 mm x 450 mm, which translates to a weight of roughly 750 g for the entire meal. Since we are given that it is a dinner-like meal and not just a snack or dessert, we can assume that there is a good balance of macronutrients. The potato, being a starchy carbohydrate source, contributes to complex sugars. The meat provides protein, but its exact fat content cannot be determined from this angle without more information. The cola would add simple sugars to the meal, although it is not visible in the image. "
+015.jpg,2014:10:04 06:50:29,12,48,8,3,5,0," Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5 
+Weight (g): 750
+Explanation: The image shows a bowl of cereal with yogurt and what appears to be granola. The spoon in the bowl suggests that it is ready to eat. Estimating the size of the bowl based on the 1 Swiss Franc coin, which has a diameter of 23.22 mm, the bowl is approximately 40 cm in diameter. Assuming the cereal and yogurt are the main components, we can estimate their contents as follows:
+
+The cereal is likely to be whole grains or rolled oats, with some added sugar. The presence of granola suggests that it might contain nuts, seeds, and dried fruits, contributing some fiber and protein. Assuming that 30% of the cereal is made up of whole grains/rolled oats, 20% from granola, and the remaining 50% as industrial sugar, we can estimate:
+
+Simple sugars (g): 12
+Complex sugars (g): 48
+Proteins (g): 8
+Fats (g): 3
+Dietary fibers (g): 5
+
+The yogurt in the bowl is likely to contain some sugar, depending on its type. For example, Greek yogurt with added honey might have a higher simple sugar content than plain yogurt. Assuming that 20% of the yogurt's volume is made up of added sugars or natural sweeteners, we can estimate:
+
+Simple sugars (g): 4
+Complex sugars (g): 16
+Proteins (g): 8
+Fats (g): 0.5
+Dietary fibers (g): 0.5
+
+Adding up the components:
+
+Simple sugars (g): 12 + 4 = 16
+Complex sugars (g): 48 + 16 = 64
+Proteins (g): 8 + 8 = 16
+Fats (g): 3 + 0.5 = 3.5
+Dietary fibers (g): 5 + 0.5 = 5.5
+Weight (g): The bowl's contents weigh approximately 40 cm x 16 cm, with a depth of 4 cm. This gives an estimated volume of 256 cubic centimeters or 0.256 liters. Assuming a density of 1 g/mL for the cereal and yogurt mixture, we can estimate the total weight:
+
+Weight (g): 0.256 L x 1 g/mL = 256 g
+
+This meal consists of whole grains or rolled oats as a source of complex carbohydrates, granola for additional fiber and protein, yogurt for calcium and protein, and a small amount of added sugar. The total weight of the meal is approximately 750 grams. "
+017.jpg,2014:10:04 11:05:38,50,100,20,30,5,730," Simple sugars (g): 50
+Complex sugars (g): 100
+Proteins (g): 20
+Fats (g): 30
+Dietary fibers (g): 5
+Weight (g): 730
+Explanation: The loaf of bread is a significant source of complex carbohydrates. The size of the loaf and the coin suggests it weighs around 730 grams. The simple sugars are likely found in any additional toppings or spread on the bread, though not directly visible in the image. The proteins are estimated based on the type of bread used. No fats or dietary fibers are visibly present on the loaf; these values may be assumed to be low given the type of food. "
+018.jpg,2014:10:04 16:06:20,25,50,15,10,3,98," Simple sugars (g): 25
+Complex sugars (g): 50
+Proteins (g): 15
+Fats (g): 10
+Dietary fibers (g): 3
+Weight (g): 98
+Explanation: The plate of food includes chicken with gravy, noodles covered in sauce, and a small portion of vegetables. The gravy on the chicken likely contains some sugar, but it is not a significant amount compared to the main components of the meal. The noodles are a source of complex carbohydrates, while the vegetables provide some fiber, vitamins, and minerals. The size of the plate and food items suggest that this is a balanced meal with a variety of nutrients present in moderate amounts. "
+019.jpg,2014:10:04 21:15:15,30,50,15,20,5,90," Simple sugars (g): 30
+Complex sugars (g): 50
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 5
+Weight (g): 90
+Explanation: The pizza and cola meal is rich in carbs, fats, and proteins. The cola boosts the meal's simple sugars. The 1 Swiss Franc coin helps estimate the pizza at 30 cm diameter and the cola at 330 ml, indicating a significant blood sugar impact. "
+020.jpg,2014:10:04 23:54:30,60,30,15,20,5,850," Simple sugars (g): 60
+Complex sugars (g): 30
+Proteins (g): 15
+Fats (g): 20
+Dietary fibers (g): 5
+Weight (g): 850
+Explanation: The meal is a bowl of cereal topped with milk and a spoonful of sugar, suggesting the presence of both simple and complex sugars. The cereal provides some complex sugars from whole grains, but the amount of refined grains or flours is unknown. Protein content in the cereal may vary, but assuming a common breakfast cereal, it's likely to be low. Fats are present in the milk and any added ingredients, while dietary fibers come from the cereal itself. The weight of the meal is estimated by considering the volume occupied by the cereal and the liquid components, taking into account the 1 Swiss Franc coin as a reference for scale. "
