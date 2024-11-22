@@ -7,6 +7,9 @@ import plotly.graph_objects as go
 import lime
 import lime.lime_tabular
 import matplotlib.pyplot as plt
+import base64
+import re
+import requests
 from warnings import simplefilter, filterwarnings
 
 
@@ -15,11 +18,31 @@ filterwarnings("ignore", category=FutureWarning)
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 simplefilter(action="ignore", category=pd.errors.SettingWithCopyWarning)
 
-# Constants
-PATIENTS = ['001', '002', '004', '006', '007', '008']
+macronutrients_instruction = '''Examine the provided meal image to analyze and estimate its nutritional content accurately. Focus on determining the amounts of simple sugars (like industrial sugar and honey), 
+complex sugars (such as starch and whole grains), proteins, fats, and dietary fibers (found in fruits and vegetables), all in grams. Also estimate the total weight of the meal in grams.
+To assist in accurately gauging the scale of the meal, a 1 Swiss Franc coin, which has a diameter of 23.22 mm, may be present in the picture. 
+Use the size of this coin as a reference to estimate the size of the meal and the amounts of the nutrients more precisely. 
+Provide your assessment of each nutritional component in grams. All estimates should be given as a single whole number. If there is no coin in the picture or the meal is covered partially, estimate anyways.
+Format your response as follows:
+- Simple sugars (g): 
+- Complex sugars (g): 
+- Proteins (g): 
+- Fats (g): 
+- Dietary fibers (g): 
+- Weight (g): 
+- Explanation: 
 
-# Prediction horizon in 5-minute intervals (e.g., 6 intervals = 30 minutes)
-prediction_horizon = 6
+Example response:
+Simple sugars (g): 40
+Complex sugars (g): 60
+Proteins (g): 25
+Fats (g): 30
+Dietary fibers (g): 5 
+Weight (g): 750
+Explanation: The pizza and cola meal, with its refined crust and toppings, is rich in carbs, fats, and proteins. The cola boosts the meal's simple sugars. 
+The 1 Swiss Franc coin helps estimate the pizza at 30 cm diameter and the cola at 330 ml, indicating a significant blood sugar impact.'''
+
+PATIENTS = ['001', '002', '004', '006', '007', '008']
 
 # Features used in the model
 features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'proteins', 'fast_insulin', 'slow_insulin']
@@ -123,6 +146,22 @@ def prepare_glucose_data(glucose_data, prediction_horizon, meal_time, selected_f
     
     return glucose_data, combined_data
 
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+  
+def parse_nutritional_info(text):
+    pattern = r'(Simple sugars \(g\)|Complex sugars \(g\)|Proteins \(g\)|Fats \(g\)|Dietary fibers \(g\)|Weight \(g\)):\s*(\d+)'
+    matches = re.findall(pattern, text)
+    nutritional_info = {match[0]: int(match[1]) for match in matches}
+    simple_sugars = nutritional_info.get('Simple sugars (g)', 0)
+    complex_sugars = nutritional_info.get('Complex sugars (g)', 0)
+    proteins = nutritional_info.get('Proteins (g)', 0)
+    fats = nutritional_info.get('Fats (g)', 0)
+    dietary_fibers = nutritional_info.get('Dietary fibers (g)', 0)
+    weight = nutritional_info.get('Weight (g)', 0)
+    return simple_sugars, complex_sugars, proteins, fats, dietary_fibers, weight
+
 st.markdown("<h3 style='margin-top:-2rem;'>Glucovision: Glucose Level Forecasting Using Multimodal LLMs 👀</h3>", unsafe_allow_html=True)
 st.markdown("""
 <small>Welcome to Glucovision, a framework designed to forecast glucose levels in Type 1 Diabetes patients by incorporating meal image information using multimodal LLMs.
@@ -145,16 +184,72 @@ with st.sidebar:
         st.warning(f"No images available for Patient {selected_patient}.")
         st.stop()
 
+    
     selected_image = st.selectbox(
         "Image",
         available_images,
         format_func=lambda x: x.split('.')[0].replace('_', ' ').title()
     )
 
+    upload_image = st.toggle("Upload own image", value=False)
+    if upload_image:
+        api_key = st.text_input("Enter your OPENAI API key", type="password")
+        if not api_key:
+            st.warning("Enter your OpenAI API key first!")
+            st.stop()
+            
+        uploaded_image = st.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
+        if not uploaded_image:  
+            st.warning("Please upload an image first!")
+            st.stop()
+
+        if api_key and uploaded_image:
+            headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+            }
+            # Convert UploadedFile to bytes and encode directly
+            base64_image = base64.b64encode(uploaded_image.getvalue()).decode('utf-8')
+            payload = {
+            "model": "gpt-4o",
+            "messages": [
+                {
+                "role": "user",
+                "content": [
+                    {
+                    "type": "text",
+                    "text": macronutrients_instruction
+                    },
+                    {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                    }
+                ]
+                }
+            ],
+            "max_tokens": 300
+            }
+            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            message = response.json()['choices'][0]['message']['content']
+            try:
+                parsed_info = parse_nutritional_info(message)
+                st.session_state['parsed_info'] = dict(zip(['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'weight'], parsed_info))
+                
+            except:
+                st.write("Error parsing nutritional information. Please try again.")
+                st.stop()
+
     selected_model = st.selectbox(
         "Model",
         ['llama', 'gpt4o', 'sonnet'],
         format_func=lambda x: x.upper()
+    )
+
+    prediction_horizon = st.selectbox(
+        "Prediction Horizon",
+        [6, 9, 12],
     )
 
 # Load data
@@ -182,17 +277,32 @@ combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').res
 combined_data.fillna(0, inplace=True)
 
 # Extract meal information
-selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+if not upload_image:
+    selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+    meal_time = selected_food_data['datetime'].iloc[-1]
+    message = selected_food_data['message'].iloc[-1]
 
+    selected_day =  int(meal_time.strftime('%d'))
+    st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
 
-# Update meal time (if necessary)
-meal_time = selected_food_data['datetime'].iloc[-1]
-message = selected_food_data['message'].iloc[-1]
+    image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
 
-selected_day =  int(meal_time.strftime('%d'))
-st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
+else:
+    if 'parsed_info' not in st.session_state:
+        st.error("Please analyze the image first!")
+        st.stop()
+        
+    selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+    meal_time = selected_food_data['datetime'].iloc[-1]
 
-image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
+    for feature in ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'weight']:
+        selected_food_data.at[selected_food_data.index[-1], feature] = st.session_state['parsed_info'][feature]
+
+    selected_day =  int(meal_time.strftime('%d'))
+    st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
+
+    image_path = uploaded_image
+    
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -241,25 +351,25 @@ with tab1:
     st.markdown("<h5>Predictions</h5>", unsafe_allow_html=True)
 
     # Filter predictions starting 30 minutes after meal time
-    time_mask_30min = processed_data['datetime'] >= meal_time + pd.Timedelta(minutes=30)
-    predictions = model.predict(X_test[time_mask_30min])
-    predictions = processed_data[time_mask_30min]['glucose'] - predictions
+    time_mask = processed_data['datetime'] >= meal_time + pd.Timedelta(minutes=prediction_horizon*5)
+    predictions = model.predict(X_test[time_mask])
+    predictions = processed_data[time_mask]['glucose'] - predictions
 
     # Check for hyper/hypoglycemic predictions
     hyper_mask = predictions > 180
     hypo_mask = predictions < 70
 
     if any(hyper_mask):
-        hyper_times = processed_data.loc[time_mask_30min][hyper_mask]['datetime'].dt.strftime('%H:%M').tolist()
+        hyper_times = processed_data.loc[time_mask][hyper_mask]['datetime'].dt.strftime('%H:%M').tolist()
         st.warning(f"⬆️ 🔴 High glucose predicted at: {', '.join(hyper_times)}")
     elif any(hypo_mask):
-        hypo_times = processed_data.loc[time_mask_30min][hypo_mask]['datetime'].dt.strftime('%H:%M').tolist() 
+        hypo_times = processed_data.loc[time_mask][hypo_mask]['datetime'].dt.strftime('%H:%M').tolist() 
         st.warning(f"⬇️ 💙 Low glucose predicted at: {', '.join(hypo_times)}")
     else:
         st.success("✨ 🎯 Glucose levels are predicted to stay in safe range for all timepoints!")
 
     # Calculate RMSE for predictions 30 minutes onwards
-    rmse = np.sqrt(np.mean((predictions - y_test[time_mask_30min]) ** 2))
+    rmse = np.sqrt(np.mean((predictions - y_test[time_mask]) ** 2))
 
     # Define glycemic zones
     def glycemic_zone(glucose_level):
@@ -271,7 +381,7 @@ with tab1:
             return 'Hyperglycemia'
 
     # Create a DataFrame for predictions starting 30 min after meal
-    prediction_data = processed_data[time_mask_30min].copy()
+    prediction_data = processed_data[time_mask].copy()
     prediction_data['Zone'] = predictions.apply(glycemic_zone)
 
     # Create figure showing predictions vs ground truth
@@ -338,11 +448,11 @@ with tab2:
         st.pyplot(fig)
     else:
         # Allow user to select specific time point for local explanation
-        time_options = processed_data[time_mask_30min]['datetime'].dt.strftime('%H:%M').tolist()
+        time_options = processed_data[time_mask]['datetime'].dt.strftime('%H:%M').tolist()
         selected_time = st.selectbox("Select time point for local explanation", time_options)
 
         # Get index of selected time
-        selected_idx = processed_data.loc[time_mask_30min]['datetime'].dt.strftime('%H:%M').tolist().index(selected_time)
+        selected_idx = processed_data.loc[time_mask]['datetime'].dt.strftime('%H:%M').tolist().index(selected_time)
 
         # Use LIME to explain predictions at selected time point
         explainer = lime.lime_tabular.LimeTabularExplainer(
@@ -354,7 +464,7 @@ with tab2:
         )
 
         exp = explainer.explain_instance(
-            X_test.loc[time_mask_30min].values[selected_idx],
+            X_test.loc[time_mask].values[selected_idx],
             model.predict,
             num_features=10
         )
