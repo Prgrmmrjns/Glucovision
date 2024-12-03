@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import base64
 import re
 import requests
+import itertools
 from warnings import simplefilter, filterwarnings
 
 
@@ -137,8 +138,8 @@ def prepare_glucose_data(glucose_data, prediction_horizon):
     return glucose_data, combined_data
 
 def encode_image(image_path):
-  with open(image_path, "rb") as image_file:
-    return base64.b64encode(image_file.read()).decode('utf-8')
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
   
 def parse_nutritional_info(text):
     pattern = r'(Simple sugars \(g\)|Complex sugars \(g\)|Proteins \(g\)|Fats \(g\)|Dietary fibers \(g\)|Weight \(g\)):\s*(\d+)'
@@ -152,7 +153,7 @@ def parse_nutritional_info(text):
     weight = nutritional_info.get('Weight (g)', 0)
     return simple_sugars, complex_sugars, proteins, fats, dietary_fibers, weight
 
-def openai_api_call(base64_image, llm_prompt):
+def openai_api_call(base64_image, llm_instructions, api_key):
     headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {api_key}"
@@ -165,7 +166,7 @@ def openai_api_call(base64_image, llm_prompt):
         "content": [
             {
             "type": "text",
-            "text": llm_prompt
+            "text": llm_instructions
             },
             {
             "type": "image_url",
@@ -182,7 +183,7 @@ def openai_api_call(base64_image, llm_prompt):
     message = response.json()['choices'][0]['message']['content']
     return message
 
-def meal_modification_suggestions(processed_data, model, X_test):
+def meal_modification_suggestions(processed_data, model, X_test, llm_estimations):
     st.markdown("<h5>Meal Modification Suggestions</h5>", unsafe_allow_html=True)
 
     # Get the time point with the highest predicted glucose spike
@@ -201,59 +202,72 @@ def meal_modification_suggestions(processed_data, model, X_test):
     original_meal = X_test.loc[max_spike_index, meal_features]
 
     # Define increments for grid search
-    increments = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+    adjustments = [-20, -10, 0, 10, 20]
 
     # Initialize a DataFrame to store results
-    results = pd.DataFrame(columns=meal_features + ['predicted_glucose'])
+    results = []
 
-    # Perform grid search over meal feature modifications
-    for feature in meal_features:
-        for increment in increments:
-            modified_meal = original_meal.copy()
-            modified_meal[feature] += increment
-            modified_meal = modified_meal.clip(lower=0)  # Ensure no negative values
+    # Perform grid search over combinations of meal feature modifications
+    for deltas in itertools.product(adjustments, repeat=len(meal_features)):
+        modified_meal = original_meal.copy()
+        for i, feature in enumerate(meal_features):
+            modified_meal[feature] += deltas[i]
+        modified_meal = modified_meal.clip(lower=0)
 
-            # Prepare the modified input
-            X_modified = X_test.loc[max_spike_index].copy()
-            X_modified.update(modified_meal)
-            X_modified = X_modified.values.reshape(1, -1)
+        # Prepare the modified input
+        X_modified = X_test.loc[max_spike_index].copy()
+        X_modified.update(modified_meal)
+        X_modified = X_modified.values.reshape(1, -1)
 
-            # Predict the glucose level
-            predicted_glucose = X_modified[0][X_test.columns.get_loc('glucose')] + model.predict(X_modified)[0]
+        # Predict the glucose level
+        predicted_glucose = X_modified[0][X_test.columns.get_loc('glucose')] - model.predict(X_modified)[0]
 
-            # Store the results
-            result = modified_meal.to_dict()
-            result['predicted_glucose'] = predicted_glucose
-            results = pd.concat([results, pd.DataFrame([result])], ignore_index=True)
+        # Store the results
+        result = modified_meal.to_dict()
+        result['predicted_glucose'] = predicted_glucose
+        result['modifications'] = {meal_features[i]: deltas[i] for i in range(len(meal_features))}
+        results.append(result)
+
+    # Convert results to DataFrame
+    results_df = pd.DataFrame(results)
 
     # Find the best modification (lowest predicted glucose)
-    best_modification = results.loc[results['predicted_glucose'].idxmin()]
+    best_modification = results_df.loc[results_df['predicted_glucose'].idxmin()]
 
     # Display the results
     st.write("### Suggested Meal Modifications:")
-    st.write(f"To reduce your predicted glucose spike from **{hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']:.2f} mg/dL** to **{best_modification['predicted_glucose']:.2f} mg/dL**, consider making the following changes to your meal:")
+    st.write(f"To reduce your predicted glucose spike from **{hyperglycemia_point['glucose'] - hyperglycemia_point['glucose_next']:.2f} mg/dL** to **{best_modification['predicted_glucose']:.2f} mg/dL**, consider making the following changes to your meal:")
 
-    modifications = {}
-    for feature in meal_features:
-        change = best_modification[feature] - original_meal[feature]
-        if change != 0:
-            modifications[feature.replace('_', ' ').title()] = int(change)
-
-    st.write(modifications)
-
-    # Use LLM API to generate suggestions if API key is provided
+    # Extract modifications
+    modifications = {k.replace('_', ' ').title(): int(v) for k, v in best_modification['modifications'].items() if v != 0}
+    
+    # Prepare the LLM prompt
     if 'api_key' in globals():
-        if not upload_image:
-            base64_image = encode_image(image_path)
-        else:
-            base64_image = base64.b64encode(uploaded_image.getvalue()).decode('utf-8')
-            
-        #suggestion = openai_api_call(base64_image, modifications)
-        suggestion = 'LLM suggestion not implemented yet.'
+        base64_image = encode_image(image_path)
+        modifications_text = '\n'.join([f"- {k}: {v:+d}g" for k, v in modifications.items()])
+        llm_instructions = f"""Based on the meal shown in the image, provide at maximum 3 specific, actionable suggestions to adjust this meal to reduce glucose spike.
+
+**Original Estimated Nutritional Values:**
+{llm_estimations}
+
+**Recommended Changes:**
+{modifications_text}
+
+Please provide concrete suggestions based on what you see in the image. For example:
+- If you see rice, suggest reducing the portion or replacing with cauliflower rice
+- If you see bread, suggest whole grain alternatives
+- If you see pasta, suggest adding more vegetables or protein
+
+Format each suggestion as:
+1. What specific item in the meal to change
+2. How exactly to change it (reduce portion, substitute, or add something)
+3. The expected benefit for glucose control"""
+        
+        suggestion = openai_api_call(base64_image, llm_instructions, api_key)
         st.write("### LLM Suggestions:")
         st.write(suggestion)
     else:
-        st.info("To get detailed LLM suggestions, please provide an OpenAI API key.")
+        st.info("To get LLM suggestions, please provide an OpenAI API key.")
 
 st.markdown("<h3 style='margin-top:-2rem;'>Glucovision: Glucose Level Forecasting Using Multimodal LLMs 👀</h3>", unsafe_allow_html=True)
 st.markdown("""
@@ -261,6 +275,8 @@ st.markdown("""
 
 **Note:** This app is a demonstration using the D1namo dataset and is not intended for medical advice.</small>
 """, unsafe_allow_html=True)
+
+submit_button = st.button("Generate Predictions")
 
 # Sidebar
 with st.sidebar:
@@ -284,65 +300,22 @@ with st.sidebar:
         format_func=lambda x: x.split('.')[0].replace('_', ' ').title()
     )
 
+    # Show preview image before submit
+    image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
+    st.image(image_path, caption="Preview", width=100)
+
     api_key = st.text_input("Enter your OPENAI API key (optional)", type="password")
 
-    upload_image = st.toggle("Upload own image", value=False)
-    if upload_image:
-        if not api_key:
-            st.warning("Enter your OpenAI API key first!")
-            st.stop()
-            
-        uploaded_image = st.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
-        if not uploaded_image:  
-            st.warning("Please upload an image first!")
-            st.stop()
-
-        if api_key and uploaded_image:
-            headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-            }
-            # Convert UploadedFile to bytes and encode directly
-            base64_image = base64.b64encode(uploaded_image.getvalue()).decode('utf-8')
-            payload = {
-            "model": "gpt-4o",
-            "messages": [
-                {
-                "role": "user",
-                "content": [
-                    {
-                    "type": "text",
-                    "text": macronutrients_instruction
-                    },
-                    {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                    }
-                ]
-                }
-            ],
-            "max_tokens": 300
-            }
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-            message = response.json()['choices'][0]['message']['content']
-            try:
-                parsed_info = parse_nutritional_info(message)
-                st.session_state['parsed_info'] = dict(zip(['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'weight'], parsed_info))
-                
-            except:
-                st.write("Error parsing nutritional information. Please try again.")
-                st.stop()
+    if not api_key:
+        st.warning("Enter your OpenAI API key first!")
+        st.stop()
 
     prediction_horizon = st.selectbox(
         "Prediction Horizon",
         [6, 12],
     )
 
-    submit_button = st.button("Generate Predictions")
-
-if submit_button or (upload_image and api_key and uploaded_image):
+if submit_button and api_key:
     # Load data
     @st.cache_data
     def load_data(patient, model):
@@ -367,33 +340,19 @@ if submit_button or (upload_image and api_key and uploaded_image):
     combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
     combined_data.fillna(0, inplace=True)
 
-    # Extract meal information
-    if not upload_image:
-        selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
-        meal_time = selected_food_data['datetime'].iloc[-1]
-        message = selected_food_data['message'].iloc[-1]
+    selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+    meal_time = selected_food_data['datetime'].iloc[-1]
+    message = selected_food_data['message'].iloc[-1]
 
-        selected_day =  int(meal_time.strftime('%d'))
-        st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
-
-        image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
-
-    else:
-        if 'parsed_info' not in st.session_state:
-            st.error("Please analyze the image first!")
-            st.stop()
-            
-        selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
-        meal_time = selected_food_data['datetime'].iloc[-1]
-
-        for feature in ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']:
-            selected_food_data.at[selected_food_data.index[-1], feature] = st.session_state['parsed_info'][feature]
-
-        selected_day =  int(meal_time.strftime('%d'))
-        st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
-
-        image_path = uploaded_image
+    selected_day =  int(meal_time.strftime('%d'))
+    
+    # Show preview in sidebar
+    image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
+    with st.sidebar:
+        st.image(image_path, caption="Preview", width=100)
         
+    st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
+    
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -403,10 +362,12 @@ if submit_button or (upload_image and api_key and uploaded_image):
         with st.expander("View LLM Reasoning"):
             st.write(message)
         with st.expander("View LLM Estimations"):
+            llm_estimations = ""
             for feature in features:
                 if feature == 'fast_insulin' or feature == 'slow_insulin':
                     continue
-                st.write(f"{feature}: {selected_food_data[feature].iloc[-1]}")
+                llm_estimations += f"{feature}: {selected_food_data[feature].iloc[-1]}\n"
+            st.write(llm_estimations)
 
     # Call the function
     glucose_data, combined_data = prepare_glucose_data(glucose_data, prediction_horizon)
@@ -533,4 +494,4 @@ if submit_button or (upload_image and api_key and uploaded_image):
         st.pyplot(fig)
     with tab3:
     # Call the new function for meal modification suggestions
-        meal_modification_suggestions(processed_data, model, X_test)
+        meal_modification_suggestions(processed_data, model, X_test, llm_estimations)
