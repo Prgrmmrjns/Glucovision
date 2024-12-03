@@ -4,8 +4,6 @@ import numpy as np
 import joblib
 import os
 import plotly.graph_objects as go
-import lime
-import lime.lime_tabular
 import matplotlib.pyplot as plt
 import base64
 import re
@@ -47,24 +45,27 @@ PATIENTS = ['001', '002', '004', '006', '007', '008']
 # Features used in the model
 features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'proteins', 'fast_insulin', 'slow_insulin']
 
+
+
 # Metabolism parameters for features (sensitivity and peak time)
 feature_params = {
-    'simple_sugars': [0.5, 0.5],
+    'simple_sugars': [0.4, 0.5],  # [metabolism_rate_param, peak_time]
     'complex_sugars': [0.3, 0.5],
     'proteins': [0.2, 3.5],
     'fats': [0.05, 3.5], 
-    'dietary_fibers': [0.03, 3.5],
+    'dietary_fibers': [0.05, 3.5],
     'fast_insulin': [1.0, 0.5], 
     'slow_insulin': [0.5, 1.0]
 }
 
-def get_trend_intercept(window):
-    """
-    Calculate the linear trend (intercept) of a rolling window.
-    """
+model = 'gpt4o'
+
+def get_projected_value(window, prediction_horizon):
     x = np.arange(len(window))
-    coeffs = np.polyfit(x, window, deg=2)
-    return coeffs[1]  
+    coeffs = np.polyfit(x, window, deg=3)
+    poly = np.poly1d(coeffs)
+    projected_value = poly(len(window) + prediction_horizon)
+    return projected_value
 
 def get_available_images(patient):
     """
@@ -75,7 +76,7 @@ def get_available_images(patient):
         return [f for f in os.listdir(image_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
     return []
 
-def add_features_and_create_patient_data(params, features, prediction_horizon):
+def add_features(params, features, prediction_horizon):
     """
     Add metabolic features to glucose data based on food and insulin intake.
     """
@@ -108,42 +109,31 @@ def add_features_and_create_patient_data(params, features, prediction_horizon):
 
     return glucose_data
 
-def prepare_glucose_data(glucose_data, prediction_horizon, meal_time, selected_food_data, insulin_data):
+def prepare_glucose_data(glucose_data, prediction_horizon):
     # Prepare glucose data
     glucose_data['hour'] = glucose_data['datetime'].dt.hour
-    glucose_data['glucose_next'] = glucose_data['glucose'] - glucose_data['glucose'].shift(-prediction_horizon)
-    glucose_data['glucose_change'] = glucose_data['glucose'] - glucose_data['glucose'].shift(1)
-    glucose_data['glucose_change_6'] = glucose_data['glucose'] - glucose_data['glucose'].shift(6)
-    glucose_data['glucose_change_sh_1'] = glucose_data['glucose_change'].shift(1)
-    glucose_data['glucose_change_sh_3'] = glucose_data['glucose_change'].shift(3)
-    glucose_data['glucose_change_std2'] = glucose_data['glucose_change'].rolling(window=2).std()
-    glucose_data['glucose_change_std3'] = glucose_data['glucose_change'].rolling(window=3).std()
-    glucose_data['glucose_change_std6'] = glucose_data['glucose_change'].rolling(window=6).std()
 
-    # Calculate RSI
+    glucose_data['glucose_next'] = glucose_data['glucose'] - glucose_data['glucose'].shift(-prediction_horizon)
+
+    glucose_data['glucose_change'] = glucose_data['glucose'] - glucose_data['glucose'].shift(1)
+
+    glucose_data[f'glucose_change_sh_3'] = glucose_data['glucose_change'].shift(3)
+
+    for window in [2, 3, 6]:
+        glucose_data[f'glucose_change_std_{window}'] = glucose_data['glucose_change'].rolling(window=window).std()
+    
     delta = glucose_data['glucose'].diff(1)
     gain = delta.where(delta > 0, 0).rolling(window=6).mean()
     loss = -delta.where(delta < 0, 0).rolling(window=6).mean()
     glucose_data['glucose_rsi'] = 100 - (100 / (1 + gain / loss))
 
-    # Compute trend intercepts
-    glucose_data['glucose_change_trend_intercept'] = glucose_data['glucose_change'].rolling(
+    glucose_data['glucose_change_projected'] = glucose_data['glucose_change'].rolling(
         window=6, min_periods=6
-    ).apply(get_trend_intercept)
-    glucose_data['glucose_trend_intercept'] = glucose_data['glucose'].rolling(
+    ).apply(lambda window: get_projected_value(window, prediction_horizon))
+    glucose_data['glucose_projected'] = glucose_data['glucose'].rolling(
         window=6, min_periods=6
-    ).apply(get_trend_intercept)
+    ).apply(lambda window: get_projected_value(window, prediction_horizon))
     glucose_data.dropna(subset=['glucose_next'], inplace=True)
-
-    # Update combined data
-    combined_data = pd.concat([selected_food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
-    combined_data.fillna(0, inplace=True)
-
-    # Filter data within 2 hours after meal time
-    time_mask = (combined_data['datetime'] >= meal_time) & \
-                (combined_data['datetime'] <= meal_time + pd.Timedelta(hours=2))
-    combined_data = combined_data[time_mask]
-    
     return glucose_data, combined_data
 
 def encode_image(image_path):
@@ -161,6 +151,109 @@ def parse_nutritional_info(text):
     dietary_fibers = nutritional_info.get('Dietary fibers (g)', 0)
     weight = nutritional_info.get('Weight (g)', 0)
     return simple_sugars, complex_sugars, proteins, fats, dietary_fibers, weight
+
+def openai_api_call(base64_image, llm_prompt):
+    headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {api_key}"
+    }
+    payload = {
+    "model": "gpt-4o",
+    "messages": [
+        {
+        "role": "user",
+        "content": [
+            {
+            "type": "text",
+            "text": llm_prompt
+            },
+            {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{base64_image}"
+            }
+            }
+        ]
+        }
+    ],
+    "max_tokens": 300
+    }
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    message = response.json()['choices'][0]['message']['content']
+    return message
+
+def meal_modification_suggestions(processed_data, model, X_test):
+    st.markdown("<h5>Meal Modification Suggestions</h5>", unsafe_allow_html=True)
+
+    # Get the time point with the highest predicted glucose spike
+    time_mask = processed_data['datetime'] >= meal_time
+    max_spike_index = (processed_data.loc[time_mask]['glucose'] - processed_data.loc[time_mask]['glucose_next']).idxmax()
+    hyperglycemia_point = processed_data.loc[max_spike_index]
+    
+    # Only show suggestions if predicted glucose is in hyperglycemic range (>180 mg/dL)
+    predicted_glucose = hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']
+    if predicted_glucose <= 180:
+        st.write("No meal modifications needed - predicted glucose levels are within normal range.")
+        return
+
+    # Extract the meal features
+    meal_features = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']
+    original_meal = X_test.loc[max_spike_index, meal_features]
+
+    # Define increments for grid search
+    increments = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+
+    # Initialize a DataFrame to store results
+    results = pd.DataFrame(columns=meal_features + ['predicted_glucose'])
+
+    # Perform grid search over meal feature modifications
+    for feature in meal_features:
+        for increment in increments:
+            modified_meal = original_meal.copy()
+            modified_meal[feature] += increment
+            modified_meal = modified_meal.clip(lower=0)  # Ensure no negative values
+
+            # Prepare the modified input
+            X_modified = X_test.loc[max_spike_index].copy()
+            X_modified.update(modified_meal)
+            X_modified = X_modified.values.reshape(1, -1)
+
+            # Predict the glucose level
+            predicted_glucose = X_modified[0][X_test.columns.get_loc('glucose')] + model.predict(X_modified)[0]
+
+            # Store the results
+            result = modified_meal.to_dict()
+            result['predicted_glucose'] = predicted_glucose
+            results = pd.concat([results, pd.DataFrame([result])], ignore_index=True)
+
+    # Find the best modification (lowest predicted glucose)
+    best_modification = results.loc[results['predicted_glucose'].idxmin()]
+
+    # Display the results
+    st.write("### Suggested Meal Modifications:")
+    st.write(f"To reduce your predicted glucose spike from **{hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']:.2f} mg/dL** to **{best_modification['predicted_glucose']:.2f} mg/dL**, consider making the following changes to your meal:")
+
+    modifications = {}
+    for feature in meal_features:
+        change = best_modification[feature] - original_meal[feature]
+        if change != 0:
+            modifications[feature.replace('_', ' ').title()] = int(change)
+
+    st.write(modifications)
+
+    # Use LLM API to generate suggestions if API key is provided
+    if 'api_key' in globals():
+        if not upload_image:
+            base64_image = encode_image(image_path)
+        else:
+            base64_image = base64.b64encode(uploaded_image.getvalue()).decode('utf-8')
+            
+        #suggestion = openai_api_call(base64_image, modifications)
+        suggestion = 'LLM suggestion not implemented yet.'
+        st.write("### LLM Suggestions:")
+        st.write(suggestion)
+    else:
+        st.info("To get detailed LLM suggestions, please provide an OpenAI API key.")
 
 st.markdown("<h3 style='margin-top:-2rem;'>Glucovision: Glucose Level Forecasting Using Multimodal LLMs 👀</h3>", unsafe_allow_html=True)
 st.markdown("""
@@ -191,9 +284,10 @@ with st.sidebar:
         format_func=lambda x: x.split('.')[0].replace('_', ' ').title()
     )
 
+    api_key = st.text_input("Enter your OPENAI API key (optional)", type="password")
+
     upload_image = st.toggle("Upload own image", value=False)
     if upload_image:
-        api_key = st.text_input("Enter your OPENAI API key", type="password")
         if not api_key:
             st.warning("Enter your OpenAI API key first!")
             st.stop()
@@ -241,204 +335,195 @@ with st.sidebar:
                 st.write("Error parsing nutritional information. Please try again.")
                 st.stop()
 
-    selected_model = st.selectbox(
-        "Model",
-        ['llama', 'gpt4o', 'sonnet'],
-        format_func=lambda x: x.upper()
-    )
-
     prediction_horizon = st.selectbox(
         "Prediction Horizon",
-        [6, 9, 12],
+        [6, 12],
     )
 
-# Load data
-@st.cache_data
-def load_data(patient, model):
-    # Load food data
-    food_data = pd.read_csv(f"food_data/{model}/{patient}.csv")
-    # Load insulin data
-    insulin_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/insulin.csv")
-    # Load glucose data
-    glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/glucose.csv")
-    return food_data, insulin_data, glucose_data
+    submit_button = st.button("Generate Predictions")
 
-food_data, insulin_data, glucose_data = load_data(selected_patient, selected_model)
-# Preprocess data
-glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
-glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
-glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1, inplace=True)
-insulin_data["datetime"] = pd.to_datetime(insulin_data["date"] + ' ' + insulin_data["time"])
-insulin_data.drop(['comment', 'date', 'time'], axis=1, inplace=True)
-food_data['datetime'] = pd.to_datetime(food_data['datetime'], format='%Y:%m:%d %H:%M:%S')
+if submit_button or (upload_image and api_key and uploaded_image):
+    # Load data
+    @st.cache_data
+    def load_data(patient, model):
+        # Load food data
+        food_data = pd.read_csv(f"food_data/{model}/{patient}.csv")
+        # Load insulin data
+        insulin_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/insulin.csv")
+        # Load glucose data
+        glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/glucose.csv")
+        return food_data, insulin_data, glucose_data
 
-# Combine food and insulin data
-combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
-combined_data.fillna(0, inplace=True)
+    food_data, insulin_data, glucose_data = load_data(selected_patient, model)
+    # Preprocess data
+    glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
+    glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
+    glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1, inplace=True)
+    insulin_data["datetime"] = pd.to_datetime(insulin_data["date"] + ' ' + insulin_data["time"])
+    insulin_data.drop(['comment', 'date', 'time'], axis=1, inplace=True)
+    food_data['datetime'] = pd.to_datetime(food_data['datetime'], format='%Y:%m:%d %H:%M:%S')
 
-# Extract meal information
-if not upload_image:
-    selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
-    meal_time = selected_food_data['datetime'].iloc[-1]
-    message = selected_food_data['message'].iloc[-1]
+    # Combine food and insulin data
+    combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
+    combined_data.fillna(0, inplace=True)
 
-    selected_day =  int(meal_time.strftime('%d'))
-    st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
+    # Extract meal information
+    if not upload_image:
+        selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+        meal_time = selected_food_data['datetime'].iloc[-1]
+        message = selected_food_data['message'].iloc[-1]
 
-    image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
+        selected_day =  int(meal_time.strftime('%d'))
+        st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
 
-else:
-    if 'parsed_info' not in st.session_state:
-        st.error("Please analyze the image first!")
-        st.stop()
-        
-    selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
-    meal_time = selected_food_data['datetime'].iloc[-1]
+        image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
 
-    for feature in ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'weight']:
-        selected_food_data.at[selected_food_data.index[-1], feature] = st.session_state['parsed_info'][feature]
-
-    selected_day =  int(meal_time.strftime('%d'))
-    st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
-
-    image_path = uploaded_image
-    
-col1, col2 = st.columns([1, 2])
-
-with col1:
-    st.image(image_path, caption=f"Patient {selected_patient} - {selected_image}", width=200)
-
-with col2:
-    with st.expander("View LLM Reasoning"):
-        st.write(message)
-    with st.expander("View LLM Estimations"):
-        for feature in features:
-            if feature == 'fast_insulin' or feature == 'slow_insulin':
-                continue
-            st.write(f"{feature}: {selected_food_data[feature].iloc[-1]}")
-
-# Call the function
-glucose_data, combined_data = prepare_glucose_data(glucose_data, prediction_horizon, meal_time, selected_food_data, insulin_data)
-
-# Add features
-processed_data = add_features_and_create_patient_data(feature_params, features, prediction_horizon)
-processed_data.dropna(inplace=True)
-
-# Apply same time filter to processed data
-time_mask = (processed_data['datetime'] >= meal_time) & \
-            (processed_data['datetime'] <= meal_time + pd.Timedelta(hours=2))
-processed_data = processed_data[time_mask]
-
-# Check if there's enough data for prediction
-if len(processed_data) < prediction_horizon:
-    st.error("⚠️ Not enough data available to make predictions. Please select a different time period or meal.")
-    st.stop()
-
-# Load model and prepare data
-X_test = processed_data.drop(['datetime', 'glucose_next'], axis=1)
-y_test = processed_data['glucose'] - processed_data['glucose_next']
-model = joblib.load(f'models/{selected_model}/6/1_{selected_patient}.joblib')
-
-# Train Random Forest for feature importances
-model = joblib.load(f'models/{selected_model}/6/{selected_day}_001.joblib')
-feature_importances = pd.Series(model.feature_importances_, index=X_test.columns)
-
-# Add tabs for the outputs
-st.markdown("<h5>Results</h5>", unsafe_allow_html=True)
-tab1, tab2 = st.tabs(["Predictions", "Feature Importances"])
-
-with tab1:
-    st.markdown("<h5>Predictions</h5>", unsafe_allow_html=True)
-
-    # Filter predictions starting 30 minutes after meal time
-    time_mask = processed_data['datetime'] >= meal_time + pd.Timedelta(minutes=prediction_horizon*5)
-    predictions = model.predict(X_test[time_mask])
-    predictions = processed_data[time_mask]['glucose'] - predictions
-
-    # Check for hyper/hypoglycemic predictions
-    hyper_mask = predictions > 180
-    hypo_mask = predictions < 70
-
-    if any(hyper_mask):
-        hyper_times = processed_data.loc[time_mask][hyper_mask]['datetime'].dt.strftime('%H:%M').tolist()
-        st.warning(f"⬆️ 🔴 High glucose predicted at: {', '.join(hyper_times)}")
-    elif any(hypo_mask):
-        hypo_times = processed_data.loc[time_mask][hypo_mask]['datetime'].dt.strftime('%H:%M').tolist() 
-        st.warning(f"⬇️ 💙 Low glucose predicted at: {', '.join(hypo_times)}")
     else:
-        st.success("✨ 🎯 Glucose levels are predicted to stay in safe range for all timepoints!")
+        if 'parsed_info' not in st.session_state:
+            st.error("Please analyze the image first!")
+            st.stop()
+            
+        selected_food_data = food_data[food_data.index <= food_data[food_data['picture'] == selected_image].index[0]]
+        meal_time = selected_food_data['datetime'].iloc[-1]
 
-    # Calculate RMSE for predictions 30 minutes onwards
-    rmse = np.sqrt(np.mean((predictions - y_test[time_mask]) ** 2))
+        for feature in ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']:
+            selected_food_data.at[selected_food_data.index[-1], feature] = st.session_state['parsed_info'][feature]
 
-    # Define glycemic zones
-    def glycemic_zone(glucose_level):
-        if glucose_level < 70:
-            return 'Hypoglycemia'
-        elif 70 <= glucose_level <= 180:
-            return 'Normal'
+        selected_day =  int(meal_time.strftime('%d'))
+        st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
+
+        image_path = uploaded_image
+        
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        st.image(image_path, caption=f"Patient {selected_patient} - {selected_image}", width=200)
+
+    with col2:
+        with st.expander("View LLM Reasoning"):
+            st.write(message)
+        with st.expander("View LLM Estimations"):
+            for feature in features:
+                if feature == 'fast_insulin' or feature == 'slow_insulin':
+                    continue
+                st.write(f"{feature}: {selected_food_data[feature].iloc[-1]}")
+
+    # Call the function
+    glucose_data, combined_data = prepare_glucose_data(glucose_data, prediction_horizon)
+
+    # Add features
+    processed_data = add_features(feature_params, features, prediction_horizon)
+    processed_data.dropna(inplace=True)
+
+    # Apply same time filter to processed data
+    time_mask = (processed_data['datetime'] >= meal_time) & \
+                (processed_data['datetime'] <= meal_time + pd.Timedelta(hours=2))
+    processed_data = processed_data[time_mask]
+
+    # Check if there's enough data for prediction
+    if len(processed_data) < prediction_horizon:
+        st.error("⚠️ Not enough data available to make predictions. Please select a different time period or meal.")
+        st.stop()
+
+    # Load model and prepare data
+    X_test = processed_data.drop(['datetime', 'glucose_next'], axis=1)
+    y_test = processed_data['glucose'] - processed_data['glucose_next']
+    model = joblib.load(f'models/{model}/6_{selected_day}_{selected_patient}.joblib')
+
+    feature_importances = pd.Series(model.feature_importances_, index=X_test.columns)
+
+    # Add tabs for the outputs
+    st.markdown("<h5>Results</h5>", unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["Predictions", "Feature Importances", "Meal Modification Suggestions"])
+
+    with tab1:
+        st.markdown("<h5>Predictions</h5>", unsafe_allow_html=True)
+
+        # Filter predictions starting 30 minutes after meal time
+        time_mask = processed_data['datetime'] >= meal_time + pd.Timedelta(minutes=prediction_horizon*5)
+        predictions = model.predict(X_test[time_mask])
+        predictions = processed_data[time_mask]['glucose'] - predictions
+
+        # Check for hyper/hypoglycemic predictions
+        hyper_mask = predictions > 180
+        hypo_mask = predictions < 70
+
+        if any(hyper_mask):
+            hyper_times = processed_data.loc[time_mask][hyper_mask]['datetime'].dt.strftime('%H:%M').tolist()
+            st.warning(f"⬆️ 🔴 High glucose predicted at: {', '.join(hyper_times)}")
+        elif any(hypo_mask):
+            hypo_times = processed_data.loc[time_mask][hypo_mask]['datetime'].dt.strftime('%H:%M').tolist() 
+            st.warning(f"⬇️ 💙 Low glucose predicted at: {', '.join(hypo_times)}")
         else:
-            return 'Hyperglycemia'
+            st.success("✨ 🎯 Glucose levels are predicted to stay in safe range for all timepoints!")
 
-    # Create a DataFrame for predictions starting 30 min after meal
-    prediction_data = processed_data[time_mask].copy()
-    prediction_data['Zone'] = predictions.apply(glycemic_zone)
+        # Calculate RMSE for predictions 30 minutes onwards
+        rmse = np.sqrt(np.mean((predictions - y_test[time_mask]) ** 2))
 
-    # Create figure showing predictions vs ground truth
-    fig = go.Figure()
+        # Define glycemic zones
+        def glycemic_zone(glucose_level):
+            if glucose_level < 70:
+                return 'Hypoglycemia'
+            elif 70 <= glucose_level <= 180:
+                return 'Normal'
+            else:
+                return 'Hyperglycemia'
 
-    # Plot ground truth from meal time onwards
-    fig.add_trace(go.Scatter(
-        x=processed_data['datetime'],
-        y=y_test,
-        name='Ground Truth',
-        line=dict(color='blue')
-    ))
+        # Create a DataFrame for predictions starting 30 min after meal
+        prediction_data = processed_data[time_mask].copy()
+        prediction_data['Zone'] = predictions.apply(glycemic_zone)
 
-    # Plot predictions from 30 min onwards
-    fig.add_trace(go.Scatter(
-        x=prediction_data['datetime'],
-        y=predictions,
-        name='Predictions',
-        line=dict(color='red')
-    ))
+        # Create figure showing predictions vs ground truth
+        fig = go.Figure()
 
-    # Add shaded regions for glycemic zones
-    fig.add_hrect(y0=0, y1=70, fillcolor="red", opacity=0.1, line_width=0)
-    fig.add_hrect(y0=70, y1=180, fillcolor="green", opacity=0.1, line_width=0)
-    fig.add_hrect(y0=180, y1=400, fillcolor="orange", opacity=0.1, line_width=0)
+        # Plot ground truth from meal time onwards
+        fig.add_trace(go.Scatter(
+            x=processed_data['datetime'],
+            y=y_test,
+            name='Ground Truth',
+            line=dict(color='blue')
+        ))
 
-    # Add RMSE annotation
-    fig.add_annotation(
-        text=f"RMSE: {rmse:.2f} mg/dL",
-        xref="paper", yref="paper",
-        x=0.02, y=0.98,
-        showarrow=False,
-        font=dict(size=12),
-        bgcolor="white",
-        bordercolor="black",
-        borderwidth=1
-    )
+        # Plot predictions from 30 min onwards
+        fig.add_trace(go.Scatter(
+            x=prediction_data['datetime'],
+            y=predictions,
+            name='Predictions',
+            line=dict(color='red')
+        ))
 
-    fig.update_layout(
-        title='Glucose Level Predictions vs Ground Truth for the next two hours following the selected meal',
-        xaxis_title='Time',
-        yaxis_title='Glucose Level (mg/dL)',
-        showlegend=True,
-        height=400,
-        margin=dict(l=20, r=20, t=40, b=20),
-        font=dict(size=10)
-    )
+        # Add shaded regions for glycemic zones
+        fig.add_hrect(y0=0, y1=70, fillcolor="red", opacity=0.1, line_width=0)
+        fig.add_hrect(y0=70, y1=180, fillcolor="green", opacity=0.1, line_width=0)
+        fig.add_hrect(y0=180, y1=400, fillcolor="orange", opacity=0.1, line_width=0)
 
-    st.plotly_chart(fig, use_container_width=True)
+        # Add RMSE annotation
+        fig.add_annotation(
+            text=f"RMSE: {rmse:.2f} mg/dL",
+            xref="paper", yref="paper",
+            x=0.02, y=0.98,
+            showarrow=False,
+            font=dict(size=12),
+            bgcolor="white",
+            bordercolor="black",
+            borderwidth=1
+        )
 
-with tab2:
-    st.markdown("<h5>Feature Importances</h5>", unsafe_allow_html=True)
+        fig.update_layout(
+            title='Glucose Level Predictions vs Ground Truth for the next two hours following the selected meal',
+            xaxis_title='Time',
+            yaxis_title='Glucose Level (mg/dL)',
+            showlegend=True,
+            height=400,
+            margin=dict(l=20, r=20, t=40, b=20),
+            font=dict(size=10)
+        )
 
-    # Add toggle for global vs local feature importances
-    importance_type = st.radio("Select Feature Importance Type", ["Global", "Local"], key='importance_type')
+        st.plotly_chart(fig, use_container_width=True)
 
-    if importance_type == "Global":
+    with tab2:
+        st.markdown("<h5>Feature Importances</h5>", unsafe_allow_html=True)
+
         # Plot global feature importances from random forest
         fig, ax = plt.subplots()
         feature_importances.sort_values().plot(kind='barh', ax=ax)
@@ -446,43 +531,6 @@ with tab2:
         ax.set_ylabel('Feature')
         plt.title("Global Feature Importances")
         st.pyplot(fig)
-    else:
-        # Allow user to select specific time point for local explanation
-        time_options = processed_data[time_mask]['datetime'].dt.strftime('%H:%M').tolist()
-        selected_time = st.selectbox("Select time point for local explanation", time_options)
-
-        # Get index of selected time
-        selected_idx = processed_data.loc[time_mask]['datetime'].dt.strftime('%H:%M').tolist().index(selected_time)
-
-        # Use LIME to explain predictions at selected time point
-        explainer = lime.lime_tabular.LimeTabularExplainer(
-            X_test.values,
-            feature_names=X_test.columns,
-            class_names=['glucose'],
-            discretize_continuous=True,
-            mode='regression'
-        )
-
-        exp = explainer.explain_instance(
-            X_test.loc[time_mask].values[selected_idx],
-            model.predict,
-            num_features=10
-        )
-
-        # Extract feature contributions
-        exp_list = exp.as_list()
-        feature_names, contributions = zip(*exp_list)
-
-        # Create DataFrame for plotting
-        feature_importances_df = pd.DataFrame({
-            'Feature': feature_names,
-            'Contribution': contributions
-        })
-        feature_importances_df.sort_values('Contribution', inplace=True)
-
-        # Plot bar chart
-        fig, ax = plt.subplots()
-        ax.barh(feature_importances_df['Feature'], feature_importances_df['Contribution'], color='skyblue')
-        ax.set_xlabel('Contribution to Prediction')
-        ax.set_title('Top 10 Features for Prediction at Selected Time Point')
-        st.pyplot(fig)
+    with tab3:
+    # Call the new function for meal modification suggestions
+        meal_modification_suggestions(processed_data, model, X_test)
