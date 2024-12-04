@@ -140,18 +140,6 @@ def prepare_glucose_data(glucose_data, prediction_horizon):
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
-  
-def parse_nutritional_info(text):
-    pattern = r'(Simple sugars \(g\)|Complex sugars \(g\)|Proteins \(g\)|Fats \(g\)|Dietary fibers \(g\)|Weight \(g\)):\s*(\d+)'
-    matches = re.findall(pattern, text)
-    nutritional_info = {match[0]: int(match[1]) for match in matches}
-    simple_sugars = nutritional_info.get('Simple sugars (g)', 0)
-    complex_sugars = nutritional_info.get('Complex sugars (g)', 0)
-    proteins = nutritional_info.get('Proteins (g)', 0)
-    fats = nutritional_info.get('Fats (g)', 0)
-    dietary_fibers = nutritional_info.get('Dietary fibers (g)', 0)
-    weight = nutritional_info.get('Weight (g)', 0)
-    return simple_sugars, complex_sugars, proteins, fats, dietary_fibers, weight
 
 def openai_api_call(base64_image, llm_instructions, api_key):
     headers = {
@@ -180,8 +168,11 @@ def openai_api_call(base64_image, llm_instructions, api_key):
     "max_tokens": 300
     }
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    message = response.json()['choices'][0]['message']['content']
-    return message
+    try:
+        message = response.json()['choices'][0]['message']['content']
+        return message
+    except (KeyError, IndexError):
+        return response.json()['error']['message']
 
 def meal_modification_suggestions(processed_data, model, X_test, llm_estimations):
     st.markdown("<h5>Meal Modification Suggestions</h5>", unsafe_allow_html=True)
@@ -264,10 +255,8 @@ Format each suggestion as:
 3. The expected benefit for glucose control"""
         
         suggestion = openai_api_call(base64_image, llm_instructions, api_key)
-        st.write("### LLM Suggestions:")
         st.write(suggestion)
-    else:
-        st.info("To get LLM suggestions, please provide an OpenAI API key.")
+
 
 st.markdown("<h3 style='margin-top:-2rem;'>Glucovision: Glucose Level Forecasting Using Multimodal LLMs 👀</h3>", unsafe_allow_html=True)
 st.markdown("""
