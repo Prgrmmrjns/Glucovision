@@ -185,7 +185,7 @@ def meal_modification_suggestions(processed_data, model, X_test, llm_estimations
     # Only show suggestions if predicted glucose is in hyperglycemic range (>180 mg/dL)
     predicted_glucose = hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']
     if predicted_glucose <= 180:
-        st.write("No meal modifications needed - predicted glucose levels are within normal range.")
+        st.write("No meal modifications needed - predicted glucose levels are within normal range for the first prediction.")
         return
 
     # Extract the meal features
@@ -260,7 +260,7 @@ Format each suggestion as:
 
 st.markdown("<h3 style='margin-top:-2rem;'>Glucovision: Glucose Level Forecasting Using Multimodal LLMs 👀</h3>", unsafe_allow_html=True)
 st.markdown("""
-<small>Welcome to Glucovision, a framework designed to forecast glucose levels in Type 1 Diabetes patients by incorporating meal image information using multimodal LLMs.
+<small>Welcome to Glucovision, a framework designed to forecast glucose levels and suggest meal modifications for Type 1 Diabetes patients by incorporating meal image information using multimodal LLMs.
 
 **Note:** This app is a demonstration using the D1namo dataset and is not intended for medical advice.</small>
 """, unsafe_allow_html=True)
@@ -285,7 +285,7 @@ with st.sidebar:
     
     selected_image = st.selectbox(
         "Image",
-        available_images,
+        sorted(available_images),
         format_func=lambda x: x.split('.')[0].replace('_', ' ').title()
     )
 
@@ -334,11 +334,6 @@ if submit_button and api_key:
     message = selected_food_data['message'].iloc[-1]
 
     selected_day =  int(meal_time.strftime('%d'))
-    
-    # Show preview in sidebar
-    image_path = f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/food_pictures/{selected_image}"
-    with st.sidebar:
-        st.image(image_path, caption="Preview", width=100)
         
     st.markdown("<h5>Selected meal image</h5>", unsafe_allow_html=True)
     
