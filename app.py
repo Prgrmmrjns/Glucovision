@@ -176,67 +176,68 @@ def openai_api_call(base64_image, llm_instructions, api_key):
 
 def meal_modification_suggestions(processed_data, model, X_test, llm_estimations):
     st.markdown("<h5>Meal Modification Suggestions</h5>", unsafe_allow_html=True)
-
-    # Get the time point with the highest predicted glucose spike
-    time_mask = processed_data['datetime'] >= meal_time
-    max_spike_index = (processed_data.loc[time_mask]['glucose'] - processed_data.loc[time_mask]['glucose_next']).idxmax()
-    hyperglycemia_point = processed_data.loc[max_spike_index]
     
-    # Only show suggestions if predicted glucose is in hyperglycemic range (>180 mg/dL)
-    predicted_glucose = hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']
-    if predicted_glucose <= 180:
-        st.write("No meal modifications needed - predicted glucose levels are within normal range for the first prediction.")
-        return
+    with st.spinner('Analyzing meal and generating suggestions... hang tight! 🍽️'):
+        # Get the time point with the highest predicted glucose spike
+        time_mask = processed_data['datetime'] >= meal_time
+        max_spike_index = (processed_data.loc[time_mask]['glucose'] - processed_data.loc[time_mask]['glucose_next']).idxmax()
+        hyperglycemia_point = processed_data.loc[max_spike_index]
+        
+        # Only show suggestions if predicted glucose is in hyperglycemic range (>180 mg/dL)
+        predicted_glucose = hyperglycemia_point['glucose'] + hyperglycemia_point['glucose_next']
+        if predicted_glucose <= 180:
+            st.write("No meal modifications needed - predicted glucose levels are within normal range for the first prediction.")
+            return
 
-    # Extract the meal features
-    meal_features = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']
-    original_meal = X_test.loc[max_spike_index, meal_features]
+        # Extract the meal features
+        meal_features = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']
+        original_meal = X_test.loc[max_spike_index, meal_features]
 
-    # Define increments for grid search
-    adjustments = [-20, -10, 0, 10, 20]
+        # Define increments for grid search
+        adjustments = [-20, -10, 0, 10, 20]
 
-    # Initialize a DataFrame to store results
-    results = []
+        # Initialize a DataFrame to store results
+        results = []
 
-    # Perform grid search over combinations of meal feature modifications
-    for deltas in itertools.product(adjustments, repeat=len(meal_features)):
-        modified_meal = original_meal.copy()
-        for i, feature in enumerate(meal_features):
-            modified_meal[feature] += deltas[i]
-        modified_meal = modified_meal.clip(lower=0)
+        # Perform grid search over combinations of meal feature modifications
+        for deltas in itertools.product(adjustments, repeat=len(meal_features)):
+            modified_meal = original_meal.copy()
+            for i, feature in enumerate(meal_features):
+                modified_meal[feature] += deltas[i]
+            modified_meal = modified_meal.clip(lower=0)
 
-        # Prepare the modified input
-        X_modified = X_test.loc[max_spike_index].copy()
-        X_modified.update(modified_meal)
-        X_modified = X_modified.values.reshape(1, -1)
+            # Prepare the modified input
+            X_modified = X_test.loc[max_spike_index].copy()
+            X_modified.update(modified_meal)
+            X_modified = X_modified.values.reshape(1, -1)
 
-        # Predict the glucose level
-        predicted_glucose = X_modified[0][X_test.columns.get_loc('glucose')] - model.predict(X_modified)[0]
+            # Predict the glucose level
+            predicted_glucose = X_modified[0][X_test.columns.get_loc('glucose')] - model.predict(X_modified)[0]
 
-        # Store the results
-        result = modified_meal.to_dict()
-        result['predicted_glucose'] = predicted_glucose
-        result['modifications'] = {meal_features[i]: deltas[i] for i in range(len(meal_features))}
-        results.append(result)
+            # Store the results
+            result = modified_meal.to_dict()
+            result['predicted_glucose'] = predicted_glucose
+            result['modifications'] = {meal_features[i]: deltas[i] for i in range(len(meal_features))}
+            results.append(result)
 
-    # Convert results to DataFrame
-    results_df = pd.DataFrame(results)
+        # Convert results to DataFrame
+        results_df = pd.DataFrame(results)
 
-    # Find the best modification (lowest predicted glucose)
-    best_modification = results_df.loc[results_df['predicted_glucose'].idxmin()]
+        # Find the best modification (lowest predicted glucose)
+        best_modification = results_df.loc[results_df['predicted_glucose'].idxmin()]
 
-    # Display the results
-    st.write("### Suggested Meal Modifications:")
-    st.write(f"To reduce your predicted glucose spike from **{hyperglycemia_point['glucose'] - hyperglycemia_point['glucose_next']:.2f} mg/dL** to **{best_modification['predicted_glucose']:.2f} mg/dL**, consider making the following changes to your meal:")
+        # Display the results
+        st.write("### Suggested Meal Modifications:")
+        st.write(f"To reduce your predicted glucose spike from **{hyperglycemia_point['glucose'] - hyperglycemia_point['glucose_next']:.2f} mg/dL** to **{best_modification['predicted_glucose']:.2f} mg/dL**, consider making the following changes to your meal:")
 
-    # Extract modifications
-    modifications = {k.replace('_', ' ').title(): int(v) for k, v in best_modification['modifications'].items() if v != 0}
-    
-    # Prepare the LLM prompt
-    if 'api_key' in globals():
-        base64_image = encode_image(image_path)
-        modifications_text = '\n'.join([f"- {k}: {v:+d}g" for k, v in modifications.items()])
-        llm_instructions = f"""Based on the meal shown in the image, provide at maximum 3 specific, actionable suggestions to adjust this meal to reduce glucose spike.
+        # Extract modifications
+        modifications = {k.replace('_', ' ').title(): int(v) for k, v in best_modification['modifications'].items() if v != 0}
+        
+        # Prepare the LLM prompt
+        if 'api_key' in globals():
+            base64_image = encode_image(image_path)
+            modifications_text = '\n'.join([f"- {k}: {v:+d}g" for k, v in modifications.items()])
+            llm_instructions = f"""Based on the meal shown in the image, provide at maximum 3 specific, actionable suggestions to adjust this meal to reduce glucose spike.
 
 **Original Estimated Nutritional Values:**
 {llm_estimations}
@@ -467,7 +468,7 @@ if submit_button and api_key:
         st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
-        st.markdown("<h5>Feature Importances</h5>", unsafe_allow_html=True)
+        st.markdown("<h5>Feature Importances for the individual patient model</h5>", unsafe_allow_html=True)
 
         # Plot global feature importances from random forest
         fig, ax = plt.subplots()
