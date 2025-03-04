@@ -1,7 +1,6 @@
 pandas
 numpy
 joblib
-plotly
 matplotlib
 lightgbm
 requests
