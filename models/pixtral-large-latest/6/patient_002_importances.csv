@@ -1,0 +1,13 @@
+Feature,Importance
+glucose,287
+glucose_change_projected,257
+glucose_projected,240
+glucose_change,204
+hour,186
+proteins,154
+fast_insulin,95
+fats,79
+slow_insulin,55
+dietary_fibers,50
+simple_sugars,32
+complex_sugars,29
