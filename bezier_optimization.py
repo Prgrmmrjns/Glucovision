@@ -27,7 +27,7 @@ prediction_horizons = [6, 9, 12, 18, 24]
 
 # Optimization parameters
 train_size = 0.9
-n_trials = 200
+n_trials = 100
 random_seed = 42
 n_jobs = 6
 
@@ -301,7 +301,7 @@ base_control_points = {
     'slow_insulin': [0.0, 0.0, 1.0, 0.4, 4.0, 0.7, 8.0, 0.0]         # Slower action, extended effect
 }
 
-# Run optimization for prediction horizon 6
+# Run optimization
 patient_params = optimize_patient_parameters_bezier(patients, 6, base_control_points)
 # Save the optimized parameters
 os.makedirs('parameters', exist_ok=True)
@@ -420,5 +420,4 @@ for approach in approaches:
         current_rmse = current_metrics['RMSE'].mean()
         print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {current_rmse:.4f}")
 
-# Save the final metrics dataframe
 df.to_csv('evaluation_metrics_bezier.csv', index=False) 
