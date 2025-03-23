@@ -5,14 +5,13 @@ from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 import os
 import pickle
-import logging
-import pyswarms as ps
+import optuna
+from joblib import Parallel, delayed
 from scipy.special import comb
 import json
 import warnings
 
 # Silence warnings
-logging.getLogger('optuna').setLevel(logging.ERROR)
 warnings.filterwarnings('ignore')
 
 # Constants
@@ -28,8 +27,9 @@ prediction_horizons = [6, 9, 12, 18, 24]
 
 # Optimization parameters
 train_size = 0.9
-n_particles = 100
-iters = 10
+n_trials = 200
+random_seed = 42
+n_jobs = 6
 
 # LightGBM parameters
 lgb_params = {
@@ -62,6 +62,15 @@ def bezier_curve(points, num=50):
     
     for i, point in enumerate(points):
         curve += np.outer(bernstein_poly(i, n, t), point)
+    
+    # Sort curve by x-values to ensure function-like behavior
+    indices = np.argsort(curve[:, 0])
+    curve = curve[indices]
+    
+    # Remove any duplicate x-values (keeping the first occurrence)
+    _, unique_indices = np.unique(curve[:, 0], return_index=True)
+    unique_indices.sort()
+    curve = curve[unique_indices]
     
     return curve
 
@@ -141,34 +150,119 @@ def add_features_bezier(params, features, preprocessed_data, prediction_horizon,
         
         # Compute impact and shift by prediction horizon
         glucose_data[feature] = np.dot(weights, combined_data[feature].values)
-        glucose_data[feature] = glucose_data[feature] -glucose_data[feature].shift(-prediction_horizon)
+        glucose_data[feature] = glucose_data[feature] - glucose_data[feature].shift(-prediction_horizon)
     
     return glucose_data
 
-def objective_bezier(params, data, features, patient, prediction_horizon, train_size, callbacks):
-    results = []
+def optimize_for_patient(patient, prediction_horizon, base_control_points):
+    """Optimize parameters for a single patient"""
+    # Extract first 3 days for training/optimization
+    data = get_data(patient, prediction_horizon)
+    glucose_data, combined_data = data
+    first_days = glucose_data['datetime'].dt.day.unique()[:3]
+    mask = glucose_data['datetime'].dt.day.isin(first_days)
+    data = (glucose_data[mask].copy(), combined_data)
     
-    for p in params:
-        # Evaluate valid parameters
-        result = _evaluate_bezier_params(p, data, features, patient, prediction_horizon, train_size, callbacks)
-        results.append(result)
+    # Create Optuna optimization study with SQLite storage for parallelization
+    storage_name = f"sqlite:///optuna_{patient}_ph{prediction_horizon}.db"
+    study = optuna.create_study(
+        study_name=f"patient_{patient}_ph{prediction_horizon}",
+        direction="minimize",
+        sampler=optuna.samplers.TPESampler(seed=random_seed),
+        storage=storage_name,
+        load_if_exists=True
+    )
     
-    return np.array(results)
+    # Define the objective function for Optuna
+    def objective(trial):
+        # Container for parameters
+        params = {}
+        
+        # Generate parameters for each feature
+        for feature in features:
+            base_points = base_control_points[feature]
+            feature_params = []
+            
+            # First point is fixed at origin (0,0)
+            feature_params.extend([0.0, 0.0])
+            prev_x = 0.0
+            
+            # Generate remaining control points with constraints
+            for i in range(2, len(base_points), 2):
+                base_x, base_y = base_points[i], base_points[i+1]
+                
+                # X coordinates (time) - ensure monotonically increasing
+                min_x = prev_x + 0.1
+                x_val = trial.suggest_float(
+                    f"{feature}_x{i//2}", 
+                    min_x, 
+                    min(24.0, 1.5 * base_x),
+                )
+                feature_params.append(x_val)
+                prev_x = x_val
+                
+                # Y coordinates (effect magnitude)
+                y_val = trial.suggest_float(
+                    f"{feature}_y{i//2}", 
+                    max(0.0, 0.5 * base_y), 
+                    min(1.0, 1.5 * base_y),
+                )
+                feature_params.append(y_val)
+            
+            params[feature] = feature_params
+        
+        # Evaluate the parameters
+        result = evaluate_bezier_params(params, data, features, patient, 
+                                      prediction_horizon, train_size, callbacks)
+        return result
+    
+    # Run optimization with parallelize flag
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs)
+    
+    # Get best parameters
+    best_params = {}
+    for feature in features:
+        feature_params = [0.0, 0.0]  # First point fixed at origin
+        
+        for i in range(2, 8, 2):
+            x_key = f"{feature}_x{i//2}"
+            y_key = f"{feature}_y{i//2}"
+            feature_params.append(study.best_params[x_key])
+            feature_params.append(study.best_params[y_key])
+        
+        best_params[feature] = feature_params
+    
+    print(f"Completed optimization for patient {patient}, best RMSE: {study.best_value:.4f}")
+    
+    # Clean up the database file
+    try:
+        os.remove(f"optuna_{patient}_ph{prediction_horizon}.db")
+    except:
+        pass
+        
+    return patient, best_params
 
-def _evaluate_bezier_params(params, data, features, patient, prediction_horizon, train_size, callbacks):
-    """Helper function to evaluate a single parameter set using Bezier curve mapping"""
-    # Reshape params into feature-specific control points
-    feature_params = {}
-    points_per_feature = 8  # 4 control points with x,y coordinates
+def optimize_patient_parameters_bezier(patients, prediction_horizon, base_control_points):
+    """Optimize parameters for all patients in parallel"""
+    # Use joblib to parallelize across patients
+    results = Parallel(n_jobs=min(len(patients), n_jobs))(
+        delayed(optimize_for_patient)(patient, prediction_horizon, base_control_points)
+        for patient in patients
+    )
     
-    for i, feature in enumerate(features):
-        idx = i * points_per_feature
-        if idx + points_per_feature <= len(params):
-            feature_params[feature] = params[idx:idx + points_per_feature]
+    # Convert results to dictionary
+    patient_feature_params = dict(results)
+    return patient_feature_params
+
+def evaluate_bezier_params(params, data, features, patient, prediction_horizon, train_size, callbacks):
+    """Thread-safe evaluation function"""
+    # Create a local copy of the model to avoid sharing between threads
+    local_model = lgb.LGBMRegressor(**lgb_params)
     
     # Process data with current parameter set
     glucose_data, combined_data = data
-    processed_data = add_features_bezier(feature_params, features, {patient: (glucose_data, combined_data)}, 
+    processed_data = add_features_bezier(params, features, {patient: (glucose_data, combined_data)}, 
                                 prediction_horizon, patient)
     
     # Check for and handle NaN values
@@ -180,101 +274,31 @@ def _evaluate_bezier_params(params, data, features, patient, prediction_horizon,
     
     # Split the data
     X_train, X_val, y_train, y_val = train_test_split(
-        X, y, train_size=train_size, random_state=42
+        X, y, train_size=train_size, random_state=random_seed
     )
     
     # Train model
-    model.fit(
+    local_model.fit(
         X_train, y_train,
         eval_set=[(X_val, y_val)],
         callbacks=callbacks
     )
     
     # Make predictions and calculate RMSE
-    preds = model.predict(X_val)
+    preds = local_model.predict(X_val)
     rmse = np.sqrt(mean_squared_error(y_val, preds))
     return rmse
-
-def optimize_patient_parameters_bezier(patients, prediction_horizon, base_control_points):
-    patient_feature_params = {}
-    
-    for patient in patients:
-        # Extract first 3 days for training/optimization
-        data = get_data(patient, prediction_horizon)
-        glucose_data, combined_data = data
-        first_days = glucose_data['datetime'].dt.day.unique()[:3]
-        mask = glucose_data['datetime'].dt.day.isin(first_days)
-        data = (glucose_data[mask].copy(), combined_data)
-        
-        # Define bounds for control points optimization
-        lb = []  # Lower bounds
-        ub = []  # Upper bounds
-        
-        for feature in features:
-            base_points = base_control_points[feature]
-            
-            # For each control point (x,y), set bounds
-            for i in range(0, len(base_points), 2):
-                x_val, y_val = base_points[i], base_points[i+1]
-                
-                # X coordinates (time)
-                if i == 0:  # First point is always at origin
-                    lb.append(0.0)
-                    ub.append(0.0)
-                else:
-                    lb.append(max(0.0, 0.5 * x_val))
-                    ub.append(min(24.0, 1.5 * x_val))
-                
-                # Y coordinates (effect magnitude)
-                if i == 0:  # First point is always at zero effect
-                    lb.append(0.0)
-                    ub.append(0.0)
-                else:
-                    lb.append(max(0.0, 0.5 * y_val))
-                    ub.append(min(1.0, 1.5 * y_val))
-                    
-        bounds = (np.array(lb), np.array(ub))
-        
-        # Initialize optimizer with Global Best PSO (no KDTree)
-        optimizer = ps.single.GlobalBestPSO(
-            n_particles=n_particles, 
-            dimensions=len(features) * 8,
-            options={
-                'c1': 0.7,
-                'c2': 0.5,
-                'w': 0.8
-            }, 
-            bounds=bounds
-        )
-        
-        # Objective function
-        def obj_func(params):
-            return objective_bezier(params, data, features, patient, prediction_horizon, train_size, callbacks)
-        
-        # Optimize
-        cost, pos = optimizer.optimize(obj_func, iters=iters, verbose=False)
-        
-        # Extract best parameters
-        best_params = {}
-        for i, feature in enumerate(features):
-            idx = i * 8
-            best_params[feature] = pos[idx:idx+8]
-        
-        patient_feature_params[patient] = best_params
-        print(f"Completed optimization for patient {patient}, best RMSE: {cost:.4f}")
-            
-    return patient_feature_params
 
 # Initial control points for Bezier curves
 # Format: [x1, y1, x2, y2, x3, y3, x4, y4] - Four control points per feature
 base_control_points = {
-    'simple_sugars': [0.0, 0.0, 0.5, 0.8, 1.0, 0.5, 2.0, 0.0],       # Fast rise, quick drop
-    'complex_sugars': [0.0, 0.0, 1.0, 0.5, 2.0, 0.7, 4.0, 0.0],      # Slower rise, longer effect
-    'proteins': [0.0, 0.0, 2.0, 0.3, 4.0, 0.6, 8.0, 0.0],           # Very slow rise, extended effect
-    'fats': [0.0, 0.0, 3.0, 0.2, 6.0, 0.4, 10.0, 0.0],              # Slowest rise, longest effect
-    'dietary_fibers': [0.0, 0.0, 0.5, 0.1, 2.0, 0.3, 5.0, 0.0],      # Moderate effect curve
-    'fast_insulin': [0.0, 0.0, 0.3, 0.9, 1.0, 0.3, 2.0, 0.0],        # Fast action, quick drop
-    'slow_insulin': [0.0, 0.0, 1.0, 0.4, 3.0, 0.7, 6.0, 0.0]         # Slower action, extended effect
+    'simple_sugars': [0.0, 0.0, 0.5, 0.8, 1.5, 0.5, 3.0, 0.0],       # Fast rise, quick drop
+    'complex_sugars': [0.0, 0.0, 1.0, 0.5, 3.0, 0.7, 5.0, 0.0],      # Slower rise, longer effect
+    'proteins': [0.0, 0.0, 2.0, 0.3, 5.0, 0.6, 9.0, 0.0],           # Very slow rise, extended effect
+    'fats': [0.0, 0.0, 3.0, 0.2, 7.0, 0.4, 12.0, 0.0],              # Slowest rise, longest effect
+    'dietary_fibers': [0.0, 0.0, 1.0, 0.1, 3.0, 0.3, 6.0, 0.0],      # Moderate effect curve
+    'fast_insulin': [0.0, 0.0, 0.3, 0.9, 1.5, 0.3, 3.0, 0.0],        # Fast action, quick drop
+    'slow_insulin': [0.0, 0.0, 1.0, 0.4, 4.0, 0.7, 8.0, 0.0]         # Slower action, extended effect
 }
 
 # Run optimization for prediction horizon 6
