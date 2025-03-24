@@ -45,7 +45,6 @@ lgb_params = {
     'num_threads': 5,
     'verbosity': -1,
     'reg_alpha': 10,
-    'min_child_samples': 10,
 }
 model = lgb.LGBMRegressor(**lgb_params)
 callbacks = [lgb.early_stopping(stopping_rounds=20, verbose=False)]
@@ -150,7 +149,7 @@ def add_features_bezier(params, features, preprocessed_data, prediction_horizon,
         
         # Compute impact and shift by prediction horizon
         glucose_data[feature] = np.dot(weights, combined_data[feature].values)
-        glucose_data[feature] = glucose_data[feature] - glucose_data[feature].shift(-prediction_horizon)
+        glucose_data[feature] = glucose_data[feature].shift(-prediction_horizon) - glucose_data[feature]
     
     return glucose_data
 
@@ -237,7 +236,7 @@ def optimize_for_patient(patient, prediction_horizon, base_control_points):
     
     # Clean up the database file
     try:
-        os.remove(f"optuna_{patient}_ph{prediction_horizon}.db")
+        os.remove(f"optuna_{patient}.db")
     except:
         pass
         
@@ -264,17 +263,10 @@ def evaluate_bezier_params(params, data, features, patient, prediction_horizon, 
     glucose_data, combined_data = data
     processed_data = add_features_bezier(params, features, {patient: (glucose_data, combined_data)}, 
                                 prediction_horizon, patient)
-    
-    # Check for and handle NaN values
-    processed_data = processed_data.fillna(0)
-    
-    # Split data into train/validation sets
-    X = processed_data.drop(features_to_remove, axis=1)
-    y = processed_data['glucose_next']
-    
+
     # Split the data
     X_train, X_val, y_train, y_val = train_test_split(
-        X, y, train_size=train_size, random_state=random_seed
+        processed_data.drop(features_to_remove, axis=1), processed_data['glucose_next'], train_size=train_size, random_state=random_seed
     )
     
     # Train model
@@ -286,8 +278,7 @@ def evaluate_bezier_params(params, data, features, patient, prediction_horizon, 
     
     # Make predictions and calculate RMSE
     preds = local_model.predict(X_val)
-    rmse = np.sqrt(mean_squared_error(y_val, preds))
-    return rmse
+    return np.sqrt(mean_squared_error(y_val, preds))
 
 # Initial control points for Bezier curves
 # Format: [x1, y1, x2, y2, x3, y3, x4, y4] - Four control points per feature
@@ -302,122 +293,135 @@ base_control_points = {
 }
 
 # Run optimization
-patient_params = optimize_patient_parameters_bezier(patients, 6, base_control_points)
-# Save the optimized parameters
-os.makedirs('parameters', exist_ok=True)
-with open('parameters/patient_bezier_params.pkl', 'wb') as f:
-    pickle.dump(patient_params, f)
+def main(load_params=False):
+    if load_params:
+        try:
+            with open('parameters/patient_bezier_params.pkl', 'rb') as f:
+                patient_params = pickle.load(f)
+            print("Loaded existing bezier parameters")
+        except FileNotFoundError:
+            print("No existing parameters found, running optimization")
+            patient_params = optimize_patient_parameters_bezier(patients, 6, base_control_points)
+            # Save the optimized parameters
+            os.makedirs('parameters', exist_ok=True)
+            with open('parameters/patient_bezier_params.pkl', 'wb') as f:
+                pickle.dump(patient_params, f)
+    else:
+        patient_params = optimize_patient_parameters_bezier(patients, 6, base_control_points)
+        # Save the optimized parameters
+        os.makedirs('parameters', exist_ok=True)
+        with open('parameters/patient_bezier_params.pkl', 'wb') as f:
+            pickle.dump(patient_params, f)
 
-# Optionally save as JSON for better readability
-with open('parameters/patient_bezier_params.json', 'w') as f:
-    # Convert numpy arrays to lists for JSON serialization
-    json_params = {}
-    for patient, features in patient_params.items():
-        json_params[patient] = {
-            feature: params.tolist() if isinstance(params, np.ndarray) else params
-            for feature, params in features.items()
-        }
-    json.dump(json_params, f, indent=2)
+    # Optionally save as JSON for better readability
+    with open('parameters/patient_bezier_params.json', 'w') as f:
+        # Convert numpy arrays to lists for JSON serialization
+        json_params = {}
+        for patient, features in patient_params.items():
+            json_params[patient] = {
+                feature: params.tolist() if isinstance(params, np.ndarray) else params
+                for feature, params in features.items()
+            }
+        json.dump(json_params, f, indent=2)
 
-# Main evaluation loop
-df = pd.DataFrame(columns=['Approach', 'Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE']) 
+    # Main evaluation loop
+    df = pd.DataFrame(columns=['Approach', 'Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE']) 
 
-for approach in approaches:
-    for prediction_horizon in prediction_horizons:
-        
-        # Get raw data for all patients
-        data = {patient: get_data(patient, prediction_horizon) for patient in patients}
-        
-        # Create directories for models
-        os.makedirs(f'models/{approach}/{prediction_horizon}', exist_ok=True)
-        
-        # Process per patient for evaluation
-        for patient in patients:
-            # Get patient-specific feature parameters
-            patient_feature_params = patient_params[patient].copy()
-            processed_data = add_features_bezier(
-                {k: v for k, v in patient_feature_params.items() if k in features},
-                features,
-                {patient: data[patient]}, 
-                prediction_horizon, patient
-            )
+    for approach in approaches:
+        for prediction_horizon in prediction_horizons:
             
-            if approach == 'nollm':
-                processed_data.drop(meal_features, axis=1, inplace=True)
+            # Get raw data for all patients
+            data = {patient: get_data(patient, prediction_horizon) for patient in patients}
             
-            all_preds = []
-            all_test_data = []
+            # Create directories for models
+            os.makedirs(f'models/{approach}/{prediction_horizon}', exist_ok=True)
             
-            days = processed_data['datetime'].dt.day.unique()
-            train_days = days[:3]
-            test_days = days[3:]  
-            
-            for test_day in test_days:
-                day_mask = processed_data['datetime'].dt.day == test_day
-                test_day_data = processed_data[day_mask]
-                hours = sorted(test_day_data['hour'].unique())
+            # Process per patient for evaluation
+            for patient in patients:
+                # Get patient-specific feature parameters
+                patient_feature_params = patient_params[patient].copy()
+                processed_data = add_features_bezier(
+                    {k: v for k, v in patient_feature_params.items() if k in features},
+                    features,
+                    {patient: data[patient]}, 
+                    prediction_horizon, patient
+                )
                 
-                for hour in hours:
-                    hour_mask = test_day_data['hour'] == hour
-                    test = test_day_data[hour_mask]
-                    
-                    prior_days_mask = processed_data['datetime'].dt.day < test_day
-                    prior_hours_mask = (processed_data['datetime'].dt.day == test_day) & (processed_data['hour'] < hour)
-                    
-                    train = pd.concat([
-                        processed_data[prior_days_mask],
-                        processed_data[prior_hours_mask]
-                    ])
-                    
-                    hour_model = lgb.LGBMRegressor(**lgb_params)
-                    
-                    X_train, X_val, y_train, y_val, weights_train, weights_val = train_test_split(
-                        train.drop(features_to_remove, axis=1), train['glucose_next'], 
-                        np.ones(len(train)), train_size=train_size, random_state=42
-                    )
-                    
-                    hour_model.fit(
-                        X_train, y_train,
-                        sample_weight=weights_train,
-                        eval_set=[(X_val, y_val)], 
-                        eval_sample_weight=[weights_val],
-                        callbacks=callbacks
-                    )
-                    
-                    hour_preds = hour_model.predict(test.drop(features_to_remove, axis=1))
-                    hour_rmse = np.sqrt(mean_squared_error(test['glucose_next'], hour_preds))
-                    
-                    all_preds.append(hour_preds)
-                    all_test_data.append(test)
-                    
-                    df = pd.concat([df, pd.DataFrame({
-                        'Approach': [approach],
-                        'Prediction Horizon': [prediction_horizon],
-                        'Patient': [patient],
-                        'Day': [test_day],
-                        'Hour': [hour],
-                        'RMSE': [hour_rmse]
-                    })], ignore_index=True)
-                    
-                    if test_day == test_days[-1] and hour == hours[-1]:
-                        model_filename = f'models/{approach}/{prediction_horizon}/patient_{patient}_model.pkl'
-                        with open(model_filename, 'wb') as file:
-                            pickle.dump(hour_model, file)
+                if approach == 'nollm':
+                    processed_data.drop(meal_features, axis=1, inplace=True)
                 
-            combined_preds = np.concatenate(all_preds)
-            combined_test = pd.concat(all_test_data)
+                all_preds = []
+                all_test_data = []
+                
+                days = processed_data['datetime'].dt.day.unique()
+                train_days = days[:3]
+                test_days = days[3:]  
+                
+                for test_day in test_days:
+                    day_mask = processed_data['datetime'].dt.day == test_day
+                    test_day_data = processed_data[day_mask]
+                    hours = sorted(test_day_data['hour'].unique())
+                    
+                    for hour in hours:
+                        hour_mask = test_day_data['hour'] == hour
+                        test = test_day_data[hour_mask]
+                        
+                        # Train on all data before the current hour from any day
+                        earliest_test_time = test['datetime'].min()
+                        safe_train_mask = processed_data['datetime'] < earliest_test_time
+                        
+                        train = processed_data[safe_train_mask]
+                        
+                        hour_model = lgb.LGBMRegressor(**lgb_params)
+                        
+                        X_train, X_val, y_train, y_val = train_test_split(
+                            train.drop(features_to_remove, axis=1), train['glucose_next'], 
+                            train_size=train_size, random_state=42
+                        )
+                        
+                        hour_model.fit(
+                            X_train, y_train,
+                            eval_set=[(X_val, y_val)], 
+                            callbacks=callbacks
+                        )
+                        
+                        hour_preds = hour_model.predict(test.drop(features_to_remove, axis=1))
+                        hour_rmse = np.sqrt(mean_squared_error(test['glucose_next'], hour_preds))
+                        
+                        all_preds.append(hour_preds)
+                        all_test_data.append(test)
+                        
+                        df = pd.concat([df, pd.DataFrame({
+                            'Approach': [approach],
+                            'Prediction Horizon': [prediction_horizon],
+                            'Patient': [patient],
+                            'Day': [test_day],
+                            'Hour': [hour],
+                            'RMSE': [hour_rmse]
+                        })], ignore_index=True)
+                        
+                        if test_day == test_days[-1] and hour == hours[-1]:
+                            model_filename = f'models/{approach}/{prediction_horizon}/patient_{patient}_model.pkl'
+                            with open(model_filename, 'wb') as file:
+                                pickle.dump(hour_model, file)
+                
+                combined_preds = np.concatenate(all_preds)
+                combined_test = pd.concat(all_test_data)
+                
+                predictions = pd.DataFrame({
+                    'Predictions': combined_test['glucose'] - combined_preds, 
+                    'Ground_truth': combined_test['glucose'] - combined_test['glucose_next'], 
+                    'Datetime': combined_test['datetime']
+                })
+                
+                os.makedirs(f'predictions/{approach}/{prediction_horizon}', exist_ok=True)
+                predictions.to_csv(f'predictions/{approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
             
-            predictions = pd.DataFrame({
-                'Predictions': combined_test['glucose'] - combined_preds, 
-                'Ground_truth': combined_test['glucose'] - combined_test['glucose_next'], 
-                'Datetime': combined_test['datetime']
-            })
-            
-            os.makedirs(f'predictions/{approach}/{prediction_horizon}', exist_ok=True)
-            predictions.to_csv(f'predictions/{approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
-        
-        current_metrics = df[(df['Approach'] == approach) & (df['Prediction Horizon'] == prediction_horizon)]
-        current_rmse = current_metrics['RMSE'].mean()
-        print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {current_rmse:.4f}")
+            current_metrics = df[(df['Approach'] == approach) & (df['Prediction Horizon'] == prediction_horizon)]
+            current_rmse = current_metrics['RMSE'].mean()
+            print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {current_rmse:.4f}")
 
-df.to_csv('evaluation_metrics_bezier.csv', index=False) 
+    df.to_csv('evaluation_metrics_bezier.csv', index=False) 
+
+if __name__ == "__main__":
+    main(load_params=False)  # Set to True to load existing parameters 
