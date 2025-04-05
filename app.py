@@ -7,6 +7,9 @@ from PIL import Image
 import os
 import pickle
 from scipy.special import comb
+import lightgbm as lgb
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 # Load Bezier parameters
 with open('parameters/patient_bezier_params.json', 'r') as f:
@@ -19,6 +22,17 @@ meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'p
 features = meal_features + ['insulin']
 features_to_remove = ['glucose_next', 'datetime', 'hour']
 
+# LightGBM parameters
+lgb_params = {
+    'max_depth': 3,
+    'n_estimators': 100,
+    'learning_rate': 0.1,
+    'objective': 'regression',
+    'random_state': 42,
+    'deterministic': True,
+    'verbosity': -1,
+}
+
 # Function to generate Bezier curve
 def bezier_curve(points, num=50):
     n = len(points) - 1
@@ -30,12 +44,22 @@ def bezier_curve(points, num=50):
     
     return curve[np.argsort(curve[:, 0])]
 
-# Function to load meal data
+# Function to load meal data (filtered to last two days)
 def load_meal_data(patient):
     df = pd.read_csv(f"food_data/pixtral-large-latest/{patient}.csv")
     # Add insulin column if it doesn't exist
     if 'insulin' not in df.columns:
         df['insulin'] = 0.0
+    
+    # Convert datetime
+    df['datetime'] = pd.to_datetime(df['datetime'], format='%Y:%m:%d %H:%M:%S')
+    
+    # Filter to last two days only
+    unique_days = df['datetime'].dt.date.unique()
+    if len(unique_days) > 2:
+        last_two_days = sorted(unique_days)[-2:]
+        df = df[df['datetime'].dt.date.isin(last_two_days)]
+        
     return df
 
 # Function to load sample data to get feature names
@@ -165,6 +189,107 @@ def get_projected_value(window, prediction_horizon):
     projected_change = change_per_interval * prediction_horizon
     return window.iloc[-1] + projected_change
 
+# Function for getting data similar to main.py get_data function
+def get_training_data(patient, prediction_horizon):
+    # Load data
+    glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/glucose.csv")
+    insulin_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/insulin.csv")
+    food_data = pd.read_csv(f"food_data/pixtral-large-latest/{patient}.csv")
+
+    # Process glucose data
+    glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
+    glucose_data = glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1)
+    glucose_data['glucose'] *= 18.0182
+    glucose_data['hour'] = glucose_data['datetime'].dt.hour
+    glucose_data['time'] = glucose_data['hour'] + glucose_data['datetime'].dt.minute / 60
+
+    # Process insulin data
+    insulin_data["datetime"] = pd.to_datetime(insulin_data["date"] + ' ' + insulin_data["time"])
+    insulin_data['insulin'] = insulin_data['slow_insulin'] + insulin_data['fast_insulin']
+    insulin_data = insulin_data.drop(['slow_insulin', 'fast_insulin', 'comment', 'date', 'time'], axis=1)
+
+    # Process food data
+    food_data['datetime'] = pd.to_datetime(food_data['datetime'], format='%Y:%m:%d %H:%M:%S')
+    food_data = food_data[['datetime', 'simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']]
+
+    # Combine data
+    combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
+    combined_data.fillna(0, inplace=True)
+
+    # Calculate target variables
+    glucose_data['glucose_next'] = glucose_data['glucose'] - glucose_data['glucose'].shift(-prediction_horizon)
+    glucose_data['glucose_change'] = glucose_data['glucose'] - glucose_data['glucose'].shift(1)
+    
+    window_size = 6
+    glucose_data['glucose_change_projected'] = glucose_data['glucose_change'].rolling(
+        window=window_size, min_periods=window_size
+    ).apply(lambda window: get_projected_value(window, prediction_horizon))
+    
+    glucose_data['glucose_projected'] = glucose_data['glucose'].rolling(
+        window=window_size, min_periods=window_size
+    ).apply(lambda window: get_projected_value(window, prediction_horizon))
+    
+    glucose_data.dropna(subset=['glucose_next'], inplace=True)
+    return glucose_data, combined_data
+
+# Function to prepare training data with features
+def train_model_for_patient(patient, prediction_horizon):
+    # Get data
+    glucose_data, combined_data = get_training_data(patient, prediction_horizon)
+    
+    # Apply bezier curves to add features
+    df = add_features(patient_params[patient], features, (glucose_data, combined_data), prediction_horizon)
+    
+    # Prepare for training
+    X_data = df.drop(features_to_remove, axis=1)
+    y_data = df['glucose_next']
+    
+    # Train-test split
+    X_train, X_val, y_train, y_val = train_test_split(X_data, y_data, test_size=0.2, random_state=42)
+    
+    # Train model
+    model = lgb.LGBMRegressor(**lgb_params)
+    callbacks = [lgb.early_stopping(stopping_rounds=10, verbose=False)]
+    model.fit(X_train, y_train, eval_set=[(X_val, y_val)], callbacks=callbacks, eval_metric='rmse')
+    
+    # Save feature names
+    feature_names = X_data.columns.tolist()
+    
+    return model, feature_names, df
+
+# Function to add features using bezier curves
+def add_features(params, features_list, data, prediction_horizon):
+    glucose_data, combined_data = data
+    
+    # Convert datetime to nanoseconds for efficient vectorized operations
+    glucose_times = glucose_data['datetime'].values.astype('datetime64[s]').astype(np.int64)
+    combined_times = combined_data['datetime'].values.astype('datetime64[s]').astype(np.int64)
+    
+    # Calculate time difference matrix (in hours)
+    time_diff_hours = ((glucose_times[:, None] - combined_times[None, :]) / 3600)
+    
+    for feature in features_list:
+        # Generate Bezier curve
+        curve = bezier_curve(np.array(params[feature]).reshape(-1, 2), num=100)
+        x_curve, y_curve = curve[:, 0], curve[:, 1]
+        
+        # Create weights array
+        weights = np.zeros_like(time_diff_hours)
+        
+        # For each time difference, find the closest point on bezier curve
+        for i in range(len(glucose_times)):
+            for j in range(len(combined_times)):
+                if time_diff_hours[i, j] >= 0 and time_diff_hours[i, j] <= max(x_curve):
+                    # Find closest x value in curve
+                    idx = np.abs(x_curve - time_diff_hours[i, j]).argmin()
+                    weights[i, j] = y_curve[idx]
+        
+        # Compute impact and shift by prediction horizon
+        feature_values = pd.Series(np.dot(weights, combined_data[feature].values))
+        glucose_data[feature] = feature_values.shift(-prediction_horizon) - feature_values
+    
+    return glucose_data
+
 # UI
 st.title("Glucose Prediction App")
 
@@ -210,7 +335,7 @@ with col2:
     # Display selected image
     st.header("Selected Meal")
     image = load_image(selected_patient, selected_image)
-    st.image(image, caption=selected_image, use_container_width=True)
+    st.image(image, caption=selected_image)
     
     # Display meal data
     st.header("Meal Data")
@@ -241,152 +366,139 @@ if predict_button:
             fig = prepare_feature_visualization(selected_patient)
             st.pyplot(fig)
             
-            # Check if model exists
-            model_path = f'models/pixtral-large-latest/{selected_horizon}/patient_{selected_patient}_model.pkl'
+            # Train model on-the-fly
+            with st.spinner(f"Training model for patient {selected_patient} with prediction horizon {selected_horizon}..."):
+                model, model_feature_names, train_df = train_model_for_patient(selected_patient, selected_horizon)
             
-            if os.path.exists(model_path):
+            # Display feature importances
+            st.subheader("Feature Importances")
+            importances = dict(zip(model_feature_names, (model.feature_importances_ / model.feature_importances_.sum()) * 100))
+            importance_fig = display_feature_importances(importances)
+            st.pyplot(importance_fig)
+            
+            # Process original features
+            original_processed_features, original_features = process_features(meal_row, selected_patient, selected_horizon)
+            
+            # Process modified features
+            modified_processed_features, modified_features = modify_and_process_features(
+                meal_row, selected_patient, selected_horizon, modifications
+            )
+            
+            # Get model feature names
+            if not model_feature_names:
+                model_feature_names = model.feature_name_
+            
+            # Create feature vectors with all expected columns
+            original_feature_vector = {}
+            modified_feature_vector = {}
+            
+            # Set default values for all features
+            for feature_name in model_feature_names:
+                original_feature_vector[feature_name] = 0.0
+                modified_feature_vector[feature_name] = 0.0
+            
+            # Set values for processed features
+            for feature in features:
+                original_feature_vector[feature] = original_processed_features[feature]
+                modified_feature_vector[feature] = modified_processed_features[feature]
+            
+            # Add real values for additional features used by the model
+            for vector in [original_feature_vector, modified_feature_vector]:
+                # Load real glucose data for the patient
+                glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/glucose.csv")
+                glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
+                glucose_data = glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1)
+                glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
+                
+                # Parse meal datetime
+                dt_str = meal_row['datetime'].iloc[0]
                 try:
-                    # Load the model
-                    with open(model_path, 'rb') as f:
-                        model = pickle.load(f)
-                    
-                    # Display feature importances
-                    st.subheader("Feature Importances")
-                    importances = get_feature_importances(selected_patient, selected_horizon)
-                    importance_fig = display_feature_importances(importances)
-                    st.pyplot(importance_fig)
-                        
-                    # Process original features
-                    original_processed_features, original_features = process_features(meal_row, selected_patient, selected_horizon)
-                    
-                    # Process modified features
-                    modified_processed_features, modified_features = modify_and_process_features(
-                        meal_row, selected_patient, selected_horizon, modifications
-                    )
-                    
-                    # Get model feature names if available
-                    model_feature_names = get_model_feature_names(selected_patient, selected_horizon)
-                    
-                    model_feature_names = model.feature_name_
-                    
-                    # Create feature vectors with all expected columns
-                    original_feature_vector = {}
-                    modified_feature_vector = {}
-                    
-                    # Set default values for all features
-                    for feature_name in model_feature_names:
-                        original_feature_vector[feature_name] = 0.0
-                        modified_feature_vector[feature_name] = 0.0
-                    
-                    # Set values for processed features
-                    for feature in features:
-                        original_feature_vector[feature] = original_processed_features[feature]
-                        modified_feature_vector[feature] = modified_processed_features[feature]
-                    
-                    # Add placeholder values for additional features used by the model
-                    for vector in [original_feature_vector, modified_feature_vector]:
-                        # Load real glucose data for the patient
-                        glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/glucose.csv")
-                        glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
-                        glucose_data = glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1)
-                        glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
-                        
-                        # Parse meal datetime
-                        dt_str = meal_row['datetime'].iloc[0]
-                        try:
-                            meal_dt = pd.to_datetime(dt_str, format='%Y:%m:%d %H:%M:%S')
-                        except:
-                            meal_dt = pd.to_datetime(dt_str)
-                        
-                        # Get closest glucose reading before meal
-                        glucose_before_meal = glucose_data[glucose_data['datetime'] <= meal_dt]
-                        
-                        current_glucose = glucose_before_meal.iloc[-1]['glucose']
-                        
-                        # Calculate time features
-                        vector['time'] = meal_dt.hour + meal_dt.minute/60
-                        
-                        # Set current glucose
-                        vector['glucose'] = current_glucose
-                        
-                        # Calculate glucose change (if we have enough history)
-                        vector['glucose_change'] = current_glucose - glucose_before_meal.iloc[-2]['glucose']
+                    meal_dt = pd.to_datetime(dt_str, format='%Y:%m:%d %H:%M:%S')
+                except:
+                    meal_dt = pd.to_datetime(dt_str)
+                
+                # Get closest glucose reading before meal
+                glucose_before_meal = glucose_data[glucose_data['datetime'] <= meal_dt]
+                
+                current_glucose = glucose_before_meal.iloc[-1]['glucose']
+                
+                # Calculate time features
+                vector['time'] = meal_dt.hour + meal_dt.minute/60
+                
+                # Set current glucose
+                vector['glucose'] = current_glucose
+                
+                # Calculate glucose change (if we have enough history)
+                vector['glucose_change'] = current_glucose - glucose_before_meal.iloc[-2]['glucose']
+                
+                # Calculate projected glucose values
+                window_size = 6
+                glucose_window = glucose_before_meal.iloc[-window_size:]['glucose']
+                
+                # Calculate projected change
+                glucose_changes = glucose_window.diff().dropna()
+                vector['glucose_change_projected'] = get_projected_value(glucose_changes, selected_horizon)
+                
+                # Calculate projected glucose
+                vector['glucose_projected'] = get_projected_value(glucose_window, selected_horizon)
 
-                        
-                        # Calculate projected glucose values
-                        window_size = 6
-                        glucose_window = glucose_before_meal.iloc[-window_size:]['glucose']
-                        
-                        # Calculate projected change
-                        glucose_changes = glucose_window.diff().dropna()
-                        vector['glucose_change_projected'] = get_projected_value(glucose_changes, selected_horizon)
+            # Make predictions
+            original_feature_array = np.array([original_feature_vector[feature] for feature in model_feature_names])
+            modified_feature_array = np.array([modified_feature_vector[feature] for feature in model_feature_names])
+            
+            original_prediction = model.predict([original_feature_array])[0]
+            modified_prediction = model.predict([modified_feature_array])[0]
 
-                        # Calculate projected glucose
-                        vector['glucose_projected'] = get_projected_value(glucose_window, selected_horizon)
-
-                    # Make predictions
-                    original_feature_array = np.array([original_feature_vector[feature] for feature in model_feature_names])
-                    modified_feature_array = np.array([modified_feature_vector[feature] for feature in model_feature_names])
+            with right_col:
+                # Display original prediction
+                st.subheader(f"Original Glucose Change (in {selected_horizon*5} minutes)")
+                if original_prediction > 0:
+                    st.error(f"↑ +{original_prediction:.1f} mg/dL (increase)")
+                else:
+                    st.success(f"↓ {original_prediction:.1f} mg/dL (decrease)")
+                
+                # Display modified prediction
+                st.subheader(f"Modified Glucose Change (in {selected_horizon*5} minutes)")
+                if modified_prediction > 0:
+                    st.error(f"↑ +{modified_prediction:.1f} mg/dL (increase)")
+                else:
+                    st.success(f"↓ {modified_prediction:.1f} mg/dL (decrease)")
+                
+                # Display the difference
+                difference = modified_prediction - original_prediction
+                st.subheader("Effect of Modifications")
+                if difference > 0:
+                    st.error(f"↑ +{difference:.1f} mg/dL higher than original")
+                elif difference < 0:
+                    st.success(f"↓ {abs(difference):.1f} mg/dL lower than original")
+                else:
+                    st.info("No change from modifications")
+                
+                # Show processed feature values
+                st.write("**Processed Features for Prediction:**")
+                
+                # Create DataFrame for display
+                processed_data = []
+                for feature in features:
+                    original_value = original_features[feature]
+                    modified_value = modified_features[feature]
                     
-                    original_prediction = model.predict([original_feature_array])[0]
-                    modified_prediction = model.predict([modified_feature_array])[0]
-
-                    with right_col:
-                        # Display original prediction
-                        st.subheader(f"Original Glucose Change (in {selected_horizon*5} minutes)")
-                        if original_prediction > 0:
-                            st.error(f"↑ +{original_prediction:.1f} mg/dL (increase)")
-                        else:
-                            st.success(f"↓ {original_prediction:.1f} mg/dL (decrease)")
-                        
-                        # Display modified prediction
-                        st.subheader(f"Modified Glucose Change (in {selected_horizon*5} minutes)")
-                        if modified_prediction > 0:
-                            st.error(f"↑ +{modified_prediction:.1f} mg/dL (increase)")
-                        else:
-                            st.success(f"↓ {modified_prediction:.1f} mg/dL (decrease)")
-                        
-                        # Display the difference
-                        difference = modified_prediction - original_prediction
-                        st.subheader("Effect of Modifications")
-                        if difference > 0:
-                            st.error(f"↑ +{difference:.1f} mg/dL higher than original")
-                        elif difference < 0:
-                            st.success(f"↓ {abs(difference):.1f} mg/dL lower than original")
-                        else:
-                            st.info("No change from modifications")
-                        
-                        # Show processed feature values
-                        st.write("**Processed Features for Prediction:**")
-                        
-                        # Create DataFrame for display
-                        processed_data = []
-                        for feature in features:
-                            original_value = original_features[feature]
-                            modified_value = modified_features[feature]
-                            
-                            # Calculate impact factors (handle division by zero)
-                            original_impact = 0 if original_value == 0 else original_processed_features[feature] / original_value
-                            modified_impact = 0 if modified_value == 0 else modified_processed_features[feature] / modified_value
-                            
-                            processed_data.append({
-                                'Feature': feature,
-                                'Original Value': original_value,
-                                'Modified Value': modified_value,
-                                'Original Processed': original_processed_features[feature],
-                                'Modified Processed': modified_processed_features[feature],
-                                'Original Impact': original_impact,
-                                'Modified Impact': modified_impact
-                            })
-                        
-                        processed_df = pd.DataFrame(processed_data)
-                        st.table(processed_df)
-                        
-                except Exception as e:
-                    st.error(f"Error making prediction: {e}")
-                    st.exception(e)  # Show full error details
-            else:
-                st.error(f"Model not found for patient {selected_patient} with prediction horizon {selected_horizon}")
+                    # Calculate impact factors (handle division by zero)
+                    original_impact = 0 if original_value == 0 else original_processed_features[feature] / original_value
+                    modified_impact = 0 if modified_value == 0 else modified_processed_features[feature] / modified_value
+                    
+                    processed_data.append({
+                        'Feature': feature,
+                        'Original Value': original_value,
+                        'Modified Value': modified_value,
+                        'Original Processed': original_processed_features[feature],
+                        'Modified Processed': modified_processed_features[feature],
+                        'Original Impact': original_impact,
+                        'Modified Impact': modified_impact
+                    })
+                
+                processed_df = pd.DataFrame(processed_data)
+                st.table(processed_df)
 
 # Add info about the app
 st.sidebar.markdown("---")
