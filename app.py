@@ -474,37 +474,13 @@ if predict_button:
                 else:
                     st.info("No change from modifications")
                 
-                # Show processed feature values
-                st.write("**Processed Features for Prediction:**")
-                
-                # Create DataFrame for display
-                processed_data = []
-                for feature in features:
-                    original_value = original_features[feature]
-                    modified_value = modified_features[feature]
-                    
-                    # Calculate impact factors (handle division by zero)
-                    original_impact = 0 if original_value == 0 else original_processed_features[feature] / original_value
-                    modified_impact = 0 if modified_value == 0 else modified_processed_features[feature] / modified_value
-                    
-                    processed_data.append({
-                        'Feature': feature,
-                        'Original Value': original_value,
-                        'Modified Value': modified_value,
-                        'Original Processed': original_processed_features[feature],
-                        'Modified Processed': modified_processed_features[feature],
-                        'Original Impact': original_impact,
-                        'Modified Impact': modified_impact
-                    })
-                
-                processed_df = pd.DataFrame(processed_data)
-                st.table(processed_df)
-
 # Add info about the app
 st.sidebar.markdown("---")
 st.sidebar.info("""
 This app uses Bezier curves to model how different nutrients affect glucose levels over time.
 The models are trained on historical data and patient-specific parameters.
+Data are based on the D1namo dataset (https://www.sciencedirect.com/science/article/pii/S2352914818301059) where
+Type 1 Diabetes patients were monitored for around 5 days with CGM and asked to upload meal images and insulin data.
 Select a patient, meal image, and prediction horizon, then click Submit to see the predicted glucose change.
 
 You can also modify macronutrient values to see how changing your meal composition affects glucose prediction.
