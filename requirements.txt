@@ -4,3 +4,6 @@ joblib
 matplotlib
 lightgbm
 requests
+streamlit
+Pillow
+scipy
