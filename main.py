@@ -201,7 +201,7 @@ def optimize_for_patient(patient, prediction_horizon, base_control_points):
         
         # Third control point (x optimized, y=0)
         feature_params.append(study.best_params[f"{feature}_x2"])
-        feature_params.append(0.0)  # y4 is fixed at 0
+        feature_params.append(0.0)  # y3 is fixed at 0
         
         best_params[feature] = feature_params
     
@@ -334,4 +334,4 @@ for approach in approaches:
             predictions.to_csv(f'predictions/{approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
         print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {df[(df['Approach'] == approach) & (df['Prediction Horizon'] == prediction_horizon)]['RMSE'].mean():.4f}")
 
-df.to_csv('evaluation_metrics.csv', index=False) 
+df.to_csv('results/evaluation_metrics.csv', index=False) 
