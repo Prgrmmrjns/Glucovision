@@ -176,16 +176,12 @@ for patient in patients:
             preds_mod = X_test_mod['glucose'] - model.predict(X_test_mod)
             
             # Calculate metrics
-            hyper_minutes = np.sum(preds_mod > 180)
-            hypo_minutes = np.sum(preds_mod < 70) 
             mean_glucose = np.mean(preds_mod)
             
             # Store results
             results_df = pd.concat([results_df, pd.DataFrame({
                 'feature': [feature],
                 'increment': [increment],
-                'hyper_minutes': [hyper_minutes],
-                'hypo_minutes': [hypo_minutes],
                 'mean_glucose': [mean_glucose],
                 'patient': [patient]
             })])
@@ -255,7 +251,7 @@ def plot_all_features_mean_glucose(results_df):
         
         # Customize plot
         axes[i].set_title(feature)
-        axes[i].set_xlabel('Increment')
+        axes[i].set_xlabel('Increment / Decrement (g)')
         axes[i].set_ylabel('Change in Mean Glucose')
         axes[i].grid(True)
         axes[i].axhline(y=0, color='k', linestyle='--', alpha=0.3)

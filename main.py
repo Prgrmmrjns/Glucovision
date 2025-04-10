@@ -10,7 +10,6 @@ from joblib import Parallel, delayed
 from scipy.special import comb
 import json
 import warnings
-import matplotlib.pyplot as plt
 
 # Silence warnings
 warnings.filterwarnings('ignore')
@@ -21,7 +20,7 @@ meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'p
 features_to_remove = ['glucose_next', 'datetime', 'hour']
 patients = ['001', '002', '004', '006', '007', '008']
 approaches = ['pixtral-large-latest', 'nollm']
-prediction_horizons = [6, 9, 12, 18, 24]
+prediction_horizons = [6, 12]
 
 # Optimization parameters
 train_size = 0.9
@@ -144,17 +143,27 @@ def optimize_for_patient(patient, prediction_horizon, base_control_points):
     glucose_data, combined_data = get_data(patient, prediction_horizon)
     first_days = glucose_data['datetime'].dt.day.unique()[:3]
     mask = glucose_data['datetime'].dt.day.isin(first_days)
-    data = (glucose_data[mask].copy(), combined_data)
+    train_glucose_data = glucose_data[mask].copy()
+    data = (train_glucose_data, combined_data) # Pass only training glucose data for optimization
     
-    # Create Optuna optimization study with SQLite storage for parallelization
+    # --- Start Pre-calculation ---
+    # Pre-calculate normalized target as it's constant across trials for this patient
+    target = train_glucose_data['glucose_next'].copy()
+    target_mean = target.mean()
+    target_std = target.std()
+    normalized_target = (target - target_mean) / target_std
+    # --- End Pre-calculation ---
+    
+    # Create Optuna optimization study
     study = optuna.create_study(study_name=patient, direction="minimize", sampler=optuna.samplers.TPESampler(seed=random_seed), storage=f"sqlite:///optuna_{patient}.db", load_if_exists=True)
     
     # Define the objective function for Optuna
     def objective(trial):
-        # Container for parameters
+        # Container for parameters and weights
         params = {}
+        weights = {}
         
-        # Generate parameters for each feature
+        # Generate parameters and weights for each feature
         for feature in features:
             base_bounds = base_control_points[feature]
             feature_params = []
@@ -167,112 +176,119 @@ def optimize_for_patient(patient, prediction_horizon, base_control_points):
             y2 = trial.suggest_float(f"{feature}_y1", 0.1, 1.0)
             feature_params.extend([x2, y2])
             
-            # Third control point (x optimized, y=0)
+            # Third control point (x and y optimized)
             min_x3 = x2 + 0.1
             x3 = trial.suggest_float(f"{feature}_x2", min_x3, base_bounds[1][1])
-            feature_params.extend([x3, 0.0])
+            y3 = trial.suggest_float(f"{feature}_y2", 0.0, 1.0) # y can be lower/zero
+            feature_params.extend([x3, y3])
+
+            # Fourth control point (x optimized, y=0)
+            min_x4 = x3 + 0.1
+            x4 = trial.suggest_float(f"{feature}_x3", min_x4, base_bounds[2][1])
+            feature_params.extend([x4, 0.0])
             
             params[feature] = feature_params
+            # --- Start Weight Suggestion ---
+            weights[feature] = trial.suggest_float(f"{feature}_weight", -1.0, 1.0)
+            # --- End Weight Suggestion ---
         
         # Process data with current parameter set
-        glucose_data, combined_data = data
-        df = add_features(params, features, (glucose_data, combined_data), prediction_horizon)
+        # Important: Use the original 'data' tuple which contains the train_glucose_data
+        glucose_data_copy, combined_data_copy = data[0].copy(), data[1].copy() 
+        df = add_features(params, features, (glucose_data_copy, combined_data_copy), prediction_horizon)
 
-        # Split the data
-        X_train, X_val, y_train, y_val = train_test_split(df.drop(features_to_remove, axis=1), df['glucose_next'], train_size=train_size, random_state=42)
+        # --- Use Pre-calculated Normalized Target --- 
+        feature_impacts = df[features].copy()
 
-        model.fit(X_train, y_train, eval_set=[(X_val, y_val)], callbacks=callbacks,eval_metric='rmse')
-        
-        # Make predictions and calculate RMSE
-        return np.sqrt(mean_squared_error(y_val, model.predict(X_val)))
+        # Normalize features and apply weights (this depends on trial params, so must be inside)
+        weighted_normalized_sum = pd.Series(np.zeros(len(df)), index=df.index)
+        for feature in features:
+            col = feature_impacts[feature]
+            col_mean = col.mean()
+            col_std = col.std()
+            if col_std == 0: 
+                 normalized_col = pd.Series(np.zeros(len(df)), index=df.index)
+            else:
+                 normalized_col = (col - col_mean) / col_std
+            
+            weighted_normalized_sum += normalized_col * weights[feature]
+
+        # Calculate the absolute Pearson correlation using pre-calculated normalized_target
+        # Ensure indices align if add_features modified the index (it shouldn't currently)
+        correlation = normalized_target.corr(weighted_normalized_sum)
+
+        if pd.isna(correlation):
+            # Return penalty if correlation is NaN (e.g., target or weighted sum is constant)
+            return 1.0 
+
+        return 1.0 - abs(correlation)
+        # --- End Change ---
     
     # Run optimization with parallelize flag
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs)
     
-    # Get best parameters
-    best_params = {}
+    # Get best parameters and weights
+    best_params = {'bezier_points': {}, 'weights': {}}
     for feature in features:
         feature_params = [0.0, 0.0]  # First point fixed at origin
         
-        # Second control point (x and y optimized)
+        # Bezier control points
         feature_params.append(study.best_params[f"{feature}_x1"])
         feature_params.append(study.best_params[f"{feature}_y1"])
-        
-        # Third control point (x optimized, y=0)
         feature_params.append(study.best_params[f"{feature}_x2"])
-        feature_params.append(0.0)  # y3 is fixed at 0
+        feature_params.append(study.best_params[f"{feature}_y2"])
+        feature_params.append(study.best_params[f"{feature}_x3"])
+        feature_params.append(0.0)  # y4 is fixed at 0
+        best_params['bezier_points'][feature] = feature_params
         
-        best_params[feature] = feature_params
+        # Weights
+        best_params['weights'][feature] = study.best_params[f"{feature}_weight"]
     
-    print(f"Completed optimization for patient {patient}, best RMSE: {study.best_value:.4f}")
+    print(f"Completed optimization for patient {patient}, best score (1 - abs(corr)): {study.best_value:.4f}")
+    # Optionally print weights
+    # print(f"Best weights for patient {patient}: {best_params['weights']}")
     os.remove(f"optuna_{patient}.db")
         
     return patient, best_params
 
-# Initial control points for Bezier curves
-# Format: [[min_x2, max_x2], [min_x4, max_x4]] - Bounds for x coordinates of second and fourth control points
+# Format: [[min_x1, max_x1], [min_x2, max_x2], [min_x3, max_x3]] - Bounds for x coordinates of the 3 optimized points P1, P2, P3.
+# y1 bounds: [0.1, 1.0]
+# y2 bounds: [0.0, 1.0]
+# P0 is (0,0), P4 is (x3, 0)
 base_control_points = {
-    'simple_sugars': [[0.1, 1.0], [2.0, 4.0]],       # Fast rise, quick drop
-    'complex_sugars': [[0.5, 2.0], [4.0, 6.0]],      # Slower rise, longer effect
-    'proteins': [[1.0, 3.0], [5.0, 10.0]],           # Very slow rise, extended effect
-    'fats': [[2.0, 4.0], [5.0, 14.0]],              # Slowest rise, longest effect
-    'dietary_fibers': [[2.0, 4.0], [5.0, 18.0]],      # Moderate effect curve
-    'insulin': [[0.1, 1.0], [1.5, 4.0]],             # Fast action, quick drop
+    'simple_sugars': [[0.1, 0.8], [0.5, 1.5], [2.0, 4.0]],   # Fast rise, peak ~1h, return 2-4h
+    'complex_sugars': [[0.5, 1.5], [1.5, 3.0], [4.0, 7.0]],  # Slower rise, peak 1.5-3h, return 4-7h
+    'proteins': [[1.0, 2.5], [2.5, 5.0], [5.0, 10.0]],       # Slow rise, peak 2.5-5h, return 5-10h
+    'fats': [[1.5, 3.0], [3.0, 6.0], [6.0, 14.0]],          # Slowest rise, peak 3-6h, return 6-14h
+    'dietary_fibers': [[1.0, 3.0], [3.0, 6.0], [6.0, 18.0]], # Blunting effect, long duration
+    'insulin': [[0.1, 0.5], [0.5, 1.5], [1.5, 4.0]],         # Fast action, peak ~1h, return 1.5-4h
 }
 
 # Main evaluation loop
 df = pd.DataFrame(columns=['Approach', 'Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE']) 
 
-# Visualize Bezier curves
-def visualize_bezier_curves(patient_params):
-    os.makedirs('visualizations', exist_ok=True)
-    
-    for patient, features_params in patient_params.items():
-        fig, ax = plt.subplots(figsize=(12, 8))
-        
-        for feature in features:
-            params = features_params[feature]
-            control_points = np.array(params).reshape(-1, 2)
-            curve = bezier_curve(control_points, num=100)
-            
-            ax.plot(curve[:, 0], curve[:, 1], label=feature, linewidth=2)
-            ax.scatter(control_points[:, 0], control_points[:, 1], alpha=0.5)
-        
-        ax.set_xlim(0, 15)
-        ax.set_ylim(0, 1.1)
-        ax.set_xlabel('Time (hours)', fontsize=12)
-        ax.set_ylabel('Effect Strength', fontsize=12)
-        ax.set_title(f'Patient {patient} - Bezier Curves for Features', fontsize=14)
-        ax.legend(fontsize=10)
-        ax.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(f'visualizations/patient_{patient}_bezier_curves.png', dpi=300)
-        plt.close()
-
 # Call visualization after loading or optimizing parameters
 if load_params:
     with open('parameters/patient_bezier_params.json', 'r') as f:
         patient_params = json.load(f)
-    visualize_bezier_curves(patient_params)
 else:
     results = Parallel(n_jobs=min(len(patients), n_jobs))(delayed(optimize_for_patient)(patient, 6, base_control_points) for patient in patients)
     patient_params = dict(results)
-    # Save as JSON
+    # Save as JSON (structure now includes bezier_points and weights)
     with open('parameters/patient_bezier_params.json', 'w') as f:
-        # Convert numpy arrays to lists for JSON serialization
-        json_params = {}
-        for patient, features in patient_params.items(): json_params[patient] = {feature: params for feature, params in features.items()}
-        json.dump(json_params, f, indent=2)
-    visualize_bezier_curves(json_params)
+        # No need for special conversion for weights, they are floats
+        json.dump(patient_params, f, indent=2)
 
 for approach in approaches:
     for prediction_horizon in prediction_horizons:
         
         # Process per patient for evaluation
         for patient in patients:
-            # Get patient-specific feature parameters
-            data = add_features({k: v for k, v in patient_params[patient].items() if k in features}, features, get_data(patient, prediction_horizon), prediction_horizon)
+            # Get patient-specific feature parameters (access bezier points specifically)
+            bezier_params = patient_params[patient]['bezier_points']
+            # Note: Weights are not used here in the current evaluation logic
+            data = add_features({k: v for k, v in bezier_params.items() if k in features}, features, get_data(patient, prediction_horizon), prediction_horizon)
             
             if approach == 'nollm':
                 data.drop(meal_features, axis=1, inplace=True)

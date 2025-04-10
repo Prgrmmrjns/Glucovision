@@ -189,16 +189,12 @@ for i, patient in enumerate(patient_summary['Patient']):
     values = [detailed_df[(detailed_df['Patient'] == patient) & (detailed_df['Feature'] == f)]['Peak Time (h)'].values[0] 
              for f in features]
     
-    # Normalize by the maximum peak time across all patients and features
-    max_peak_time = detailed_df['Peak Time (h)'].max()
-    values_norm = [v/max_peak_time for v in values]
-    
     # Close the loop
-    values_norm += [values_norm[0]]
+    values_with_loop = values + [values[0]]
     
     # Plot
-    ax2.plot(angles, values_norm, 'o-', linewidth=2, label=f'Patient {patient}', color=patient_colors[i])
-    ax2.fill(angles, values_norm, alpha=0.1, color=patient_colors[i])
+    ax2.plot(angles, values_with_loop, 'o-', linewidth=2, label=f'Patient {patient}', color=patient_colors[i])
+    ax2.fill(angles, values_with_loop, alpha=0.1, color=patient_colors[i])
 
 ax2.set_thetagrids(np.degrees(angles)[:-1], radar_features[:-1])
 ax2.set_title('Peak Effect Times', fontsize=14)
@@ -215,16 +211,12 @@ for i, patient in enumerate(patient_summary['Patient']):
     values = [detailed_df[(detailed_df['Patient'] == patient) & (detailed_df['Feature'] == f)]['Peak Intensity'].values[0] 
              for f in features]
     
-    # Normalize by the maximum peak intensity across all patients and features
-    max_peak_intensity = detailed_df['Peak Intensity'].max()
-    values_norm = [v/max_peak_intensity for v in values]
-    
     # Close the loop
-    values_norm += [values_norm[0]]
+    values_with_loop = values + [values[0]]
     
     # Plot
-    ax3.plot(angles, values_norm, 'o-', linewidth=2, color=patient_colors[i])
-    ax3.fill(angles, values_norm, alpha=0.1, color=patient_colors[i])
+    ax3.plot(angles, values_with_loop, 'o-', linewidth=2, color=patient_colors[i])
+    ax3.fill(angles, values_with_loop, alpha=0.1, color=patient_colors[i])
 
 ax3.set_thetagrids(np.degrees(angles)[:-1], radar_features[:-1])
 ax3.set_title('Peak Effect Intensities', fontsize=14)
@@ -241,16 +233,12 @@ for i, patient in enumerate(patient_summary['Patient']):
     values = [detailed_df[(detailed_df['Patient'] == patient) & (detailed_df['Feature'] == f)]['Effect Duration (h)'].values[0] 
              for f in features]
     
-    # Normalize by the maximum effect duration across all patients and features
-    max_effect_duration = detailed_df['Effect Duration (h)'].max()
-    values_norm = [v/max_effect_duration for v in values]
-    
     # Close the loop
-    values_norm += [values_norm[0]]
+    values_with_loop = values + [values[0]]
     
     # Plot
-    ax4.plot(angles, values_norm, 'o-', linewidth=2, color=patient_colors[i])
-    ax4.fill(angles, values_norm, alpha=0.1, color=patient_colors[i])
+    ax4.plot(angles, values_with_loop, 'o-', linewidth=2, color=patient_colors[i])
+    ax4.fill(angles, values_with_loop, alpha=0.1, color=patient_colors[i])
 
 ax4.set_thetagrids(np.degrees(angles)[:-1], radar_features[:-1])
 ax4.set_title('Effect Durations', fontsize=14)

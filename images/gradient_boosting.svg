@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <!-- Background -->
+  <rect width="400" height="400" fill="white"/>
+
+  <!-- Define styles -->
+  <defs>
+    <style>
+      .tree-node { fill: #C8E6C9; stroke: #388E3C; stroke-width: 1.5; }
+      .tree-leaf { fill: #A5D6A7; stroke: #2E7D32; stroke-width: 1; }
+      .branch { stroke: #555; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <!-- Tree Structure (No Text) -->
+
+  <!-- Level 0 (Root) -->
+  <rect x="180" y="20" width="40" height="25" rx="3" class="tree-node"/>
+
+  <!-- Level 1 -->
+  <line x1="200" y1="45" x2="120" y2="80" class="branch"/>
+  <rect x="100" y="80" width="40" height="25" rx="3" class="tree-node"/>
+  <line x1="200" y1="45" x2="280" y2="80" class="branch"/>
+  <rect x="260" y="80" width="40" height="25" rx="3" class="tree-node"/>
+
+  <!-- Level 2 -->
+  <!-- Branches from Node 1.1 -->
+  <line x1="120" y1="105" x2="70" y2="140" class="branch"/>
+  <rect x="50" y="140" width="40" height="25" rx="3" class="tree-node"/>
+  <line x1="120" y1="105" x2="170" y2="140" class="branch"/>
+  <rect x="150" y="140" width="40" height="25" rx="3" class="tree-leaf"/> 
+
+  <!-- Branches from Node 1.2 -->
+  <line x1="280" y1="105" x2="230" y2="140" class="branch"/>
+  <rect x="210" y="140" width="40" height="25" rx="3" class="tree-node"/>
+  <line x1="280" y1="105" x2="330" y2="140" class="branch"/>
+  <rect x="310" y="140" width="40" height="25" rx="3" class="tree-leaf"/>
+
+  <!-- Level 3 -->
+  <!-- Branches from Node 2.1 -->
+  <line x1="70" y1="165" x2="40" y2="200" class="branch"/>
+  <rect x="20" y="200" width="40" height="25" rx="3" class="tree-leaf"/>
+  <line x1="70" y1="165" x2="100" y2="200" class="branch"/>
+  <rect x="80" y="200" width="40" height="25" rx="3" class="tree-leaf"/>
+  
+  <!-- Branches from Node 2.3 -->
+  <line x1="230" y1="165" x2="200" y2="200" class="branch"/>
+  <rect x="180" y="200" width="40" height="25" rx="3" class="tree-node"/> 
+  <line x1="230" y1="165" x2="260" y2="200" class="branch"/>
+  <rect x="240" y="200" width="40" height="25" rx="3" class="tree-leaf"/>
+
+  <!-- Level 4 -->
+  <!-- Branches from Node 3.1 -->
+   <line x1="200" y1="225" x2="170" y2="260" class="branch"/>
+   <rect x="150" y="260" width="40" height="25" rx="3" class="tree-leaf"/>
+   <line x1="200" y1="225" x2="230" y2="260" class="branch"/>
+   <rect x="210" y="260" width="40" height="25" rx="3" class="tree-leaf"/>
+
+</svg> 

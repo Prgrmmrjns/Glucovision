@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <!-- Background -->
+  <rect width="400" height="300" fill="white"/>
+
+  <!-- Define styles and gradients -->
+  <defs>
+    <style>
+      .bowl-outer-rice { fill: #EAEAEA; /* Light Gray */ stroke: #C0C0C0; /* Silver */ stroke-width: 2; }
+      .bowl-inner-rice { fill: #F8F8F8; /* Very Light Gray */ }
+      .bowl-rim-rice { fill: none; stroke: #C0C0C0; stroke-width: 4; }
+      .rice-grain { fill: #FFFAF0; /* Floral White */ stroke: #F5F5F5; /* White Smoke */ stroke-width: 0.3; opacity: 0.9; }
+    </style>
+     <radialGradient id="bowlShadingRice" cx="0.5" cy="0.9" r="0.8" fx="0.5" fy="0.9">
+      <stop offset="0%" style="stop-color:#C0C0C0; stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#EAEAEA; stop-opacity:0" />
+    </radialGradient>
+     <!-- Simple texture/shading for rice pile -->
+     <filter id="riceTexture" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.1 0.3" numOctaves="1" seed="10" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.98 0 0 0 0 0.98 0 0 0 0 0.95 0 0 0 0.1 0" result="riceNoise"/>
+      <feComposite operator="in" in="riceNoise" in2="SourceGraphic" result="texturedRice"/>
+      <feGaussianBlur in="texturedRice" stdDeviation="0.5" result="blurredTexture"/>
+      <feBlend in="SourceGraphic" in2="blurredTexture" mode="multiply"/>
+    </filter>
+  </defs>
+
+  <!-- Bowl -->
+  <g transform="translate(50, 80)">
+    <!-- Outer bowl shape -->
+    <path class="bowl-outer-rice" d="M0,150 C0,50 300,50 300,150 A 150 50 0 0 1 0,150 Z"/>
+    <!-- Inner shading -->
+     <path d="M0,150 C0,50 300,50 300,150 A 150 50 0 0 1 0,150 Z" style="fill: url(#bowlShadingRice);"/>
+     <!-- Inner bowl visible area (top ellipse) -->
+    <ellipse class="bowl-inner-rice" cx="150" cy="55" rx="145" ry="45"/>
+    <!-- Rice mound shape -->
+    <ellipse cx="150" cy="65" rx="135" ry="40" style="fill:#FFFAF0;" filter="url(#riceTexture)"/> 
+    <!-- Bowl Rim -->
+    <ellipse class="bowl-rim-rice" cx="150" cy="55" rx="145" ry="45"/>
+
+    <!-- Add a few slightly more defined grains on top (optional) -->
+     <g transform="translate(150, 65)">
+      <ellipse cx="-50" cy="0" rx="5" ry="2" class="rice-grain" transform="rotate(-10)"/>
+      <ellipse cx="30" cy="-10" rx="6" ry="2.5" class="rice-grain" transform="rotate(20)"/>
+      <ellipse cx="0" cy="10" rx="4" ry="1.5" class="rice-grain" transform="rotate(5)"/>
+      <ellipse cx="80" cy="5" rx="5" ry="2" class="rice-grain" transform="rotate(-30)"/>
+      <ellipse cx="-90" cy="-5" rx="6" ry="2.5" class="rice-grain" transform="rotate(15)"/>
+    </g>
+
+  </g>
+
+</svg> 

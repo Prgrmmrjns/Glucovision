@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+
+
+  <!-- Define styles and filters -->
+  <defs>
+    <style>
+      .eye-outline { fill: #FFF; stroke: #bbb; stroke-width: 2; filter: url(#glow); }
+      .pupil { fill: #4682B4; filter: url(#pupil-glow); }
+      .highlight { fill: white; opacity: 0.7; }
+    </style>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+     <filter id="pupil-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="pupilBlur"/>
+      <feMerge>
+        <feMergeNode in="pupilBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Glowing Eye -->
+  <g transform="translate(150, 150)"> <!-- Center the eye -->
+    <ellipse cx="0" cy="0" rx="80" ry="50" class="eye-outline"/>
+    <circle cx="0" cy="0" r="25" class="pupil"/>
+    <circle cx="-15" cy="-15" r="8" class="highlight"/> <!-- Highlight -->
+  </g>
+
+</svg> 
