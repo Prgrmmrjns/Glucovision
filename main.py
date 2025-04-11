@@ -20,7 +20,7 @@ meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'p
 features_to_remove = ['glucose_next', 'datetime', 'hour']
 patients = ['001', '002', '004', '006', '007', '008']
 approaches = ['pixtral-large-latest', 'nollm']
-prediction_horizons = [6, 12]
+prediction_horizons = [6, 9, 12, 18, 24]
 
 # Optimization parameters
 train_size = 0.9
@@ -33,14 +33,17 @@ load_params=False
 lgb_params = {
     'max_depth': 3,
     'n_estimators': 1000,
-    'learning_rate': 0.1,
+    'learning_rate': 0.01,
+    'min_data_in_leaf': 0,
     'objective': 'regression',
     'data_sample_strategy': 'goss',
     'use_quantized_grad': True,
     'random_state': 42,
     'deterministic': True,
     'force_row_wise': True,
-    'num_threads': 10,
+    'num_threads': 20,
+    'reg_alpha': 0,
+    'path_smooth': 1,
     'reg_lambda': 20,
     'verbosity': -1,
 }
@@ -347,7 +350,7 @@ for approach in approaches:
             })
             # Create directory if it doesn't exist
             os.makedirs(f'predictions/{approach}/{prediction_horizon}', exist_ok=True)
-            predictions.to_csv(f'predictions/{approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
+            predictions.to_csv(f'predictions/ {approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
         print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {df[(df['Approach'] == approach) & (df['Prediction Horizon'] == prediction_horizon)]['RMSE'].mean():.4f}")
 
 df.to_csv('results/evaluation_metrics.csv', index=False) 
