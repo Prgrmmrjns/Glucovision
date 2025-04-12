@@ -55,7 +55,7 @@ def get_impact(curve, delta_t):
 
 # Define the cubic control points for the simple sugars example
 # P0=(0,0), P1=(0.25, 1.0), P2=(0.7, -0.2), P3=(1.8, 0.0)  <- P2.y is now negative
-simple_sugar_points_cubic = np.array([[0.0, 0.0], [0.25, 1.0], [0.7, -0.2], [1.8, 0.0]])
+simple_sugar_points_cubic = np.array([[0.0, 0.0], [0.5, 1.0], [1, 0], [3, 0.0]])
 
 # Generate the cubic curve points
 curve_cubic = bezier_curve(simple_sugar_points_cubic, num=500) # Higher resolution for plotting
@@ -63,8 +63,8 @@ curve_cubic = bezier_curve(simple_sugar_points_cubic, num=500) # Higher resoluti
 # Define meal times (hours relative to 11:00 AM) and amounts
 meal1_time_rel = 0.0 # 11:00 AM
 meal2_time_rel = 1.0 # 12:00 PM
-meal1_ss = 25.0 # grams
-meal2_ss = 20.0 # grams
+meal1_simple_sugars = 25.0 # grams
+meal2_simple_sugars = 20.0 # grams
 
 # Define specific times of interest for calculation/annotation
 time_1200_rel = 1.0 # 12:00 PM
@@ -76,21 +76,21 @@ delta_t1_1200 = time_1200_rel - meal1_time_rel # 1.0
 delta_t2_1200 = time_1200_rel - meal2_time_rel # 0.0
 impact1_1200_factor = get_impact(curve_cubic, delta_t1_1200)
 impact2_1200_factor = get_impact(curve_cubic, delta_t2_1200)
-total_effective_ss_1200 = (meal1_ss * impact1_1200_factor) + (meal2_ss * impact2_1200_factor)
+total_modeled_impact_1200 = (meal1_simple_sugars * impact1_1200_factor) + (meal2_simple_sugars * impact2_1200_factor)
 
 delta_t1_1230 = time_1230_rel - meal1_time_rel # 1.5
 delta_t2_1230 = time_1230_rel - meal2_time_rel # 0.5
 impact1_1230_factor = get_impact(curve_cubic, delta_t1_1230)
 impact2_1230_factor = get_impact(curve_cubic, delta_t2_1230)
-total_effective_ss_1230 = (meal1_ss * impact1_1230_factor) + (meal2_ss * impact2_1230_factor)
+total_modeled_impact_1230 = (meal1_simple_sugars * impact1_1230_factor) + (meal2_simple_sugars * impact2_1230_factor)
 
 # --- Calculate Impacts Over Time for Plotting ---
 
 # Time axis for plotting (e.g., 11:00 AM to 2:30 PM)
 time_axis_hours = np.linspace(0, 3.5, 500) # Hours relative to 11:00 AM
 
-effective_ss1_over_time = np.zeros_like(time_axis_hours)
-effective_ss2_over_time = np.zeros_like(time_axis_hours)
+effective_simple_sugars1_over_time = np.zeros_like(time_axis_hours)
+effective_simple_sugars2_over_time = np.zeros_like(time_axis_hours)
 
 for i, t in enumerate(time_axis_hours):
     # Elapsed time since each meal
@@ -101,50 +101,110 @@ for i, t in enumerate(time_axis_hours):
     impact1_factor = get_impact(curve_cubic, delta_t1)
     impact2_factor = get_impact(curve_cubic, delta_t2)
 
-    # Calculate effective simple sugars from each meal
-    effective_ss1_over_time[i] = meal1_ss * impact1_factor
-    effective_ss2_over_time[i] = meal2_ss * impact2_factor
+    # Calculate effective simple sugars from each meal using new variable names
+    effective_simple_sugars1_over_time[i] = meal1_simple_sugars * impact1_factor
+    effective_simple_sugars2_over_time[i] = meal2_simple_sugars * impact2_factor
 
-# Calculate total effective simple sugars over time
-total_effective_ss_over_time = effective_ss1_over_time + effective_ss2_over_time
+# Calculate total modeled simple sugar impact over time using new variable names
+total_modeled_impact_over_time = effective_simple_sugars1_over_time + effective_simple_sugars2_over_time
 
 # --- Plotting ---
 
 plt.style.use('seaborn-v0_8-whitegrid')
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True,
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 6), sharex=True,
                                gridspec_kw={'height_ratios': [4, 1], 'hspace': 0.05})
 
-# Plot effective amounts on ax1
-ax1.plot(time_axis_hours, effective_ss1_over_time, label=f'Meal 1 ({meal1_ss}g SS @ 11:00)', linestyle='--')
-ax1.plot(time_axis_hours, effective_ss2_over_time, label=f'Meal 2 ({meal2_ss}g SS @ 12:00)', linestyle=':')
-ax1.plot(time_axis_hours, total_effective_ss_over_time, label='Total Effective SS', color='black', linewidth=2)
+# Create a secondary y-axis for the Bezier curve values
+ax1_twin = ax1.twinx()
 
-# Annotate ax1 at specific times
-ax1.scatter([time_1200_rel, time_1230_rel],
-            [total_effective_ss_1200, total_effective_ss_1230],
-            color='red', s=50, zorder=5, label='Calculation Points')
-ax1.annotate(f'Total: {total_effective_ss_1200:.2f}g',
-             xy=(time_1200_rel, total_effective_ss_1200),
-             xytext=(time_1200_rel, total_effective_ss_1200 + 1),
-             ha='center', arrowprops=dict(arrowstyle='->', color='red'))
-ax1.annotate(f'Total: {total_effective_ss_1230:.2f}g',
-             xy=(time_1230_rel, total_effective_ss_1230),
-             xytext=(time_1230_rel, total_effective_ss_1230 + 1),
-             ha='center', arrowprops=dict(arrowstyle='->', color='red'))
+# Plot effective amounts on ax1 with colors to match axes
+# Keep only the total sugar impact (left axis)
+ax1.plot(time_axis_hours, total_modeled_impact_over_time, color='blue', linewidth=2)
 
-ax1.set_ylabel('Effective Simple Sugars (g)')
-ax1.set_title('Combined Impact of Simple Sugars from Two Meals (Cubic Bezier Example)')
-ax1.legend(loc='upper right')
+# Plot the actual Bezier curve on the secondary y-axis with distinct styling
+ax1_twin.plot(curve_cubic[:, 0], curve_cubic[:, 1], color='darkred', linewidth=1.5, 
+             linestyle='-', alpha=0.5)
+
+# Create Bezier value curves for individual meals (on right axis)
+meal1_impact_factors = np.zeros_like(time_axis_hours)
+meal2_impact_factors = np.zeros_like(time_axis_hours)
+
+for i, t in enumerate(time_axis_hours):
+    # Elapsed time since each meal
+    delta_t1 = t - meal1_time_rel
+    delta_t2 = t - meal2_time_rel
+
+    # Get impact factor for each meal at time t
+    meal1_impact_factors[i] = get_impact(curve_cubic, delta_t1)
+    meal2_impact_factors[i] = get_impact(curve_cubic, delta_t2)
+
+# Add Meal 1 Bezier curve values to right axis
+ax1_twin.plot(time_axis_hours, meal1_impact_factors, color='darkred', linestyle='--', 
+             alpha=0.8, linewidth=1.5, label='Meal 1 Bezier Curve Value')
+
+# Add Meal 2 Bezier curve values to right axis
+ax1_twin.plot(time_axis_hours, meal2_impact_factors, color='darkred', linestyle=':', 
+             alpha=0.8, linewidth=1.5, label='Meal 2 Bezier Curve Value')
+
+ax1_twin.set_ylim(0, 1)
+ax1_twin.set_ylabel('Bezier Curve Value', color='darkred')
+ax1_twin.tick_params(axis='y', labelcolor='darkred')
+
+# Add annotations for specific Bezier y-values
+annotation_fontsize = 8
+# At 12:00 (t=1.0)
+ax1_twin.annotate(f'M1: {impact1_1200_factor:.2f}', 
+                  xy=(time_1200_rel, impact1_1200_factor), 
+                  xytext=(time_1200_rel, impact1_1200_factor + 0.05), 
+                  ha='center', fontsize=annotation_fontsize, color='darkred',
+                  arrowprops=dict(arrowstyle='-', color='darkred', linestyle='--', alpha=0.7))
+ax1_twin.annotate(f'M2: {impact2_1200_factor:.2f}', 
+                  xy=(time_1200_rel, impact2_1200_factor), 
+                  xytext=(time_1200_rel - 0.05, impact2_1200_factor + 0.05), # Shift left and up
+                  ha='right', # Align text right
+                  va='bottom', # Align text bottom
+                  fontsize=annotation_fontsize, color='darkred',
+                  arrowprops=dict(arrowstyle='-', color='darkred', linestyle=':', alpha=0.7))
+# At 12:30 (t=1.5)
+ax1_twin.annotate(f'M1: {impact1_1230_factor:.2f}', 
+                  xy=(time_1230_rel, impact1_1230_factor), 
+                  xytext=(time_1230_rel + 0.1, impact1_1230_factor + 0.1), 
+                  ha='left', fontsize=annotation_fontsize, color='darkred',
+                  arrowprops=dict(arrowstyle='-', color='darkred', linestyle='--', alpha=0.7))
+ax1_twin.annotate(f'M2: {impact2_1230_factor:.2f}', 
+                  xy=(time_1230_rel, impact2_1230_factor), 
+                  xytext=(time_1230_rel + 0.1, impact2_1230_factor - 0.05), 
+                  ha='left', va='top', fontsize=annotation_fontsize, color='darkred',
+                  arrowprops=dict(arrowstyle='-', color='darkred', linestyle=':', alpha=0.7))
+
+# Annotate ax1 at specific times using new variable names and phrasing
+ax1.annotate(f'Total: {total_modeled_impact_1200:.1f}g',
+             xy=(time_1200_rel, total_modeled_impact_1200),
+             xytext=(time_1200_rel, total_modeled_impact_1200 - 2),
+             ha='center', arrowprops=dict(arrowstyle='->', color='blue'))
+ax1.annotate(f'Total: {total_modeled_impact_1230:.1f}g',
+             xy=(time_1230_rel, total_modeled_impact_1230),
+             xytext=(time_1230_rel, total_modeled_impact_1230 - 2),
+             ha='center', arrowprops=dict(arrowstyle='->', color='blue'))
+
+# Update y-axis label and color
+ax1.set_ylabel('Cumulative Modeled Simple Sugar Impact (g)', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+
+# Combine legends
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax1_twin.get_legend_handles_labels()
+ax1_twin.legend(lines + lines2, labels + labels2, loc='upper right')
+
 ax1.grid(True, linestyle='--', alpha=0.7)
 
 
-# Plot meal events on ax2
+# Plot meal events on ax2 (Labels remain the same)
 ax2.vlines([meal1_time_rel, meal2_time_rel], ymin=0, ymax=1, color=['blue', 'green'], linestyle='-', lw=2,
            label='Meal Intake Events')
-ax2.text(meal1_time_rel, 0.5, f' Meal 1\n ({meal1_ss}g SS)', ha='left', va='center', color='blue')
-ax2.text(meal2_time_rel, 0.5, f' Meal 2\n ({meal2_ss}g SS)', ha='left', va='center', color='green')
+ax2.text(meal1_time_rel, 0.5, f' Meal 1\n ({meal1_simple_sugars}g Simple Sugars)', ha='left', va='center', color='blue')
+ax2.text(meal2_time_rel, 0.5, f' Meal 2\n ({meal2_simple_sugars}g Simple Sugars)', ha='left', va='center', color='green')
 
-ax2.set_xlabel('Time (Hours since 11:00 AM)')
 ax2.set_yticks([]) # No y-ticks needed for event plot
 ax2.set_ylim(0, 1)
 ax2.grid(True, axis='x', linestyle='--', alpha=0.7)
@@ -157,14 +217,15 @@ ax2.set_xticklabels(hour_labels)
 ax1.set_xlim(left=-0.1, right=3.6) # Adjust limits slightly
 
 plt.tight_layout(rect=[0, 0, 1, 0.97]) # Adjust layout to prevent title overlap
-plt.savefig('cubic_bezier_impact_visualization.png') # Save the plot
-plt.show()
+plt.savefig('images/methods/example_bezier.png') # Save the plot
+plt.savefig('images/methods/example_bezier.eps') # Save the plo
+plt.close()
 
 print("--- Calculated Values ---")
 print(f"Impact Factor @ 12:00 (Meal 1, \u0394t=1.0h): {impact1_1200_factor:.3f}")
 print(f"Impact Factor @ 12:00 (Meal 2, \u0394t=0.0h): {impact2_1200_factor:.3f}")
-print(f"Total Effective SS @ 12:00 (t=1.0h): {total_effective_ss_1200:.2f}g")
+print(f"Total Modeled Simple Sugar Impact @ 12:00 (t=1.0h): {total_modeled_impact_1200:.2f}g")
 print(f"Impact Factor @ 12:30 (Meal 1, \u0394t=1.5h): {impact1_1230_factor:.3f}")
 print(f"Impact Factor @ 12:30 (Meal 2, \u0394t=0.5h): {impact2_1230_factor:.3f}")
-print(f"Total Effective SS @ 12:30 (t=1.5h): {total_effective_ss_1230:.2f}g")
-print("\nPlot saved as cubic_bezier_impact_visualization.png") 
+print(f"Total Modeled Simple Sugar Impact @ 12:30 (t=1.5h): {total_modeled_impact_1230:.2f}g")
+print("\nPlot saved as cubic_bezier_impact_visualization.png")

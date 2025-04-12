@@ -1,5 +1,0 @@
-Factor,Finding,Statistical_Measure
-Patient differences,Average patient RMSE variation (std dev): 23.78 mg/dL,Std Dev
-Patient differences,Maximum performance difference between patients: 146.11%,Range
-Amount of training data,Correlation between training days and RMSE: nan,Correlation
-Effect of meal features,Average RMSE improvement with meal features: 3.02%,Percentage

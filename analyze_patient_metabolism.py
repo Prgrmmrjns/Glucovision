@@ -25,9 +25,69 @@ def bezier_curve(points, num=100):
     curve = np.zeros((num, 2))
     
     for i, point in enumerate(points):
-        curve += np.outer(comb(n, i) * (t**i) * ((1-t)**(n-i)), point)
+        bernstein_poly = comb(n, i) * (t**i) * ((1-t)**(n-i))
+        curve += np.outer(bernstein_poly, point)
     
-    return curve[np.argsort(curve[:, 0])]
+    # Ensure curve is sorted by x-values if needed, though not strictly necessary for peak finding
+    # return curve[np.argsort(curve[:, 0])]
+    return curve
+
+# Function to calculate Bezier point at specific t
+def bezier_point_at_t(points, t):
+    n = len(points) - 1
+    point_at_t = np.zeros(2)
+    for i, point in enumerate(points):
+        bernstein_poly = comb(n, i) * (t**i) * ((1-t)**(n-i))
+        point_at_t += bernstein_poly * point
+    return point_at_t
+
+# Function to find the t value corresponding to the peak y-value of a cubic Bezier curve
+def find_cubic_bezier_peak_t(points):
+    if len(points) != 4:
+        # Fallback for non-cubic curves or unexpected input
+        return None
+
+    y0, y1, y2, y3 = points[:, 1]
+    
+    # Correct coefficients of the derivative dy/dt = at^2 + bt + c = 0
+    a = 3 * (-y0 + 3*y1 - 3*y2 + y3) # This is derivative of Bernstein form directly
+    b = 6 * (y0 - 2*y1 + y2)
+    c = 3 * (y1 - y0)
+
+    # Solve the quadratic equation for t
+    roots = []
+    if np.isclose(a, 0):
+        # Linear equation: bt + c = 0
+        if not np.isclose(b, 0):
+            t = -c / b
+            if 0 < t < 1:
+                roots.append(t)
+    else:
+        # Quadratic equation
+        delta = b**2 - 4*a*c
+        if delta >= 0:
+            sqrt_delta = np.sqrt(delta)
+            t1 = (-b + sqrt_delta) / (2*a)
+            t2 = (-b - sqrt_delta) / (2*a)
+            if 0 < t1 < 1:
+                roots.append(t1)
+            if 0 < t2 < 1:
+                roots.append(t2)
+    
+    # Evaluate y at the valid roots and endpoints (t=0, t=1)
+    candidate_t = [0] + roots + [1]
+    y_values = [bezier_point_at_t(points, t)[1] for t in candidate_t]
+    
+    # Find the t corresponding to the maximum y
+    if not y_values:
+        return None # Should not happen if endpoints are included
+        
+    max_y_idx = np.argmax(y_values)
+    peak_t = candidate_t[max_y_idx]
+    
+    # Return the t for max y, even if it's 0 or 1, to handle monotonic cases
+    return peak_t
+
 
 # Calculate metrics for each patient
 patient_metrics = {patient: {
@@ -44,31 +104,65 @@ max_time = 15  # Maximum time to show on x-axis
 for feature in features:
     all_curves[feature] = {}
     for patient in patients:
-        params = patient_params[patient][feature]
+        params = patient_params[patient]['bezier_points'][feature]
         control_points = np.array(params).reshape(-1, 2)
-        curve = bezier_curve(control_points, num=200)
-        all_curves[feature][patient] = curve
         
-        # Find peak
-        peak_idx = np.argmax(curve[:, 1])
-        patient_metrics[patient]['peak_times'].append(curve[peak_idx, 0])
-        patient_metrics[patient]['peak_intensities'].append(curve[peak_idx, 1])
+        # Generate sampled curve for plotting and AUC
+        sampled_curve = bezier_curve(control_points, num=200)
+        all_curves[feature][patient] = sampled_curve[np.argsort(sampled_curve[:, 0])] # Sort for plotting
         
-        # Calculate effect duration (time until effect drops below 10% of peak)
-        threshold = 0.1 * curve[peak_idx, 1]
-        post_peak = curve[peak_idx:]
-        duration_idx = np.where(post_peak[:, 1] < threshold)[0]
-        if len(duration_idx) > 0:
-            duration = post_peak[duration_idx[0], 0] - curve[peak_idx, 0]
+        # --- Find Peak Analytically --- 
+        peak_t = find_cubic_bezier_peak_t(control_points)
+        
+        if peak_t is not None:
+            peak_coords = bezier_point_at_t(control_points, peak_t)
+            peak_time = peak_coords[0]
+            peak_intensity = peak_coords[1]
+            # Ensure peak intensity is non-negative
+            peak_intensity = max(0, peak_intensity)
         else:
-            duration = curve[-1, 0] - curve[peak_idx, 0]
-        patient_metrics[patient]['effect_durations'].append(duration)
+            # Fallback to argmax on sampled curve if analytical peak fails or is outside (0,1)
+            # Use the *unsorted* sampled curve for argmax
+            peak_idx = np.argmax(sampled_curve[:, 1])
+            peak_time = sampled_curve[peak_idx, 0]
+            peak_intensity = sampled_curve[peak_idx, 1]
+            
+        # Handle cases where calculated peak time might be outside expected range due to curve shape
+        peak_time = max(0, peak_time) 
+
+        patient_metrics[patient]['peak_times'].append(peak_time)
+        patient_metrics[patient]['peak_intensities'].append(peak_intensity)
+        # --- End Peak Finding --- 
         
-        # Calculate area under curve (AUC)
-        # Limit to max_time for consistent comparison
-        mask = curve[:, 0] <= max_time
-        limited_curve = curve[mask]
-        auc = np.trapz(limited_curve[:, 1], limited_curve[:, 0])
+        # Calculate effect duration (time from peak until effect drops below 10% of peak)
+        threshold = 0.1 * peak_intensity
+        
+        # Find time points *after* the calculated peak time
+        post_peak_mask = sampled_curve[:, 0] >= peak_time
+        post_peak_curve = sampled_curve[post_peak_mask]
+        
+        # Find where the effect drops below threshold in the post-peak segment
+        duration_indices = np.where(post_peak_curve[:, 1] < threshold)[0]
+        
+        if len(duration_indices) > 0:
+            # Time when effect drops below threshold
+            end_effect_time = post_peak_curve[duration_indices[0], 0]
+            duration = end_effect_time - peak_time
+        else:
+            # Effect doesn't drop below threshold within the sampled time
+            # Calculate duration until the end of the sampled curve
+            duration = sampled_curve[-1, 0] - peak_time
+            
+        patient_metrics[patient]['effect_durations'].append(max(0, duration)) # Ensure duration is non-negative
+        
+        # Calculate area under curve (AUC) using the sorted sampled curve
+        sorted_sampled_curve = all_curves[feature][patient]
+        mask = sorted_sampled_curve[:, 0] <= max_time
+        limited_curve = sorted_sampled_curve[mask]
+        if len(limited_curve) > 1:
+             auc = np.trapz(limited_curve[:, 1], limited_curve[:, 0])
+        else:
+             auc = 0 # Handle cases with insufficient points for trapz
         patient_metrics[patient]['auc'].append(auc)
 
 # Compute summary statistics for each patient

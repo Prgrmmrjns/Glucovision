@@ -24,7 +24,7 @@ prediction_horizons = [6, 9, 12, 18, 24]
 
 # Optimization parameters
 train_size = 0.9
-n_trials = 300
+n_trials = 1000
 random_seed = 42
 n_jobs = 6
 load_params=False

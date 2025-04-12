@@ -54,7 +54,7 @@ def get_data(patient, prediction_horizon):
     return glucose_data, combined_data
 
 # Load evaluation metrics
-df = pd.read_csv('analysis/evaluation_metrics.csv')
+df = pd.read_csv('results/evaluation_metrics.csv')
 
 # Get unique prediction horizons, approaches, and patients
 prediction_horizons = sorted(df['Prediction Horizon'].unique())
@@ -232,3 +232,5 @@ for ph in selected_horizons:
 
 # Add overall averages to summary
 summary_df = pd.concat([summary_df, pd.DataFrame(overall_summary)], ignore_index=True)
+
+summary_df.to_csv('analysis/training_effect_summary.csv', index=False)

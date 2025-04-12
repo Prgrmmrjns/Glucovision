@@ -13,9 +13,9 @@ patients = ['001', '002', '004', '006', '007', '008']
 meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'proteins']
 features = meal_features + ['insulin']
 features_to_remove = ['glucose_next', 'datetime', 'hour']
-prediction_horizon = 12  # Using the model from directory 12
+prediction_horizon = 6  # Using the model from directory 12
 model_path = f'models/pixtral-large-latest/{prediction_horizon}'
-increments = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+increments = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]  # Smaller increments to stay closer to training data range
 
 warnings.filterwarnings('ignore')
 
@@ -90,6 +90,15 @@ def get_data(patient, prediction_horizon):
     ).apply(lambda window: get_projected_value(window, prediction_horizon))
     
     glucose_data.dropna(subset=['glucose_next'], inplace=True)
+    
+    # Filter glucose data for 0-2 hours after each meal
+    meal_times = combined_data['datetime'].unique()
+    mask = np.zeros(len(glucose_data), dtype=bool)
+    for meal_time in meal_times:
+        time_diff = (glucose_data['datetime'] - meal_time).dt.total_seconds() / 3600
+        mask |= (time_diff >= 0) & (time_diff <= 2)
+    
+    glucose_data = glucose_data[mask]
     return glucose_data, combined_data
 
 def add_features(params, features, data, prediction_horizon):
@@ -131,27 +140,45 @@ def modify_macronutrients(food_data, nutrient, amount):
     modified_data[nutrient] = modified_data[nutrient].clip(lower=0)
     return modified_data
 
+def analyze_nutrient_ranges(patients, meal_features):
+    """Analyze the range and distribution of nutrients for each patient."""
+    print("\n=== Nutrient Ranges for Each Patient ===")
+    for patient in patients:
+        print(f"\nPatient {patient}:")
+        _, combined_data = get_data(patient, prediction_horizon)
+        
+        for feature in meal_features:
+            # Get non-zero values only
+            feature_values = combined_data[combined_data[feature] > 0][feature]
+            if len(feature_values) > 0:
+                print(f"  {feature}: {len(feature_values)} meals, range: {feature_values.min():.1f}-{feature_values.max():.1f}g, mean: {feature_values.mean():.1f}g, median: {feature_values.median():.1f}g")
+            else:
+                print(f"  {feature}: No meals with this nutrient")
+
 # Load models
 models, feature_names = load_models()
+
+# Analyze nutrient ranges before making modifications
+analyze_nutrient_ranges(patients, meal_features)
 
 # Create DataFrame to store results
 results_df = pd.DataFrame()
 
+
 # Simulate additions/subtractions for each patient and feature
 for patient in patients:
     model = models[patient]
-    patient_params_subset = {k: v for k, v in patient_params[patient].items() if k in features}
+    patient_params_subset = {k: v for k, v in patient_params[patient]['bezier_points'].items() if k in features}
     
-    # Get original data
+    # Get original data (already filtered for 0-2 hours post-meal)
     data = get_data(patient, prediction_horizon)
     processed_data = add_features(patient_params_subset, features, data, prediction_horizon)
     X_test_orig = processed_data.drop(features_to_remove, axis=1)
     preds_orig = X_test_orig['glucose'] - model.predict(X_test_orig)
     baseline_glucose = np.mean(preds_orig)
     
-    # Calculate hyper/hypo minutes in baseline
-    baseline_hyper = np.sum(preds_orig > 180)
-    baseline_hypo = np.sum(preds_orig < 70)
+    # Debug - confirm baseline is calculated on 0-2 hour window
+    print(f"Baseline glucose (0-2h post-meal) for patient {patient}: {baseline_glucose:.2f}")
     
     # Test each feature modification
     for feature in meal_features:
@@ -167,6 +194,7 @@ for patient in patients:
             modified_combined = original_combined.copy()
             modified_combined.update(food_df)
             
+
             # Process with modified data
             modified_data = (glucose_data.copy(), modified_combined)
             processed_modified = add_features(patient_params_subset, features, modified_data, prediction_horizon)
@@ -191,11 +219,11 @@ pivot_df = pd.pivot_table(
     results_df,
     index='increment',
     columns=['feature', 'patient'],
-    values=['hyper_minutes', 'hypo_minutes', 'mean_glucose']
+    values=['mean_glucose']
 )
 
 # Calculate mean and standard error across patients for each feature and increment
-metric_cols = ['hyper_minutes', 'hypo_minutes', 'mean_glucose']
+metric_cols = ['mean_glucose']
 agg_df = results_df.groupby(['feature', 'increment'])[metric_cols].agg(['mean', 'std']).reset_index()
 
 # Reshape for easier plotting
@@ -251,11 +279,11 @@ def plot_all_features_mean_glucose(results_df):
         
         # Customize plot
         axes[i].set_title(feature)
-        axes[i].set_xlabel('Increment / Decrement (g)')
-        axes[i].set_ylabel('Change in Mean Glucose')
+        axes[i].set_xlabel('Decrement / Increment (g)', fontsize=8)
+        axes[i].set_ylabel('Change in Mean Glucose (mg/dL)', fontsize=8)
         axes[i].grid(True)
         axes[i].axhline(y=0, color='k', linestyle='--', alpha=0.3)
-        axes[i].text(-0.1, 1.05, letters[i], transform=axes[i].transAxes, fontsize=16, fontweight='bold', va='top')
+        axes[i].text(-0.12, 1.05, letters[i], transform=axes[i].transAxes, fontsize=16, fontweight='bold', va='top')
     
     # Use the last subplot space for the legend
     axes[5].axis('off')  # Turn off axis for the legend subplot
@@ -267,216 +295,27 @@ def plot_all_features_mean_glucose(results_df):
     axes[5].legend(handles, labels, title='Patient', loc='center', fontsize=12)
     
     plt.tight_layout()
-    plt.savefig('images/all_features_mean_glucose.png', dpi=300)
-    plt.savefig('images/all_features_mean_glucose.eps', dpi=300)
+    plt.savefig('images/results/all_features_mean_glucose.png', dpi=300)
+    plt.savefig('images/results/all_features_mean_glucose.eps', dpi=300)
     plt.close()
 
 # Only plot mean glucose changes across all features
 plot_all_features_mean_glucose(results_df)
 
 # Save results
-results_df.to_csv('analysis/food_modification_results.csv', index=False)
-
-# Analyze time-of-day effect on glucose
-def modify_time(data, target_hour):
-    """Modify the time of day for all data points while preserving date."""
-    glucose_data, combined_data = data
-    
-    # Create deep copies to avoid modifying originals
-    modified_glucose = glucose_data.copy()
-    modified_combined = combined_data.copy()
-    
-    # For glucose data, set the hour component while preserving the date
-    original_dates = modified_glucose['datetime'].dt.date
-    original_minutes = modified_glucose['datetime'].dt.minute
-    modified_glucose['datetime'] = original_dates.apply(
-        lambda date: pd.Timestamp(date.year, date.month, date.day, target_hour, 0)
-    )
-    # Update hour and time fields
-    modified_glucose['hour'] = target_hour
-    modified_glucose['time'] = target_hour + original_minutes / 60
-    
-    # For combined data (food and insulin), set the hour component while preserving the date
-    original_combined_dates = modified_combined['datetime'].dt.date
-    modified_combined['datetime'] = original_combined_dates.apply(
-        lambda date: pd.Timestamp(date.year, date.month, date.day, target_hour, 0)
-    )
-    
-    return modified_glucose, modified_combined
-
-def analyze_time_effect():
-    """Analyze the effect of time of day on glucose predictions."""
-    time_results = pd.DataFrame()
-    
-    for patient in patients:
-        model = models[patient]
-        patient_params_subset = {k: v for k, v in patient_params[patient].items() if k in features}
+# Transform to relative glucose values
+relative_results_df = results_df.copy()
+# For each patient and feature, calculate relative changes from baseline
+for patient in patients:
+    for feature in meal_features:
+        # Get baseline (increment=0) glucose value
+        baseline = results_df[(results_df['patient'] == patient) & 
+                             (results_df['feature'] == feature) & 
+                             (results_df['increment'] == 0)]['mean_glucose'].values[0]
         
-        # Get original data for this patient
-        original_data = get_data(patient, prediction_horizon)
-        glucose_data, _ = original_data
-        
-        # Run predictions for each hour of the day
-        for hour in range(24):
-            # Modify the time to the current hour
-            modified_data = modify_time(original_data, hour)
-            processed_data = add_features(patient_params_subset, features, modified_data, prediction_horizon)
-            
-            # Make predictions
-            X_test = processed_data.drop(features_to_remove, axis=1)
-            preds = X_test['glucose'] - model.predict(X_test)
-            
-            # Calculate metrics
-            time_results = pd.concat([time_results, pd.DataFrame({
-                'hour': [hour] * len(preds),
-                'glucose_prediction': preds,
-                'patient': [patient] * len(preds)
-            })])
-    
-    return time_results
+        # Calculate relative changes
+        mask = (relative_results_df['patient'] == patient) & (relative_results_df['feature'] == feature)
+        relative_results_df.loc[mask, 'mean_glucose'] = relative_results_df.loc[mask, 'mean_glucose'] - baseline
 
-def plot_time_effect(time_df):
-    """Plot the effect of time of day on glucose predictions."""
-    plt.figure(figsize=(15, 5))
-    
-    # Calculate average glucose by hour and patient
-    hour_avg = time_df.groupby(['patient', 'hour'])['glucose_prediction'].mean().reset_index()
-    
-    # Calculate baseline (average across all hours) for each patient
-    patient_baselines = hour_avg.groupby('patient')['glucose_prediction'].mean().to_dict()
-    
-    # Plot relative change from baseline for each patient
-    for patient in patients:
-        patient_data = hour_avg[hour_avg['patient'] == patient]
-        baseline = patient_baselines[patient]
-        
-        plt.plot(
-            patient_data['hour'], 
-            patient_data['glucose_prediction'] - baseline,
-            marker='o', 
-            linewidth=2,
-            label=f'Patient {patient}'
-        )
-    
-    plt.axhline(y=0, color='k', linestyle='--', alpha=0.3)
-    plt.xticks(range(24))
-    plt.xlabel('Hour of Day', fontsize=12)
-    plt.ylabel('Relative Change in Predicted Glucose (mg/dL)', fontsize=12)
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    
-    # Save figures
-    plt.savefig('images/supplementary_data/time_effect_glucose_predictions.png', dpi=300)
-    plt.savefig('images/supplementary_data/time_effect_glucose_predictions.eps', dpi=300)
-    plt.close()
-
-time_df = analyze_time_effect()
-
-# Save time analysis results
-time_df.to_csv('analysis/time_effect_results.csv', index=False)
-
-# Plot time effect
-plot_time_effect(time_df)
-
-# Interpret time effect findings
-def interpret_time_effect(time_df):
-    """Analyze and interpret the time-of-day effect on glucose predictions."""
-    
-    # Calculate average glucose by hour and patient
-    hour_avg = time_df.groupby(['patient', 'hour'])['glucose_prediction'].mean().reset_index()
-    
-    # Calculate baseline (average across all hours) for each patient
-    patient_baselines = hour_avg.groupby('patient')['glucose_prediction'].mean().to_dict()
-    
-    # Calculate relative change from baseline
-    hour_avg['relative_change'] = hour_avg.apply(
-        lambda row: row['glucose_prediction'] - patient_baselines[row['patient']], 
-        axis=1
-    )
-    
-    # Find peak hours and lowest hours for each patient
-    summary = pd.DataFrame(columns=['patient', 'peak_hour', 'peak_change', 'lowest_hour', 'lowest_change', 'range'])
-    
-    for patient in patients:
-        patient_data = hour_avg[hour_avg['patient'] == patient]
-        
-        peak_row = patient_data.loc[patient_data['relative_change'].idxmax()]
-        lowest_row = patient_data.loc[patient_data['relative_change'].idxmin()]
-        
-        peak_hour = peak_row['hour']
-        peak_change = peak_row['relative_change']
-        
-        lowest_hour = lowest_row['hour']
-        lowest_change = lowest_row['relative_change']
-        
-        glucose_range = peak_change - lowest_change
-        
-        summary = pd.concat([summary, pd.DataFrame({
-            'patient': [patient],
-            'peak_hour': [peak_hour],
-            'peak_change': [peak_change],
-            'lowest_hour': [lowest_hour],
-            'lowest_change': [lowest_change],
-            'range': [glucose_range]
-        })], ignore_index=True)
-    
-    # Calculate morning (6-12), afternoon (12-18), evening (18-0), night (0-6) averages
-    time_periods = {
-        'morning': range(6, 12),
-        'afternoon': range(12, 18),
-        'evening': range(18, 24),
-        'night': range(0, 6)
-    }
-    
-    period_avgs = pd.DataFrame(columns=['patient', 'period', 'avg_change'])
-    
-    for patient in patients:
-        patient_data = hour_avg[hour_avg['patient'] == patient]
-        
-        for period, hours in time_periods.items():
-            period_data = patient_data[patient_data['hour'].isin(hours)]
-            avg_change = period_data['relative_change'].mean()
-            
-            period_avgs = pd.concat([period_avgs, pd.DataFrame({
-                'patient': [patient],
-                'period': [period],
-                'avg_change': [avg_change]
-            })], ignore_index=True)
-    
-    # Save summary to CSV
-    summary.to_csv('analysis/time_effect_summary.csv', index=False)
-    period_avgs.to_csv('analysis/time_effect_periods.csv', index=False)
-    
-    # Find common patterns
-    common_patterns = {}
-    common_patterns['avg_peak_hour'] = summary['peak_hour'].mean()
-    common_patterns['avg_lowest_hour'] = summary['lowest_hour'].mean()
-    common_patterns['avg_glucose_range'] = summary['range'].mean()
-    
-    # Calculate overall period effect
-    overall_period_effect = period_avgs.groupby('period')['avg_change'].mean().reset_index()
-    common_patterns['period_ranking'] = overall_period_effect.sort_values('avg_change', ascending=False)['period'].tolist()
-    
-    return summary, period_avgs, common_patterns
-
-# Get interpretation results
-summary, period_avgs, common_patterns = interpret_time_effect(time_df)
-
-# Print interpretation results
-print("\nTime Effect Analysis Results:")
-print("-" * 50)
-print(f"Average peak glucose hour: {common_patterns['avg_peak_hour']:.1f}")
-print(f"Average lowest glucose hour: {common_patterns['avg_lowest_hour']:.1f}")
-print(f"Average glucose range due to time effect: {common_patterns['avg_glucose_range']:.1f} mg/dL")
-print("\nPeriod ranking from highest to lowest glucose effect:")
-for i, period in enumerate(common_patterns['period_ranking']):
-    avg = period_avgs[period_avgs['period'] == period]['avg_change'].mean()
-    print(f"{i+1}. {period.capitalize()}: {avg:.1f} mg/dL")
-
-print("\nPatient-specific peak and lowest hours:")
-for _, row in summary.iterrows():
-    print(f"Patient {row['patient']}: Peak at hour {int(row['peak_hour'])} ({row['peak_change']:.1f} mg/dL), Lowest at hour {int(row['lowest_hour'])} ({row['lowest_change']:.1f} mg/dL)")
-
-# Analysis complete message
-print("\nTime effect analysis complete. Results saved to analysis folder.")
+# Save results with relative glucose values
+relative_results_df.to_csv('analysis/food_modification_results.csv', index=False)
