@@ -253,9 +253,9 @@ for i, feature in enumerate(features):
 # Add bold 'A' label to upper left corner
 ax1.text(-0.05, 1.05, 'A', transform=ax1.transAxes, fontsize=16, fontweight='bold')
 
-ax1.set_xlabel('Time (hours)', fontsize=12)
-ax1.set_ylabel('Effect Strength', fontsize=12)
-ax1.set_title('Average Effect Curves Across Patients', fontsize=14)
+ax1.set_xlabel('Time (hours)', fontsize=18)
+ax1.set_ylabel('Effect Strength', fontsize=18)
+ax1.set_title('Average Effect Curves Across Patients', fontsize=18)
 ax1.legend(fontsize=10, loc='upper right')
 ax1.grid(True, alpha=0.3)
 ax1.set_xlim(0, max_time)
@@ -265,7 +265,7 @@ ax1.set_ylim(0, 1.0)
 ax2 = fig.add_subplot(gs[1, 0], polar=True)
 
 # Add bold 'B' label to upper left corner
-ax2.text(-0.1, 1.1, 'B', transform=ax2.transAxes, fontsize=16, fontweight='bold')
+ax2.text(-0.1, 1.1, 'B', transform=ax2.transAxes, fontsize=18, fontweight='bold')
 
 # Set radar chart angles
 angles = np.linspace(0, 2*np.pi, len(features), endpoint=False).tolist()
@@ -291,13 +291,13 @@ for i, patient in enumerate(patient_summary['Patient']):
     ax2.fill(angles, values_with_loop, alpha=0.1, color=patient_colors[i])
 
 ax2.set_thetagrids(np.degrees(angles)[:-1], radar_features[:-1])
-ax2.set_title('Peak Effect Times', fontsize=14)
+ax2.set_title('Peak Effect Times', fontsize=18)
 
 # 3. Radar chart for Peak Intensities (bottom row, second column)
 ax3 = fig.add_subplot(gs[1, 1], polar=True)
 
 # Add bold 'C' label to upper left corner
-ax3.text(-0.1, 1.1, 'C', transform=ax3.transAxes, fontsize=16, fontweight='bold')
+ax3.text(-0.1, 1.1, 'C', transform=ax3.transAxes, fontsize=18, fontweight='bold')
 
 # Plot each patient on radar chart for peak intensities
 for i, patient in enumerate(patient_summary['Patient']):
@@ -319,7 +319,7 @@ ax3.set_title('Peak Effect Intensities', fontsize=14)
 ax4 = fig.add_subplot(gs[1, 2], polar=True)
 
 # Add bold 'D' label to upper left corner
-ax4.text(-0.1, 1.1, 'D', transform=ax4.transAxes, fontsize=16, fontweight='bold')
+ax4.text(-0.1, 1.1, 'D', transform=ax4.transAxes, fontsize=18, fontweight='bold')
 
 # Plot each patient on radar chart for effect durations
 for i, patient in enumerate(patient_summary['Patient']):
@@ -335,11 +335,11 @@ for i, patient in enumerate(patient_summary['Patient']):
     ax4.fill(angles, values_with_loop, alpha=0.1, color=patient_colors[i])
 
 ax4.set_thetagrids(np.degrees(angles)[:-1], radar_features[:-1])
-ax4.set_title('Effect Durations', fontsize=14)
+ax4.set_title('Effect Durations', fontsize=18)
 
 # Add a shared legend for all radar charts
 handles, labels = ax2.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center', ncol=len(patients), bbox_to_anchor=(0.5, 0), fontsize=10)
+fig.legend(handles, labels, loc='lower center', ncol=len(patients), bbox_to_anchor=(0.5, 0), fontsize=14)
 
 # Create a colorbar to indicate metabolism ranking
 cbar_ax = fig.add_axes([0.89, 0.05, 0.02, 0.4])

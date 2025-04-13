@@ -32,8 +32,8 @@ df_limited['feature_sum_scaled'] = scaler.fit_transform(df_limited[['feature_sum
 plt.figure(figsize=(12, 4))
 
 # Plot scaled glucose_next and feature_sum
-plt.plot(df_limited['datetime'], df_limited['glucose_next_scaled'], 'b-', linewidth=3)
-plt.plot(df_limited['datetime'], df_limited['feature_sum_scaled'], 'r-', linewidth=3, alpha=0.7)
+plt.plot(df_limited['datetime'], df_limited['glucose_next_scaled'], 'b-', linewidth=3, label='Glucose')
+plt.plot(df_limited['datetime'], df_limited['feature_sum_scaled'], 'r-', linewidth=3, alpha=0.7, label='Feature Sum')
 
 # Minimalistic styling
 plt.xticks([])
@@ -45,6 +45,9 @@ plt.gca().spines['top'].set_visible(False)
 plt.gca().spines['right'].set_visible(False)
 plt.gca().spines['bottom'].set_visible(False)
 plt.gca().spines['left'].set_visible(False)
+
+# Add legend
+plt.legend(loc='upper right', fontsize=14)
 
 # Ensure layout is tight
 plt.tight_layout()
@@ -57,7 +60,7 @@ plt.close()
 plt.figure(figsize=(12, 4))
 
 # Plot scaled glucose_next and feature_sum
-plt.plot(df_limited['datetime'], df_limited['glucose_next_scaled'], 'b-', linewidth=3)
+plt.plot(df_limited['datetime'], df_limited['glucose_next_scaled'], 'b-', linewidth=3, label='Glucose')
 
 # Minimalistic styling
 plt.xticks([])
@@ -69,6 +72,9 @@ plt.gca().spines['top'].set_visible(False)
 plt.gca().spines['right'].set_visible(False)
 plt.gca().spines['bottom'].set_visible(False)
 plt.gca().spines['left'].set_visible(False)
+
+# Add legend
+plt.legend(loc='upper right', fontsize=14)
 
 # Ensure layout is tight
 plt.tight_layout()
@@ -99,10 +105,10 @@ predictions_filtered['Predictions_scaled'] = pred_scaler.fit_transform(predictio
 predictions_filtered['Ground_truth_scaled'] = pred_scaler.fit_transform(predictions_filtered[['Ground_truth']])
 
 # Create a figure for predictions vs ground truth
-plt.figure(figsize=(12, 4))
+plt.figure(figsize=(16, 4))
 
 # Plot predictions and ground truth
-plt.plot(predictions_filtered['Datetime'], predictions_filtered['Ground_truth_scaled'], 'b-', linewidth=3, label='Ground Truth')
+plt.plot(predictions_filtered['Datetime'], predictions_filtered['Ground_truth_scaled'], 'b-', linewidth=3, label='Glucose')
 plt.plot(predictions_filtered['Datetime'], predictions_filtered['Predictions_scaled'], 'g-', linewidth=3, alpha=0.7, label='Predictions')
 
 # Minimalistic styling
@@ -115,6 +121,9 @@ plt.gca().spines['top'].set_visible(False)
 plt.gca().spines['right'].set_visible(False)
 plt.gca().spines['bottom'].set_visible(False)
 plt.gca().spines['left'].set_visible(False)
+
+# Add legend
+plt.legend(loc='upper right', fontsize=14)
 
 # Ensure layout is tight
 plt.tight_layout()

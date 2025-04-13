@@ -209,7 +209,7 @@ def plot_time_effect(time_df):
     plt.axhline(y=0, color='k', linestyle='--', alpha=0.3)
     plt.xticks(range(24))
     plt.xlabel('Hour of Day', fontsize=12)
-    plt.ylabel('Relative Change in Predicted Glucose (mg/dL)', fontsize=12)
+    plt.ylabel('Change in Mean Pedicted Glucose (mg/dL)', fontsize=12)
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()

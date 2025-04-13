@@ -1,0 +1,24 @@
+\begin{table}[ht]
+\centering
+\caption{RMSE by Patient, Approach, and Prediction Horizon (mg/dL)}
+\label{tab:performance_table}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|cc|cc|cc|cc|cc|}
+\hline
+\rowcolor{gray!25} \multirow{2}{*}[1ex]{\textbf{Patient}} & \multicolumn{2}{c|}{\cellcolor{gray!25}\textbf{Horizon 30 Min}} & \multicolumn{2}{c|}{\cellcolor{gray!25}\textbf{Horizon 45 Min}} & \multicolumn{2}{c|}{\cellcolor{gray!25}\textbf{Horizon 60 Min}} & \multicolumn{2}{c|}{\cellcolor{gray!25}\textbf{Horizon 90 Min}} & \multicolumn{2}{c|}{\cellcolor{gray!25}\textbf{Horizon 120 Min}} \\
+\rowcolor{gray!25} & \cellcolor{green!10}{\textbf{mLLM}} & \cellcolor{orange!10}{\textbf{Dietitian}} & \cellcolor{green!10}{\textbf{mLLM}} & \cellcolor{orange!10}{\textbf{Dietitian}} & \cellcolor{green!10}{\textbf{mLLM}} & \cellcolor{orange!10}{\textbf{Dietitian}} & \cellcolor{green!10}{\textbf{mLLM}} & \cellcolor{orange!10}{\textbf{Dietitian}} & \cellcolor{green!10}{\textbf{mLLM}} & \cellcolor{orange!10}{\textbf{Dietitian}} \\
+\hline
+\rowcolor{gray!5} 001 & \cellcolor{green!10}{\textbf{14.85 $\pm$ 10.83}} & \cellcolor{orange!10}{16.00 $\pm$ 11.61} & \cellcolor{green!10}{\textbf{22.37 $\pm$ 16.13}} & \cellcolor{orange!10}{23.61 $\pm$ 17.57} & \cellcolor{green!10}{\textbf{28.67 $\pm$ 20.32}} & \cellcolor{orange!10}{30.01 $\pm$ 22.28} & \cellcolor{green!10}{\textbf{36.61 $\pm$ 26.48}} & \cellcolor{orange!10}{39.37 $\pm$ 30.07} & \cellcolor{green!10}{\textbf{41.23 $\pm$ 32.04}} & \cellcolor{orange!10}{47.47 $\pm$ 34.68} \\
+\rowcolor{white} 002 & \cellcolor{green!10}{\textbf{18.03 $\pm$ 13.79}} & \cellcolor{orange!10}{18.43 $\pm$ 13.67} & \cellcolor{green!10}{30.53 $\pm$ 21.27} & \cellcolor{orange!10}{\textbf{29.52 $\pm$ 21.89}} & \cellcolor{green!10}{41.62 $\pm$ 27.05} & \cellcolor{orange!10}{\textbf{39.80 $\pm$ 29.23}} & \cellcolor{green!10}{60.69 $\pm$ 38.88} & \cellcolor{orange!10}{\textbf{58.35 $\pm$ 36.90}} & \cellcolor{green!10}{77.25 $\pm$ 47.98} & \cellcolor{orange!10}{\textbf{74.40 $\pm$ 45.07}} \\
+\rowcolor{gray!5} 004 & \cellcolor{green!10}{\textbf{32.95 $\pm$ 18.31}} & \cellcolor{orange!10}{34.32 $\pm$ 18.21} & \cellcolor{green!10}{\textbf{52.03 $\pm$ 22.78}} & \cellcolor{orange!10}{54.07 $\pm$ 22.88} & \cellcolor{green!10}{\textbf{70.42 $\pm$ 31.27}} & \cellcolor{orange!10}{73.93 $\pm$ 28.61} & \cellcolor{green!10}{\textbf{101.06 $\pm$ 45.16}} & \cellcolor{orange!10}{110.34 $\pm$ 47.43} & \cellcolor{green!10}{\textbf{129.89 $\pm$ 58.13}} & \cellcolor{orange!10}{147.48 $\pm$ 66.82} \\
+\rowcolor{white} 006 & \cellcolor{green!10}{\textbf{10.77 $\pm$ 6.45}} & \cellcolor{orange!10}{10.95 $\pm$ 6.57} & \cellcolor{green!10}{\textbf{16.92 $\pm$ 10.54}} & \cellcolor{orange!10}{17.06 $\pm$ 10.31} & \cellcolor{green!10}{\textbf{22.36 $\pm$ 14.46}} & \cellcolor{orange!10}{22.61 $\pm$ 14.35} & \cellcolor{green!10}{\textbf{32.44 $\pm$ 21.36}} & \cellcolor{orange!10}{34.77 $\pm$ 21.18} & \cellcolor{green!10}{\textbf{39.14 $\pm$ 25.90}} & \cellcolor{orange!10}{43.67 $\pm$ 24.03} \\
+\rowcolor{gray!5} 007 & \cellcolor{green!10}{11.32 $\pm$ 6.89} & \cellcolor{orange!10}{\textbf{11.03 $\pm$ 6.78}} & \cellcolor{green!10}{18.49 $\pm$ 11.54} & \cellcolor{orange!10}{\textbf{17.78 $\pm$ 11.19}} & \cellcolor{green!10}{\textbf{21.79 $\pm$ 14.74}} & \cellcolor{orange!10}{22.35 $\pm$ 14.47} & \cellcolor{green!10}{\textbf{27.64 $\pm$ 17.44}} & \cellcolor{orange!10}{29.44 $\pm$ 18.79} & \cellcolor{green!10}{\textbf{33.73 $\pm$ 18.56}} & \cellcolor{orange!10}{33.81 $\pm$ 19.77} \\
+\rowcolor{white} 008 & \cellcolor{green!10}{\textbf{16.42 $\pm$ 9.92}} & \cellcolor{orange!10}{17.36 $\pm$ 10.10} & \cellcolor{green!10}{\textbf{24.39 $\pm$ 13.80}} & \cellcolor{orange!10}{26.86 $\pm$ 14.79} & \cellcolor{green!10}{\textbf{31.78 $\pm$ 16.84}} & \cellcolor{orange!10}{35.20 $\pm$ 18.34} & \cellcolor{green!10}{\textbf{44.56 $\pm$ 23.83}} & \cellcolor{orange!10}{49.12 $\pm$ 24.46} & \cellcolor{green!10}{\textbf{50.87 $\pm$ 30.46}} & \cellcolor{orange!10}{58.56 $\pm$ 31.17} \\
+\hline
+\rowcolor{blue!10} \textbf{Average} & \cellcolor{green!10}{\textbf{15.46 $\pm$ 11.95}} & \cellcolor{orange!10}{16.08 $\pm$ 12.30} & \cellcolor{green!10}{\textbf{24.29 $\pm$ 17.93}} & \cellcolor{orange!10}{24.93 $\pm$ 18.66} & \cellcolor{green!10}{\textbf{31.80 $\pm$ 23.71}} & \cellcolor{orange!10}{32.76 $\pm$ 24.69} & \cellcolor{green!10}{\textbf{43.77 $\pm$ 33.48}} & \cellcolor{orange!10}{46.26 $\pm$ 34.90} & \cellcolor{green!10}{\textbf{52.92 $\pm$ 42.56}} & \cellcolor{orange!10}{57.68 $\pm$ 44.74} \\
+\hline
+\end{tabular}
+}
+\end{table}

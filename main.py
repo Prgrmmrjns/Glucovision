@@ -19,7 +19,7 @@ features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'protei
 meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'proteins']
 features_to_remove = ['glucose_next', 'datetime', 'hour']
 patients = ['001', '002', '004', '006', '007', '008']
-approaches = ['pixtral-large-latest', 'nollm']
+llm = 'pixtral-large-latest'
 prediction_horizons = [6, 9, 12, 18, 24]
 
 # Optimization parameters
@@ -27,7 +27,7 @@ train_size = 0.9
 n_trials = 1000
 random_seed = 42
 n_jobs = 6
-load_params=False
+load_params=True
 
 # LightGBM parameters
 lgb_params = {
@@ -283,74 +283,71 @@ else:
         # No need for special conversion for weights, they are floats
         json.dump(patient_params, f, indent=2)
 
-for approach in approaches:
-    for prediction_horizon in prediction_horizons:
+for prediction_horizon in prediction_horizons:
+    
+    # Process per patient for evaluation
+    for patient in patients:
+        # Get patient-specific feature parameters (access bezier points specifically)
+        bezier_params = patient_params[patient]['bezier_points']
+        # Note: Weights are not used here in the current evaluation logic
+        data = add_features({k: v for k, v in bezier_params.items() if k in features}, features, get_data(patient, prediction_horizon), prediction_horizon)
         
-        # Process per patient for evaluation
-        for patient in patients:
-            # Get patient-specific feature parameters (access bezier points specifically)
-            bezier_params = patient_params[patient]['bezier_points']
-            # Note: Weights are not used here in the current evaluation logic
-            data = add_features({k: v for k, v in bezier_params.items() if k in features}, features, get_data(patient, prediction_horizon), prediction_horizon)
+        # Save data for pixtral-large-latest approach
+        data.to_csv(f'data/{prediction_horizon}_{patient}.csv', index=False)
+        
+        all_preds = []
+        all_test_data = []
+        days = data['datetime'].dt.day.unique()
+        test_days = days[3:]  
+        
+        for test_day in test_days:
+            day_mask = data['datetime'].dt.day == test_day
+            test_day_data = data[day_mask]
+            hours = test_day_data['hour'].unique()
             
-            if approach == 'nollm':
-                data.drop(meal_features, axis=1, inplace=True)
-            else:
-                data.to_csv(f'data/{prediction_horizon}_{patient}.csv', index=False)
-            
-            all_preds = []
-            all_test_data = []
-            days = data['datetime'].dt.day.unique()
-            test_days = days[3:]  
-            
-            for test_day in test_days:
-                day_mask = data['datetime'].dt.day == test_day
-                test_day_data = data[day_mask]
-                hours = test_day_data['hour'].unique()
+            for hour in hours:
+                hour_mask = test_day_data['hour'] == hour
+                test = test_day_data[hour_mask]
                 
-                for hour in hours:
-                    hour_mask = test_day_data['hour'] == hour
-                    test = test_day_data[hour_mask]
+                # Train on all data before the current hour from any day
+                earliest_test_time = test['datetime'].min()
+                safe_train_mask = data['datetime'].shift(-prediction_horizon) < earliest_test_time
+                train = data[safe_train_mask]
+                X_train, X_val, y_train, y_val = train_test_split(train.drop(features_to_remove, axis=1), train['glucose_next'], train_size=train_size, random_state=42)
+                model.fit(X_train, y_train, eval_set=[(X_val, y_val)], callbacks=callbacks, eval_metric='rmse')
+                hour_preds = model.predict(test.drop(features_to_remove, axis=1))
+                rmse = np.sqrt(mean_squared_error(test['glucose_next'], hour_preds))
+                
+                all_preds.append(hour_preds)
+                all_test_data.append(test)
+                
+                df = pd.concat([df, pd.DataFrame({
+                    'Approach': [llm],
+                    'Prediction Horizon': [prediction_horizon],
+                    'Patient': [patient],
+                    'Day': [test_day],
+                    'Hour': [hour],
+                    'RMSE': [rmse]
+                })], ignore_index=True)
+                
+                if test_day == test_days[-1] and hour == hours[-1]:
                     
-                    # Train on all data before the current hour from any day
-                    earliest_test_time = test['datetime'].min()
-                    safe_train_mask = data['datetime'].shift(-prediction_horizon) < earliest_test_time
-                    train = data[safe_train_mask]
-                    X_train, X_val, y_train, y_val = train_test_split(train.drop(features_to_remove, axis=1), train['glucose_next'], train_size=train_size, random_state=42)
-                    model.fit(X_train, y_train, eval_set=[(X_val, y_val)], callbacks=callbacks, eval_metric='rmse')
-                    hour_preds = model.predict(test.drop(features_to_remove, axis=1))
-                    rmse = np.sqrt(mean_squared_error(test['glucose_next'], hour_preds))
-                    
-                    all_preds.append(hour_preds)
-                    all_test_data.append(test)
-                    
-                    df = pd.concat([df, pd.DataFrame({
-                        'Approach': [approach],
-                        'Prediction Horizon': [prediction_horizon],
-                        'Patient': [patient],
-                        'Day': [test_day],
-                        'Hour': [hour],
-                        'RMSE': [rmse]
-                    })], ignore_index=True)
-                    
-                    if test_day == test_days[-1] and hour == hours[-1]:
-                        
-                        # Create directory if it doesn't exist
-                        os.makedirs(f'models/{approach}/{prediction_horizon}', exist_ok=True)
-                        model_filename = f'models/{approach}/{prediction_horizon}/patient_{patient}_model.pkl'
-                        with open(model_filename, 'wb') as file:
-                            pickle.dump(model, file)
-            
-            combined_preds = np.concatenate(all_preds)
-            combined_test = pd.concat(all_test_data)
-            predictions = pd.DataFrame({
-                'Predictions': combined_test['glucose'] - combined_preds, 
-                'Ground_truth': combined_test['glucose'] - combined_test['glucose_next'], 
-                'Datetime': combined_test['datetime']
-            })
-            # Create directory if it doesn't exist
-            os.makedirs(f'predictions/{approach}/{prediction_horizon}', exist_ok=True)
-            predictions.to_csv(f'predictions/ {approach}/{prediction_horizon}/{patient}_predictions.csv', index=False)
-        print(f"Average RMSE for {approach}, prediction horizon {prediction_horizon}: {df[(df['Approach'] == approach) & (df['Prediction Horizon'] == prediction_horizon)]['RMSE'].mean():.4f}")
+                    # Create directory if it doesn't exist
+                    os.makedirs(f'models/{llm}/{prediction_horizon}', exist_ok=True)
+                    model_filename = f'models/{llm}/{prediction_horizon}/patient_{patient}_model.pkl'
+                    with open(model_filename, 'wb') as file:
+                        pickle.dump(model, file)
+        
+        combined_preds = np.concatenate(all_preds)
+        combined_test = pd.concat(all_test_data)
+        predictions = pd.DataFrame({
+            'Predictions': combined_test['glucose'] - combined_preds, 
+            'Ground_truth': combined_test['glucose'] - combined_test['glucose_next'], 
+            'Datetime': combined_test['datetime']
+        })
+        # Create directory if it doesn't exist
+        os.makedirs(f'predictions/{llm}/{prediction_horizon}', exist_ok=True)
+        predictions.to_csv(f'predictions/{llm}/{prediction_horizon}/{patient}_predictions.csv', index=False)
+    print(f"Average RMSE for prediction horizon {prediction_horizon}: {df[df['Prediction Horizon'] == prediction_horizon]['RMSE'].mean():.4f}")
 
 df.to_csv('results/evaluation_metrics.csv', index=False) 

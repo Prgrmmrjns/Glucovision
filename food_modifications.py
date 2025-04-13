@@ -140,26 +140,9 @@ def modify_macronutrients(food_data, nutrient, amount):
     modified_data[nutrient] = modified_data[nutrient].clip(lower=0)
     return modified_data
 
-def analyze_nutrient_ranges(patients, meal_features):
-    """Analyze the range and distribution of nutrients for each patient."""
-    print("\n=== Nutrient Ranges for Each Patient ===")
-    for patient in patients:
-        print(f"\nPatient {patient}:")
-        _, combined_data = get_data(patient, prediction_horizon)
-        
-        for feature in meal_features:
-            # Get non-zero values only
-            feature_values = combined_data[combined_data[feature] > 0][feature]
-            if len(feature_values) > 0:
-                print(f"  {feature}: {len(feature_values)} meals, range: {feature_values.min():.1f}-{feature_values.max():.1f}g, mean: {feature_values.mean():.1f}g, median: {feature_values.median():.1f}g")
-            else:
-                print(f"  {feature}: No meals with this nutrient")
-
 # Load models
 models, feature_names = load_models()
 
-# Analyze nutrient ranges before making modifications
-analyze_nutrient_ranges(patients, meal_features)
 
 # Create DataFrame to store results
 results_df = pd.DataFrame()
@@ -177,8 +160,6 @@ for patient in patients:
     preds_orig = X_test_orig['glucose'] - model.predict(X_test_orig)
     baseline_glucose = np.mean(preds_orig)
     
-    # Debug - confirm baseline is calculated on 0-2 hour window
-    print(f"Baseline glucose (0-2h post-meal) for patient {patient}: {baseline_glucose:.2f}")
     
     # Test each feature modification
     for feature in meal_features:
@@ -280,10 +261,10 @@ def plot_all_features_mean_glucose(results_df):
         # Customize plot
         axes[i].set_title(feature)
         axes[i].set_xlabel('Decrement / Increment (g)', fontsize=8)
-        axes[i].set_ylabel('Change in Mean Glucose (mg/dL)', fontsize=8)
+        axes[i].set_ylabel('Change in Mean\nPedicted Glucose (mg/dL)', fontsize=10)
         axes[i].grid(True)
         axes[i].axhline(y=0, color='k', linestyle='--', alpha=0.3)
-        axes[i].text(-0.12, 1.05, letters[i], transform=axes[i].transAxes, fontsize=16, fontweight='bold', va='top')
+        axes[i].text(-0.1, 1.25, letters[i], transform=axes[i].transAxes, fontsize=16, fontweight='bold', va='top')
     
     # Use the last subplot space for the legend
     axes[5].axis('off')  # Turn off axis for the legend subplot
