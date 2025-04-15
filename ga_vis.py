@@ -33,7 +33,7 @@ plt.figure(figsize=(12, 4))
 
 # Plot scaled glucose_next and feature_sum
 plt.plot(df_limited['datetime'], df_limited['glucose_next_scaled'], 'b-', linewidth=3, label='Glucose')
-plt.plot(df_limited['datetime'], df_limited['feature_sum_scaled'], 'r-', linewidth=3, alpha=0.7, label='Feature Sum')
+plt.plot(df_limited['datetime'], df_limited['feature_sum_scaled'], 'r-', linewidth=3, alpha=0.7, label='Sum of modeled \nmacronutrients and insulin')
 
 # Minimalistic styling
 plt.xticks([])
@@ -47,7 +47,7 @@ plt.gca().spines['bottom'].set_visible(False)
 plt.gca().spines['left'].set_visible(False)
 
 # Add legend
-plt.legend(loc='upper right', fontsize=14)
+plt.legend(loc='upper right', fontsize=14, bbox_to_anchor=(1.1, 1))
 
 # Ensure layout is tight
 plt.tight_layout()
@@ -74,7 +74,7 @@ plt.gca().spines['bottom'].set_visible(False)
 plt.gca().spines['left'].set_visible(False)
 
 # Add legend
-plt.legend(loc='upper right', fontsize=14)
+plt.legend(loc='upper right', fontsize=14, bbox_to_anchor=(1.1, 1))
 
 # Ensure layout is tight
 plt.tight_layout()

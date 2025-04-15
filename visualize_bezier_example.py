@@ -87,7 +87,7 @@ total_modeled_impact_1230 = (meal1_simple_sugars * impact1_1230_factor) + (meal2
 # --- Calculate Impacts Over Time for Plotting ---
 
 # Time axis for plotting (e.g., 11:00 AM to 2:30 PM)
-time_axis_hours = np.linspace(0, 3.5, 500) # Hours relative to 11:00 AM
+time_axis_hours = np.linspace(0, 3.5, 1000) # Increased resolution for smoother curves
 
 effective_simple_sugars1_over_time = np.zeros_like(time_axis_hours)
 effective_simple_sugars2_over_time = np.zeros_like(time_axis_hours)
@@ -138,16 +138,16 @@ for i, t in enumerate(time_axis_hours):
     meal1_impact_factors[i] = get_impact(curve_cubic, delta_t1)
     meal2_impact_factors[i] = get_impact(curve_cubic, delta_t2)
 
-# Add Meal 1 Bezier curve values to right axis
+# Add Meal 1 Bezier curve values to right axis - using dashed line
 ax1_twin.plot(time_axis_hours, meal1_impact_factors, color='darkred', linestyle='--', 
-             alpha=0.8, linewidth=1.5, label='Meal 1 Bezier Curve Value')
+             alpha=0.8, linewidth=1.5, label='Meal 1 Bezier Curve')
 
 # Add Meal 2 Bezier curve values to right axis
 ax1_twin.plot(time_axis_hours, meal2_impact_factors, color='darkred', linestyle=':', 
-             alpha=0.8, linewidth=1.5, label='Meal 2 Bezier Curve Value')
+             alpha=0.8, linewidth=1.5, label='Meal 2 Bezier Curve')
 
 ax1_twin.set_ylim(0, 1)
-ax1_twin.set_ylabel('Bezier Curve Value', color='darkred')
+ax1_twin.set_ylabel('Bezier Curve y-value', color='darkred')
 ax1_twin.tick_params(axis='y', labelcolor='darkred')
 
 # Add annotations for specific Bezier y-values
@@ -188,7 +188,7 @@ ax1.annotate(f'Total: {total_modeled_impact_1230:.1f}g',
              ha='center', arrowprops=dict(arrowstyle='->', color='blue'))
 
 # Update y-axis label and color
-ax1.set_ylabel('Cumulative Modeled Simple Sugar Impact (g)', color='blue')
+ax1.set_ylabel('Cumulative Modeled Simple Sugars Impact (g)', color='blue')
 ax1.tick_params(axis='y', labelcolor='blue')
 
 # Combine legends
@@ -200,10 +200,13 @@ ax1.grid(True, linestyle='--', alpha=0.7)
 
 
 # Plot meal events on ax2 (Labels remain the same)
-ax2.vlines([meal1_time_rel, meal2_time_rel], ymin=0, ymax=1, color=['blue', 'green'], linestyle='-', lw=2,
-           label='Meal Intake Events')
-ax2.text(meal1_time_rel, 0.5, f' Meal 1\n ({meal1_simple_sugars}g Simple Sugars)', ha='left', va='center', color='blue')
-ax2.text(meal2_time_rel, 0.5, f' Meal 2\n ({meal2_simple_sugars}g Simple Sugars)', ha='left', va='center', color='green')
+# Call vlines separately for each meal to set different linestyles
+ax2.vlines(meal1_time_rel, ymin=0, ymax=1, color='darkred', linestyle='--', lw=2,
+           label='Meal 1 Intake') # Use Meal 1 linestyle
+ax2.vlines(meal2_time_rel, ymin=0, ymax=1, color='darkred', linestyle=':', lw=2,
+           label='Meal 2 Intake') # Use Meal 2 linestyle
+ax2.text(meal1_time_rel, 0.5, f' Meal 1\n {meal1_simple_sugars:.0f}g Simple Sugars', ha='left', va='center', color='darkred')
+ax2.text(meal2_time_rel, 0.5, f' Meal 2\n {meal2_simple_sugars:.0f}g Simple Sugars', ha='left', va='center', color='darkred')
 
 ax2.set_yticks([]) # No y-ticks needed for event plot
 ax2.set_ylim(0, 1)
@@ -218,7 +221,7 @@ ax1.set_xlim(left=-0.1, right=3.6) # Adjust limits slightly
 
 plt.tight_layout(rect=[0, 0, 1, 0.97]) # Adjust layout to prevent title overlap
 plt.savefig('images/methods/example_bezier.png') # Save the plot
-plt.savefig('images/methods/example_bezier.eps') # Save the plo
+plt.savefig('images/methods/example_bezier.eps') # Save the plot
 plt.close()
 
 print("--- Calculated Values ---")

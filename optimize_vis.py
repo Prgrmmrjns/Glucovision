@@ -143,10 +143,9 @@ else:
 
 # Plot data
 plt.plot(glucose_data['datetime'], glucose_next_scaled, 'b-', linewidth=2, label='Glucose')
-plt.plot(glucose_data['datetime'], weighted_sum_scaled, 'r-', linewidth=2, alpha=0.7, label='Weighted Feature Impact')
+plt.plot(glucose_data['datetime'], weighted_sum_scaled, 'r-', linewidth=2, alpha=0.7, label='Weighted sum of \nmacronutrients and insulin')
 
 # Customize plot
-plt.xticks(rotation=45)
 
 # Plot individual feature impacts with low opacity
 colors = ['g', 'c', 'm', 'y', 'orange', 'purple', 'brown']
@@ -154,20 +153,18 @@ for i, feature in enumerate(features):
     if feature in feature_impacts.columns and feature_impacts[feature].abs().sum() > 0:
         feature_scaled = scaler.fit_transform(feature_impacts[feature].values.reshape(-1, 1)).flatten()
         plt.plot(glucose_data['datetime'], feature_scaled, color=colors[i % len(colors)], 
-                    alpha=0.3, linewidth=1, label=f'{feature} impact')
+                    alpha=0.3, linewidth=1, label=feature)
 
-# Add legend to the right of the plot
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+# Add legend inside the plot
+plt.legend(loc='upper right', bbox_to_anchor=(1.18, 1))
 
 # Add axis labels
 plt.ylabel('Normalized Feature Values')
+plt.xlabel('Time')
 
-# Adjust layout to make room for the legend
+# Adjust layout
 plt.tight_layout()
-plt.subplots_adjust(right=0.7)
 
 # Save plot
 plt.savefig(f'images/supplementary_data/patient_{patient}_optimization.png')
 plt.close()
-
-print("Visualization complete. Check the optimization_plots directory for the results.") 
