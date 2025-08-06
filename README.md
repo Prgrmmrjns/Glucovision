@@ -38,9 +38,7 @@ Glucovision works with two complementary datasets:
 ### 🔹 D1namo Dataset (Primary)
 - **6 Type 1 Diabetes patients** with meal images + CGM data
 - **Essential for mLLM training and validation**
-- Download from: [https://zenodo.org/records/5651217](https://zenodo.org/records/5651217) 
-- ⚠️ **Important**: Click "Version 1.2.0" to get the complete dataset
-- Extract to: `diabetes_subset_pictures-glucose-food-insulin/`
+- Downloaded from: [https://zenodo.org/records/5651217](https://zenodo.org/records/5651217) 
 
 ### 🔹 AZT1D Dataset (Validation)
 - **25 Type 1 Diabetes patients** for model generalizability testing
@@ -95,8 +93,6 @@ streamlit run app.py
 - `analysis_scripts/food_modifications.py` - Macronutrient sensitivity
 - `analysis_scripts/combined_time_impact.py` - Circadian effects
 - `analysis_scripts/combined_correlation_analysis.py` - Sugar-glucose relationships
-
-### Visualization
 - `analysis_scripts/app.py` - **🌟 Interactive Streamlit dashboard**
 - `analysis_scripts/ga_vis.py` - Graphical abstract generation
 - `analysis_scripts/combined_metabolic_vis.py` - Metabolic visualizations
