@@ -5,3 +5,4 @@ matplotlib
 lightgbm
 requests
 scikit-learn
+streamlit

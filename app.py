@@ -4,26 +4,20 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 from PIL import Image
-import os
-import pickle
 import lightgbm as lgb
-import sys
-
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from params import *
 from processing_functions import *
 
 # Load Bezier parameters
 @st.cache_data
 def load_bezier_params():
-    with open(f'{RESULTS_PATH}/d1namo_bezier_params.json', 'r') as f:
+    with open(f'parameters/patient_bezier_params.json', 'r') as f:
         return json.load(f)
 
 # Function to load meal data (filtered to last two days)
 @st.cache_data
 def load_meal_data(patient):
-    df = pd.read_csv(f"{FOOD_DATA_PATH}/{patient}.csv")
+    df = pd.read_csv(f"food_data/pixtral-large-latest/{patient}.csv")
     # Add insulin column if it doesn't exist
     if 'insulin' not in df.columns:
         df['insulin'] = 0.0
@@ -42,7 +36,7 @@ def load_meal_data(patient):
 # Function to load glucose data for a patient
 @st.cache_data
 def load_glucose_data(patient):
-    glucose_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/glucose.csv")
+    glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/glucose.csv")
     glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
     glucose_data = glucose_data.sort_values('datetime').drop(['type', 'comments', 'date', 'time'], axis=1)
     glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
@@ -52,7 +46,7 @@ def load_glucose_data(patient):
 
 # Function to load image
 def load_image(patient, image_name):
-    img_path = f"{D1NAMO_DATA_PATH}/{patient}/food_pictures/{image_name}"
+    img_path = f"diabetes_subset_pictures-glucose-food-insulin/{patient}/food_pictures/{image_name}"
     try:
         return Image.open(img_path)
     except Exception as e:
