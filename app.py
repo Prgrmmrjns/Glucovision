@@ -8,16 +8,21 @@ import lightgbm as lgb
 from params import *
 from processing_functions import *
 
+# Override paths for root-level deployment
+D1NAMO_DATA_PATH = "diabetes_subset_pictures-glucose-food-insulin"
+FOOD_DATA_PATH = "food_data/pixtral-large-latest"
+RESULTS_PATH = "results"
+
 # Load Bezier parameters
 @st.cache_data
 def load_bezier_params():
-    with open(f'parameters/patient_bezier_params.json', 'r') as f:
+    with open(f'{RESULTS_PATH}/d1namo_bezier_params.json', 'r') as f:
         return json.load(f)
 
 # Function to load meal data (filtered to last two days)
 @st.cache_data
 def load_meal_data(patient):
-    df = pd.read_csv(f"food_data/pixtral-large-latest/{patient}.csv")
+    df = pd.read_csv(f"{FOOD_DATA_PATH}/{patient}.csv")
     # Add insulin column if it doesn't exist
     if 'insulin' not in df.columns:
         df['insulin'] = 0.0
@@ -36,7 +41,7 @@ def load_meal_data(patient):
 # Function to load glucose data for a patient
 @st.cache_data
 def load_glucose_data(patient):
-    glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{patient}/glucose.csv")
+    glucose_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/glucose.csv")
     glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
     glucose_data = glucose_data.sort_values('datetime').drop(['type', 'comments', 'date', 'time'], axis=1)
     glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
@@ -46,7 +51,7 @@ def load_glucose_data(patient):
 
 # Function to load image
 def load_image(patient, image_name):
-    img_path = f"diabetes_subset_pictures-glucose-food-insulin/{patient}/food_pictures/{image_name}"
+    img_path = f"{D1NAMO_DATA_PATH}/{patient}/food_pictures/{image_name}"
     try:
         return Image.open(img_path)
     except Exception as e:
@@ -102,10 +107,39 @@ def prepare_feature_visualization(patient):
 def make_prediction(patient, meal_datetime, modifications, prediction_horizon):
     global_params = load_bezier_params()
     
+    # Custom data loading function with correct paths
+    def load_patient_data(patient):
+        glucose_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/glucose.csv")
+        insulin_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/insulin.csv")
+        food_data = pd.read_csv(f"{FOOD_DATA_PATH}/{patient}.csv")
+        
+        glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
+        glucose_data = glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1)
+        glucose_data['glucose'] *= 18.0182
+        glucose_data['hour'] = glucose_data['datetime'].dt.hour
+        glucose_data['time'] = glucose_data['hour'] + glucose_data['datetime'].dt.minute / 60
+        insulin_data["datetime"] = pd.to_datetime(insulin_data["date"] + ' ' + insulin_data["time"])
+        insulin_data.fillna(0, inplace=True)
+        insulin_data['insulin'] = insulin_data['slow_insulin'] + insulin_data['fast_insulin']
+        insulin_data = insulin_data.drop(['slow_insulin', 'fast_insulin', 'comment', 'date', 'time'], axis=1)
+        food_data['datetime'] = pd.to_datetime(food_data['datetime'], format='%Y:%m:%d %H:%M:%S')
+        food_data = food_data[['datetime', 'simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']]
+        combined_data = pd.concat([food_data, insulin_data]).sort_values('datetime').reset_index(drop=True)
+        combined_data.fillna(0, inplace=True)
+        
+        for horizon in PREDICTION_HORIZONS:
+            glucose_data[f'glucose_{horizon}'] = glucose_data['glucose'].shift(-horizon) - glucose_data['glucose']
+        glucose_data['glucose_change'] = glucose_data['glucose'] - glucose_data['glucose'].shift(1)
+        glucose_data['glucose_change_projected'] = glucose_data['glucose_change'].rolling(6, min_periods=6).apply(lambda window: get_projected_value(window, 6))
+        glucose_data['glucose_projected'] = glucose_data['glucose'].rolling(6, min_periods=6).apply(lambda window: get_projected_value(window, 6))
+        glucose_data.dropna(subset=[f'glucose_24'], inplace=True)
+        glucose_data['patient_id'] = patient
+        return glucose_data, combined_data
+    
     # Load all patient data
     all_data_list = []
     for p in PATIENTS_D1NAMO:
-        glucose_data, combined_data = get_d1namo_data(p)
+        glucose_data, combined_data = load_patient_data(p)
         
         # Apply modifications to the target patient's meal data
         if p == patient:
@@ -120,9 +154,21 @@ def make_prediction(patient, meal_datetime, modifications, prediction_horizon):
                     combined_data.loc[closest_meal_idx, feature] = max(0, 
                         combined_data.loc[closest_meal_idx, feature] + change)
         
-        # Process features
-        patient_data = add_d1namo_features(global_params, OPTIMIZATION_FEATURES_D1NAMO, 
-                                         (glucose_data, combined_data))
+        # Process features using local bezier implementation
+        glucose_data = glucose_data.copy()
+        time_diff_hours = (glucose_data['datetime'].values.astype(np.int64)[:, None] - combined_data['datetime'].values.astype(np.int64)[None, :]) / 3600000000000
+        base_curves = {f: bezier_curve(np.array(global_params[f]).reshape(-1, 2), num=50) for f in OPTIMIZATION_FEATURES_D1NAMO if f in global_params}
+        for i, feature in enumerate(OPTIMIZATION_FEATURES_D1NAMO):
+            if feature in base_curves:
+                curve = base_curves[feature]
+                x_curve, y_curve = curve[:, 0], curve[:, 1]
+                valid_mask = (time_diff_hours >= 0) & (time_diff_hours <= x_curve[-1])
+                weights = np.zeros_like(time_diff_hours)
+                weights[valid_mask] = y_curve[np.clip(np.searchsorted(x_curve, time_diff_hours[valid_mask]), 0, len(y_curve) - 1)]
+                feature_values = combined_data[feature].values
+                feature_result = np.dot(weights, feature_values)
+                glucose_data[feature] = feature_result
+        patient_data = glucose_data
         patient_data['patient_id'] = f"patient_{p}"
         all_data_list.append(patient_data)
     
