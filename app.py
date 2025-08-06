@@ -6,33 +6,24 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 import pickle
-from scipy.special import comb
 import lightgbm as lgb
+import sys
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from params import *
+from processing_functions import *
 
 # Load Bezier parameters
-with open('parameters/patient_bezier_params.json', 'r') as f:
-    patient_params = json.load(f)
-
-# Constants
-patients = ['001', '002', '004', '006', '007', '008']
-prediction_horizons = [6, 9, 12, 18, 24]
-meal_features = ['simple_sugars', 'complex_sugars', 'fats', 'dietary_fibers', 'proteins']
-features = meal_features + ['insulin']
-
-# Function to generate Bezier curve
-def bezier_curve(points, num=50):
-    n = len(points) - 1
-    t = np.linspace(0, 1, num)
-    curve = np.zeros((num, 2))
-    
-    for i, point in enumerate(points):
-        curve += np.outer(comb(n, i) * (t**i) * ((1-t)**(n-i)), point)
-    
-    return curve[np.argsort(curve[:, 0])]
+@st.cache_data
+def load_bezier_params():
+    with open(f'{RESULTS_PATH}/d1namo_bezier_params.json', 'r') as f:
+        return json.load(f)
 
 # Function to load meal data (filtered to last two days)
+@st.cache_data
 def load_meal_data(patient):
-    df = pd.read_csv(f"food_data/pixtral-large-latest/{patient}.csv")
+    df = pd.read_csv(f"{FOOD_DATA_PATH}/{patient}.csv")
     # Add insulin column if it doesn't exist
     if 'insulin' not in df.columns:
         df['insulin'] = 0.0
@@ -48,9 +39,20 @@ def load_meal_data(patient):
         
     return df
 
+# Function to load glucose data for a patient
+@st.cache_data
+def load_glucose_data(patient):
+    glucose_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/glucose.csv")
+    glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
+    glucose_data = glucose_data.sort_values('datetime').drop(['type', 'comments', 'date', 'time'], axis=1)
+    glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
+    glucose_data['hour'] = glucose_data['datetime'].dt.hour
+    glucose_data['time'] = glucose_data['hour'] + glucose_data['datetime'].dt.minute / 60
+    return glucose_data
+
 # Function to load image
 def load_image(patient, image_name):
-    img_path = f"diabetes_subset_pictures-glucose-food-insulin/{patient}/food_pictures/{image_name}"
+    img_path = f"{D1NAMO_DATA_PATH}/{patient}/food_pictures/{image_name}"
     try:
         return Image.open(img_path)
     except Exception as e:
@@ -81,89 +83,117 @@ def display_feature_importances(importances):
     plt.tight_layout()
     return fig
 
-# Function for feature preprocessing using Bezier curves
-def process_features(meal_data, patient, prediction_horizon):
-    # Extract features and current datetime
-    feature_values = {}
-    for feature in features:
-        feature_values[feature] = meal_data[feature].iloc[0] if feature in meal_data.columns else 0.0
-    
-    # Parse datetime (no need here as we only need the values and patient params)
-    
-    # Process features using Bezier curves - calculate CHANGE in impact
-    processed_features_change = {}
-    for feature in features:
-        # Access points correctly from the nested structure
-        params = np.array(patient_params[patient]['bezier_points'][feature]).reshape(-1, 2)
-        curve = bezier_curve(params, num=100)
-        x_curve, y_curve = curve[:, 0], curve[:, 1]
-        
-        # Calculate impact change based on Bezier curve
-        # Impact at horizon - Impact at time 0
-        time_point_horizon = prediction_horizon / 12  # Convert prediction interval to hours
-        time_point_start = 0.0
-
-        # Interpolate to find effect strength at start and horizon
-        impact_factor_horizon = np.interp(time_point_horizon, x_curve, y_curve, left=0.0, right=0.0) # Assume 0 effect outside curve range
-        impact_factor_start = np.interp(time_point_start, x_curve, y_curve, left=0.0, right=0.0) # Should be 0 if curve starts at (0,0)
-        
-        # Calculate the change in impact scaled by the feature value
-        impact_change = (impact_factor_horizon - impact_factor_start)
-        processed_features_change[feature] = feature_values[feature] * impact_change
-    
-    # Return the CHANGE in processed features and the original raw features
-    return processed_features_change, feature_values
-
-# Function to modify macronutrient values and process features
-def modify_and_process_features(meal_data, patient, prediction_horizon, modifications):
-    # Make a copy of the meal data
-    modified_meal_data = meal_data.copy()
-    
-    # Apply modifications
-    for feature, change in modifications.items():
-        if feature in modified_meal_data.columns:
-            modified_meal_data[feature] = max(0, modified_meal_data[feature].iloc[0] + change)
-    
-    # Process with modified values using the updated process_features function
-    return process_features(modified_meal_data, patient, prediction_horizon)
-
-# Function to visualize feature impact
+# Function to visualize Bézier curves
 def prepare_feature_visualization(patient):
+    global_params = load_bezier_params()
     fig, ax = plt.subplots(figsize=(10, 6))
-    for feature in features:
-        # Access points correctly from the nested structure
-        params = np.array(patient_params[patient]['bezier_points'][feature]).reshape(-1, 2)
-        curve = bezier_curve(params, num=100)
-        ax.plot(curve[:, 0], curve[:, 1], label=feature, linewidth=2)
+    
+    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3']
+    feature_names = ['Simple Sugars', 'Complex Sugars', 'Proteins', 'Fats', 'Dietary Fibers', 'Insulin']
+    
+    for i, feature in enumerate(OPTIMIZATION_FEATURES_D1NAMO):
+        # Get Bézier curve
+        curve = bezier_curve(np.array(global_params[feature]).reshape(-1, 2), num=100)
+        ax.plot(curve[:, 0], curve[:, 1], label=feature_names[i], linewidth=2, color=colors[i])
     
     ax.set_xlabel('Time (hours)')
     ax.set_ylabel('Effect Strength')
-    ax.set_title(f'Bezier Curves for Patient {patient}')
+    ax.set_title(f'Bézier Curves for All Features')
     ax.legend()
     ax.grid(True, alpha=0.3)
     
     return fig
 
-# Function to get projected value using 3rd degree polynomial (from main.py)
-def get_projected_value(window, prediction_horizon):
-    # Ensure window is a pandas Series for iloc access
-    if not isinstance(window, pd.Series):
-        window = pd.Series(window)
+# Function to train and predict using d1namo methodology
+def make_prediction(patient, meal_datetime, modifications, prediction_horizon):
+    global_params = load_bezier_params()
+    
+    # Load all patient data
+    all_data_list = []
+    for p in PATIENTS_D1NAMO:
+        glucose_data, combined_data = get_d1namo_data(p)
         
-    if len(window) < 4: # Need at least 4 points for 3rd degree polyfit
-        if len(window) > 0:
-           return window.iloc[-1] # Return last value if not enough points
-        else:
-           return 0.0 # Or return 0 if window is empty
-
-    x = np.arange(len(window))
-    # Use numpy's polyfit and polyval
-    coeffs = np.polyfit(x, window.values, deg=3)
-    # Project `prediction_horizon` steps into the future
-    return np.polyval(coeffs, len(window) -1 + prediction_horizon)
+        # Apply modifications to the target patient's meal data
+        if p == patient:
+            # Find the closest meal time and apply modifications
+            meal_dt = pd.to_datetime(meal_datetime)
+            time_diff = np.abs(combined_data['datetime'] - meal_dt)
+            closest_meal_idx = time_diff.idxmin()
+            
+            # Apply modifications
+            for feature, change in modifications.items():
+                if feature in combined_data.columns:
+                    combined_data.loc[closest_meal_idx, feature] = max(0, 
+                        combined_data.loc[closest_meal_idx, feature] + change)
+        
+        # Process features
+        patient_data = add_d1namo_features(global_params, OPTIMIZATION_FEATURES_D1NAMO, 
+                                         (glucose_data, combined_data))
+        patient_data['patient_id'] = f"patient_{p}"
+        all_data_list.append(patient_data)
+    
+    all_data = pd.concat(all_data_list, ignore_index=True)
+    
+    # Get test point close to meal time
+    patient_mask = all_data['patient_id'] == f"patient_{patient}"
+    meal_dt = pd.to_datetime(meal_datetime)
+    
+    # Find data point closest to meal time
+    patient_data = all_data[patient_mask].copy()
+    time_diff = np.abs(patient_data['datetime'] - meal_dt)
+    closest_idx = time_diff.idxmin()
+    test_point = patient_data.loc[[closest_idx]]
+    
+    if test_point.empty:
+        return None, None, "No data found near meal time"
+    
+    # Prepare training data (all data before test time + other patients)
+    X = pd.concat([
+        all_data[patient_mask & (all_data['datetime'] < test_point['datetime'].iloc[0])], 
+        all_data[~patient_mask]
+    ])
+    
+    if len(X) < 100:
+        return None, None, "Not enough training data"
+    
+    # Features and target
+    target_feature = f'glucose_{prediction_horizon}'
+    features_to_remove_ph = FEATURES_TO_REMOVE_D1NAMO + [f'glucose_{h}' for h in PREDICTION_HORIZONS]
+    available_features = X.columns.difference(features_to_remove_ph)
+    
+    # Train-validation split with patient weighting
+    from sklearn.model_selection import train_test_split
+    indices = train_test_split(range(len(X)), test_size=0.2, random_state=42)
+    current_patient_weight = 10
+    weights = [np.where(X['patient_id'].values[idx] == f"patient_{patient}", current_patient_weight, 1) 
+               for idx in indices]
+    
+    train = X[available_features]
+    X_train, y_train, weights_train = train.values[indices[0]], X[target_feature].values[indices[0]], weights[0]
+    X_val, y_val, weights_val = train.values[indices[1]], X[target_feature].values[indices[1]], weights[1]
+    
+    # Train model
+    model = lgb.train(
+        LGB_PARAMS, 
+        lgb.Dataset(X_train, label=y_train, weight=weights_train),
+        valid_sets=[lgb.Dataset(X_val, label=y_val, weight=weights_val)]
+    )
+    
+    # Make prediction
+    test_features = test_point[available_features]
+    prediction = model.predict(test_features.values)[0]
+    current_glucose = test_point['glucose'].iloc[0]
+    
+    # Get feature importances
+    feature_names = list(available_features)
+    feature_importance_values = model.feature_importance(importance_type='gain')
+    importances = dict(zip(feature_names, (feature_importance_values / feature_importance_values.sum()) * 100))
+    
+    return prediction, current_glucose, importances
 
 # UI
-st.title("Glucose Prediction App")
+st.title("Glucovision")
+st.subheader("An innovative approach for leveraging meal images for glucose forecasting and patient metabolic modeling")
 
 # Layout with columns
 col1, col2 = st.columns([1, 2])
@@ -171,7 +201,7 @@ col1, col2 = st.columns([1, 2])
 # Sidebar for selection
 with col1:
     st.header("Parameters")
-    selected_patient = st.selectbox("Select Patient", patients)
+    selected_patient = st.selectbox("Select Patient", PATIENTS_D1NAMO)
     
     # Load meal data for selected patient
     meal_data = load_meal_data(selected_patient)
@@ -181,7 +211,10 @@ with col1:
     selected_image = st.selectbox("Select Image", image_options)
     
     # Prediction horizon
-    selected_horizon = st.selectbox("Select Prediction Horizon (in 5-min intervals)", prediction_horizons)
+    horizon_options = {6: "30 min", 12: "60 min", 18: "90 min", 24: "120 min"}
+    selected_horizon = st.selectbox("Select Prediction Horizon", 
+                                   options=list(horizon_options.keys()),
+                                   format_func=lambda x: horizon_options[x])
     
     # Macronutrient modification section
     st.header("Modify Macronutrients")
@@ -189,216 +222,137 @@ with col1:
     
     # Initialize modification values
     modifications = {}
+    meal_features = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers']
     for feature in meal_features:
         modifications[feature] = st.slider(
-            f"Adjust {feature}", 
+            f"Adjust {feature.replace('_', ' ').title()}", 
             min_value=-20, 
             max_value=20, 
             value=0,
             step=1,
-            help=f"Change the amount of {feature}"
+            help=f"Change the amount of {feature.replace('_', ' ')}"
         )
     
     # Button for prediction
-    predict_button = st.button("Submit")
+    predict_button = st.button("Predict Glucose Change", type="primary")
 
 # Main display area
 with col2:
-    # Display selected image
-    st.header("Selected Meal")
-    meal_row = meal_data[meal_data['picture'] == selected_image]
-    if not meal_row.empty:
-        image = load_image(selected_patient, selected_image)
-        if image:
-            st.image(image, caption=selected_image)
-        
-        # Display meal data
-        st.header("Meal Data")
-        st.write(f"**Description:** {meal_row['description'].iloc[0]}")
-        st.write(f"**Date and Time:** {meal_row['datetime'].iloc[0]}")
+    if selected_image:
+        # Display selected image
+        st.header("Selected Meal")
+        meal_row = meal_data[meal_data['picture'] == selected_image]
+        if not meal_row.empty:
+            image = load_image(selected_patient, selected_image)
+            if image:
+                st.image(image, caption=selected_image, width=300)
             
-        # Create nutritional values table
-        nutrition_df = pd.DataFrame({
-            'Nutrient': meal_features,
-            'Original Value': [meal_row[f].iloc[0] for f in meal_features],
-            'Modified Value': [max(0, meal_row[f].iloc[0] + modifications.get(f, 0)) for f in meal_features] # Use .get for safety
-        })
-        st.table(nutrition_df)
+            # Display meal data
+            st.header("Meal Data")
+            st.subheader("The following macronutrient values were estimated by a multimodal Large Language Model")
+            st.write(f"**Description:** {meal_row['description'].iloc[0] if 'description' in meal_row.columns else 'N/A'}")
+            st.write(f"**Date and Time:** {meal_row['datetime'].iloc[0]}")
+                
+            # Create nutritional values table
+            nutrition_df = pd.DataFrame({
+                'Nutrient': [f.replace('_', ' ').title() for f in meal_features],
+                'Original Value (g)': [meal_row[f].iloc[0] if f in meal_row.columns else 0 for f in meal_features],
+                'Modified Value (g)': [max(0, (meal_row[f].iloc[0] if f in meal_row.columns else 0) + modifications.get(f, 0)) for f in meal_features]
+            })
+            st.table(nutrition_df)
+        else:
+            st.warning("Selected image not found in meal data.")
     else:
-        st.warning("Selected image not found in recent meal data.")
+        st.info("Please select a meal image to continue.")
 
 # Prediction section
-if predict_button:
-    st.header("Prediction")
+if predict_button and selected_image:
+    st.header("Prediction Results")
     meal_row = meal_data[meal_data['picture'] == selected_image]
     
     if not meal_row.empty:
+        with st.spinner("Training model and making prediction..."):
+            prediction, current_glucose, importances = make_prediction(
+                selected_patient, 
+                meal_row['datetime'].iloc[0], 
+                modifications, 
+                selected_horizon
+            )
         
-        # --- Load Pre-trained Model ---
-        model_path = f'models/pixtral-large-latest/{selected_horizon}/patient_{selected_patient}_model.pkl'
-        model = None
-        model_feature_names = None
-        if os.path.exists(model_path):
-            try:
-                with open(model_path, 'rb') as f:
-                    model = pickle.load(f)
-                model_feature_names = model.feature_name_ # Get feature names from model
-            except Exception as e:
-                st.error(f"Error loading model: {e}")
-        else:
-            st.error(f"Pre-trained model not found for patient {selected_patient}, horizon {selected_horizon}.")
-            st.stop() # Stop execution if model not found
+        if prediction is not None:
+            # Create two columns for results
+            left_col, right_col = st.columns(2)
             
-        # --- End Load Model ---
-        
-        # Create two columns for results display
-        left_col, right_col = st.columns(2)
-        
-        with left_col:
-            # Display feature impact curves (Bezier curves)
-            st.subheader("Feature Impact Curves")
-            fig = prepare_feature_visualization(selected_patient)
-            st.pyplot(fig)
+            with left_col:
+                # Display Bézier curves
+                st.subheader("Feature Impact Curves")
+                fig = prepare_feature_visualization(selected_patient)
+                st.pyplot(fig)
             
-            # Display feature importances from loaded model
-            st.subheader("Feature Importances")
-            importances = dict(zip(model_feature_names, (model.feature_importances_ / model.feature_importances_.sum()) * 100))
-            importance_fig = display_feature_importances(importances)
-            if importance_fig:
-                st.pyplot(importance_fig)
-            else:
-                st.write("Could not display feature importances.")
-
-        # --- Feature Processing and Vector Creation ---
-        # Process original features (get CHANGE in impact)
-        original_processed_features_change, original_features = process_features(meal_row, selected_patient, selected_horizon)
-        
-        # Process modified features (get CHANGE in impact)
-        modified_processed_features_change, modified_features = modify_and_process_features(
-            meal_row, selected_patient, selected_horizon, modifications
-        )
-        
-        # Get model feature names from the loaded model (already done above)
-        
-        # Create feature vectors with all expected columns
-        original_feature_vector = pd.Series(index=model_feature_names, dtype=float).fillna(0.0)
-        modified_feature_vector = pd.Series(index=model_feature_names, dtype=float).fillna(0.0)
-        
-        # Load real glucose data for the patient (needed for glucose context)
-        glucose_data = pd.read_csv(f"diabetes_subset_pictures-glucose-food-insulin/{selected_patient}/glucose.csv")
-        glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
-        glucose_data = glucose_data.sort_values('datetime').drop(['type', 'comments', 'date', 'time'], axis=1)
-        glucose_data['glucose'] *= 18.0182  # Convert to mg/dL
-        
-        # Parse meal datetime
-        dt_str = meal_row['datetime'].iloc[0]
-        try:
-            meal_dt = pd.to_datetime(dt_str, format='%Y:%m:%d %H:%M:%S')
-        except:
-            meal_dt = pd.to_datetime(dt_str)
-            
-        # Get glucose readings before or at the meal time
-        glucose_before_meal = glucose_data[glucose_data['datetime'] <= meal_dt].copy() # Use .copy()
-
-        # Ensure there is glucose data before the meal
-        if glucose_before_meal.empty:
-            st.error(f"No historical glucose data found before the selected meal time for patient {selected_patient}.")
-            st.stop()
-
-        current_glucose = glucose_before_meal['glucose'].iloc[-1]
-        
-        # Calculate glucose change (handle case with only one reading)
-        if len(glucose_before_meal) > 1:
-            glucose_change = current_glucose - glucose_before_meal['glucose'].iloc[-2]
-        else:
-            glucose_change = 0.0 # Assume no change if only one prior point
-
-        # Calculate projected glucose values using the updated function
-        window_size = 6 # As used in main.py for projection input
-        glucose_window = glucose_before_meal['glucose'].iloc[-window_size:]
-        
-        # Calculate projected change (use diff for changes)
-        glucose_changes = glucose_window.diff().dropna() # Get series of changes
-        glucose_change_projected = get_projected_value(glucose_changes, selected_horizon)
-        
-        # Calculate projected glucose level
-        glucose_projected = get_projected_value(glucose_window, selected_horizon)
-        
-        # Populate the feature vectors
-        for vector, processed_change in zip([original_feature_vector, modified_feature_vector],
-                                             [original_processed_features_change, modified_processed_features_change]):
-            
-            # Set values for processed feature CHANGES
-            for feature in features:
-                if feature in vector.index: # Check if feature is in model features
-                    vector[feature] = processed_change[feature]
-            
-            # Add real-time/contextual features
-            if 'time' in vector.index:
-                vector['time'] = meal_dt.hour + meal_dt.minute / 60
-            if 'glucose' in vector.index:
-                vector['glucose'] = current_glucose
-            if 'glucose_change' in vector.index:
-                vector['glucose_change'] = glucose_change
-            if 'glucose_change_projected' in vector.index:
-                vector['glucose_change_projected'] = glucose_change_projected
-            if 'glucose_projected' in vector.index:
-                vector['glucose_projected'] = glucose_projected
-            
-            # Fill any remaining NaNs (features not calculated above) with 0
-            vector.fillna(0.0, inplace=True)
-
-        # Make predictions using the loaded model
-        # Ensure the order matches model_feature_names by reindexing
-        original_feature_array = original_feature_vector[model_feature_names].values.reshape(1, -1)
-        modified_feature_array = modified_feature_vector[model_feature_names].values.reshape(1, -1)
-        
-        try:
-            original_prediction = model.predict(original_feature_array)[0]
-            modified_prediction = model.predict(modified_feature_array)[0]
-        except Exception as e:
-            st.error(f"Error during prediction: {e}")
-            st.stop()
-
-        # --- End Feature Processing and Vector Creation ---
-
-        with right_col:
-            # Display original prediction
-            st.subheader(f"Predicted Glucose Change (in {selected_horizon*5} minutes)")
-            if original_prediction > 0:
-                st.error(f"↑ +{original_prediction:.1f} mg/dL (increase)")
-            else:
-                st.success(f"↓ {original_prediction:.1f} mg/dL (decrease)")
-            
-            # Display modified prediction
-            st.subheader(f"Predicted Modified Glucose Change (in {selected_horizon*5} minutes)")
-            if modified_prediction > 0:
-                st.error(f"↑ +{modified_prediction:.1f} mg/dL (increase)")
-            else:
-                st.success(f"↓ {modified_prediction:.1f} mg/dL (decrease)")
-            
-            # Display the difference
-            difference = modified_prediction - original_prediction
-            st.subheader("Effect of Modifications")
-            if difference > 0:
-                st.error(f"↑ +{difference:.1f} mg/dL higher than original")
-            elif difference < 0:
-                st.success(f"↓ {abs(difference):.1f} mg/dL lower than original")
-            else:
-                st.info("No change from modifications")
-    else:
-        # Handle case where meal_row was empty after button press (should be rare)
-        st.warning("Selected image data not found.")
+            with right_col:
+                # Display prediction results
+                st.subheader(f"Predicted Glucose Change")
+                st.metric(
+                    label=f"In {horizon_options[selected_horizon]}",
+                    value=f"{prediction:+.1f} mg/dL",
+                    delta=f"From current: {current_glucose:.1f} mg/dL"
+                )
                 
+                if prediction > 0:
+                    st.error(f"⚠️ Expected glucose increase of {prediction:.1f} mg/dL")
+                else:
+                    st.success(f"✅ Expected glucose decrease of {abs(prediction):.1f} mg/dL")
+            
+            # Display feature importances
+            st.subheader("Model Feature Importances")
+            if importances and isinstance(importances, dict):
+                importance_fig = display_feature_importances(importances)
+                if importance_fig:
+                    st.pyplot(importance_fig)
+                else:
+                    st.write("Could not display feature importances.")
+            else:
+                st.write("Feature importances not available.")
+                
+        else:
+            st.error("Could not make prediction. Please try a different meal or patient.")
+    else:
+        st.warning("Selected meal data not found.")
+
 # Add info about the app
 st.sidebar.markdown("---")
 st.sidebar.info("""
-This app uses Bezier curves to model how different nutrients affect glucose levels over time.
-The models are trained on historical data and patient-specific parameters.
-Data are based on the D1namo dataset (https://www.sciencedirect.com/science/article/pii/S2352914818301059) where
-Type 1 Diabetes patients were monitored for around 5 days with CGM and asked to upload meal images and insulin data.
-Select a patient, meal image, and prediction horizon, then click Submit to see the predicted glucose change.
+**Enhanced D1namo Glucose Prediction**
 
-You can also modify macronutrient values to see how changing your meal composition affects glucose prediction.
+This app uses:
+- Optimized Bézier curves for temporal modeling
+- Cross-patient learning with patient weighting
+- Real-time feature importance analysis
+- LightGBM machine learning
+
+Based on the D1namo dataset with Type 1 Diabetes patients monitored for ~5 days with CGM, meal images, and insulin data.
+
+**How to use:**
+1. Select a patient and meal image
+2. Choose prediction horizon (30-120 minutes)
+3. Optionally modify macronutrients
+4. Click "Predict" to see expected glucose change
+
 Check out https://github.com/Prgrmmrjns/Glucovision for more information.
-""") 
+""")
+
+# Display technical details in expander
+with st.expander("Technical Details"):
+    st.write(f"""
+    **Model Configuration:**
+    - Patients: {len(PATIENTS_D1NAMO)}
+    - Features: {len(OPTIMIZATION_FEATURES_D1NAMO)} optimized Bézier curves
+    - ML Algorithm: LightGBM with patient weighting (10:1)
+    - Cross-validation: 80/20 train/validation split
+    - Prediction horizons: 30, 60, 90, 120 minutes
+    
+    **Bézier Curve Features:**
+    - Simple sugars, complex sugars, proteins, fats, dietary fibers, insulin
+    - Globally optimized parameters across all patients
+    - Temporal modeling of nutrient absorption and insulin action
+    """)

@@ -1,0 +1,321 @@
+{
+  "overall_correlations": {
+    "carbohydrates": {
+      "pearson_r": 0.16352925769421675,
+      "pearson_p": 0.0,
+      "spearman_r": 0.18109125879175336,
+      "spearman_p": 0.0
+    },
+    "insulin": {
+      "pearson_r": 0.14051399519922747,
+      "pearson_p": 0.0,
+      "spearman_r": 0.30439835139028804,
+      "spearman_p": 0.0
+    }
+  },
+  "inter_feature_correlations": {
+    "carb_insulin": {
+      "r": 0.7283034212254228,
+      "p": 0.0
+    }
+  },
+  "patient_correlations": {
+    "1": {
+      "carbohydrates": {
+        "pearson_r": 0.10299355801542748,
+        "pearson_p": 2.120275411912326e-27,
+        "n_points": 11030
+      },
+      "insulin": {
+        "pearson_r": 0.2026506455217931,
+        "pearson_p": 1.421672140639022e-102,
+        "n_points": 11030
+      }
+    },
+    "2": {
+      "carbohydrates": {
+        "pearson_r": 0.3241481352030382,
+        "pearson_p": 7.278753875053191e-272,
+        "n_points": 11182
+      },
+      "insulin": {
+        "pearson_r": 0.30135777088942767,
+        "pearson_p": 1.821218783229601e-233,
+        "n_points": 11182
+      }
+    },
+    "3": {
+      "carbohydrates": {
+        "pearson_r": 0.29334570798792575,
+        "pearson_p": 8.382709606410968e-229,
+        "n_points": 11593
+      },
+      "insulin": {
+        "pearson_r": 0.28787509807898565,
+        "pearson_p": 4.708098610686942e-220,
+        "n_points": 11593
+      }
+    },
+    "4": {
+      "carbohydrates": {
+        "pearson_r": 0.1989103405752768,
+        "pearson_p": 1.873740780024848e-114,
+        "n_points": 12810
+      },
+      "insulin": {
+        "pearson_r": 0.29467233881843374,
+        "pearson_p": 5.568331880495521e-255,
+        "n_points": 12810
+      }
+    },
+    "5": {
+      "carbohydrates": {
+        "pearson_r": 0.16207788639128745,
+        "pearson_p": 2.2416352802806634e-78,
+        "n_points": 13198
+      },
+      "insulin": {
+        "pearson_r": 0.3270511620616638,
+        "pearson_p": 0.0,
+        "n_points": 13198
+      }
+    },
+    "6": {
+      "carbohydrates": {
+        "pearson_r": 0.3922985898976738,
+        "pearson_p": 0.0,
+        "n_points": 12889
+      },
+      "insulin": {
+        "pearson_r": 0.31488783610885646,
+        "pearson_p": 1.3745388607820379e-294,
+        "n_points": 12889
+      }
+    },
+    "7": {
+      "carbohydrates": {
+        "pearson_r": 0.3019304179266591,
+        "pearson_p": 4.72743813669749e-280,
+        "n_points": 13380
+      },
+      "insulin": {
+        "pearson_r": 0.2871378204179005,
+        "pearson_p": 2.6093986286970487e-252,
+        "n_points": 13380
+      }
+    },
+    "8": {
+      "carbohydrates": {
+        "pearson_r": 0.12221284843450118,
+        "pearson_p": 2.022071696917605e-28,
+        "n_points": 8127
+      },
+      "insulin": {
+        "pearson_r": 0.21729427145297198,
+        "pearson_p": 1.8723551499446665e-87,
+        "n_points": 8127
+      }
+    },
+    "9": {
+      "carbohydrates": {
+        "pearson_r": 0.22590131761691842,
+        "pearson_p": 6.247831557972038e-124,
+        "n_points": 10705
+      },
+      "insulin": {
+        "pearson_r": 0.29640118844930063,
+        "pearson_p": 5.0135291092504776e-216,
+        "n_points": 10705
+      }
+    },
+    "10": {
+      "carbohydrates": {
+        "pearson_r": 0.14780229779269924,
+        "pearson_p": 2.0997173088763717e-60,
+        "n_points": 12171
+      },
+      "insulin": {
+        "pearson_r": 0.3174422116382341,
+        "pearson_p": 4.8464800758218745e-283,
+        "n_points": 12171
+      }
+    },
+    "11": {
+      "carbohydrates": {
+        "pearson_r": 0.4146671737765212,
+        "pearson_p": 0.0,
+        "n_points": 12942
+      },
+      "insulin": {
+        "pearson_r": 0.3972275685338507,
+        "pearson_p": 0.0,
+        "n_points": 12942
+      }
+    },
+    "12": {
+      "carbohydrates": {
+        "pearson_r": 0.1442544056531986,
+        "pearson_p": 7.041920358237023e-60,
+        "n_points": 12669
+      },
+      "insulin": {
+        "pearson_r": 0.2455617602818908,
+        "pearson_p": 2.4292789199784816e-173,
+        "n_points": 12669
+      }
+    },
+    "13": {
+      "carbohydrates": {
+        "pearson_r": 0.17529855214914783,
+        "pearson_p": 1.9992848077763355e-89,
+        "n_points": 12883
+      },
+      "insulin": {
+        "pearson_r": 0.20108096992408833,
+        "pearson_p": 1.2507268930841799e-117,
+        "n_points": 12883
+      }
+    },
+    "15": {
+      "carbohydrates": {
+        "pearson_r": 0.006976709794327436,
+        "pearson_p": 0.3803449746352299,
+        "n_points": 15813
+      },
+      "insulin": {
+        "pearson_r": 0.21533201468924254,
+        "pearson_p": 2.9124976886169046e-165,
+        "n_points": 15813
+      }
+    },
+    "16": {
+      "carbohydrates": {
+        "pearson_r": 0.28291583349192734,
+        "pearson_p": 1.9610048392782714e-226,
+        "n_points": 12373
+      },
+      "insulin": {
+        "pearson_r": 0.3134810187486305,
+        "pearson_p": 3.047628697602856e-280,
+        "n_points": 12373
+      }
+    },
+    "17": {
+      "carbohydrates": {
+        "pearson_r": 0.11397943431862191,
+        "pearson_p": 9.815860405175452e-39,
+        "n_points": 12960
+      },
+      "insulin": {
+        "pearson_r": 0.3071205429683653,
+        "pearson_p": 3.874432684353009e-281,
+        "n_points": 12960
+      }
+    },
+    "18": {
+      "carbohydrates": {
+        "pearson_r": 0.2619154928553421,
+        "pearson_p": 2.917511716182437e-165,
+        "n_points": 10565
+      },
+      "insulin": {
+        "pearson_r": 0.25380587078707717,
+        "pearson_p": 5.691052838083981e-155,
+        "n_points": 10565
+      }
+    },
+    "19": {
+      "carbohydrates": {
+        "pearson_r": 0.2587377208903357,
+        "pearson_p": 4.9544921012812284e-201,
+        "n_points": 13210
+      },
+      "insulin": {
+        "pearson_r": 0.2736092124570411,
+        "pearson_p": 1.7054204163363113e-225,
+        "n_points": 13210
+      }
+    },
+    "20": {
+      "carbohydrates": {
+        "pearson_r": 0.056843375124809956,
+        "pearson_p": 4.723565123806256e-11,
+        "n_points": 13378
+      },
+      "insulin": {
+        "pearson_r": 0.13841037662844308,
+        "pearson_p": 3.251690661605126e-58,
+        "n_points": 13378
+      }
+    },
+    "21": {
+      "carbohydrates": {
+        "pearson_r": 0.1689996787322935,
+        "pearson_p": 2.2745273373840335e-86,
+        "n_points": 13392
+      },
+      "insulin": {
+        "pearson_r": 0.3017958906235885,
+        "pearson_p": 4.845825603182815e-280,
+        "n_points": 13392
+      }
+    },
+    "22": {
+      "carbohydrates": {
+        "pearson_r": -0.03447831803611794,
+        "pearson_p": 0.0002387409462497101,
+        "n_points": 11351
+      },
+      "insulin": {
+        "pearson_r": 0.07502532351266689,
+        "pearson_p": 1.2075543410323196e-15,
+        "n_points": 11351
+      }
+    },
+    "23": {
+      "carbohydrates": {
+        "pearson_r": NaN,
+        "pearson_p": NaN,
+        "n_points": 13754
+      },
+      "insulin": {
+        "pearson_r": 0.03197938022301818,
+        "pearson_p": 0.0001760754928347434,
+        "n_points": 13754
+      }
+    },
+    "24": {
+      "carbohydrates": {
+        "pearson_r": -0.04329551889713286,
+        "pearson_p": 1.2956962777992013e-05,
+        "n_points": 10138
+      },
+      "insulin": {
+        "pearson_r": -0.031186538969147203,
+        "pearson_p": 0.0016867380625352707,
+        "n_points": 10138
+      }
+    },
+    "25": {
+      "carbohydrates": {
+        "pearson_r": 0.2500434510071767,
+        "pearson_p": 3.8812460973573844e-155,
+        "n_points": 10908
+      },
+      "insulin": {
+        "pearson_r": 0.2990432756853089,
+        "pearson_p": 3.55387611038917e-224,
+        "n_points": 10908
+      }
+    }
+  },
+  "timing_analysis_summary": {
+    "total_pairs": 4207,
+    "mean_time_diff_minutes": 0.04158545281673401,
+    "std_time_diff_minutes": 1.2203266593521735,
+    "pre_bolus_percentage": 0.0,
+    "concurrent_percentage": 99.92869027810791,
+    "post_bolus_percentage": 0.07130972189208462,
+    "mean_insulin_carb_ratio": 0.1661955673873063
+  }
+}

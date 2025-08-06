@@ -1,10 +1,7 @@
 pandas
 numpy
-joblib
+optuna
 matplotlib
 lightgbm
 requests
-streamlit
-Pillow
-scipy
 scikit-learn

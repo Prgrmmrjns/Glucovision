@@ -1,0 +1,81 @@
+DETAILED RMSE ANALYSIS: MACRONUTRIENT-INFORMED vs BASELINE MODEL
+================================================================================
+
+OVERALL PERFORMANCE:
+Macronutrient-informed model: 31.85 ± 28.79 mg/dL
+Baseline model: 32.45 ± 29.02 mg/dL
+Overall improvement: 1.9%
+
+ANALYSIS BY PREDICTION HORIZON:
+----------------------------------------
+30 min:
+  Macro: 14.85 ± 11.34 mg/dL
+  Base:  14.85 ± 11.41 mg/dL
+  Improvement: 0.0% (p=0.968)
+
+45 min:
+  Macro: 23.50 ± 18.05 mg/dL
+  Base:  23.56 ± 17.92 mg/dL
+  Improvement: 0.3% (p=0.843)
+
+60 min:
+  Macro: 30.50 ± 23.68 mg/dL
+  Base:  30.97 ± 23.27 mg/dL
+  Improvement: 1.5% (p=0.306)
+
+90 min:
+  Macro: 41.59 ± 31.27 mg/dL
+  Base:  42.75 ± 31.61 mg/dL
+  Improvement: 2.7% (p=0.068)
+
+120 min:
+  Macro: 48.79 ± 37.68 mg/dL
+  Base:  50.12 ± 37.71 mg/dL
+  Improvement: 2.7% (p=0.085)
+
+Statistically significant improvements at: 
+
+ANALYSIS BY PATIENT:
+-------------------------
+Patient 1:
+  Macro: 31.41 ± 25.93 mg/dL
+  Base:  32.13 ± 25.60 mg/dL
+  Improvement: 2.3% (p=0.110)
+
+Patient 2:
+  Macro: 40.24 ± 36.53 mg/dL
+  Base:  39.28 ± 35.20 mg/dL
+  Improvement: -2.4% (p=0.074)
+
+Patient 4:
+  Macro: 62.11 ± 48.63 mg/dL
+  Base:  65.51 ± 50.10 mg/dL
+  Improvement: 5.2% (p=0.040)
+
+Patient 6:
+  Macro: 21.89 ± 16.35 mg/dL
+  Base:  22.90 ± 17.05 mg/dL
+  Improvement: 4.5% (p=0.002)
+
+Patient 7:
+  Macro: 21.53 ± 14.41 mg/dL
+  Base:  20.37 ± 13.76 mg/dL
+  Improvement: -5.7% (p=0.013)
+
+Patient 8:
+  Macro: 34.16 ± 23.12 mg/dL
+  Base:  35.51 ± 24.12 mg/dL
+  Improvement: 3.8% (p=0.023)
+
+PATIENT-SPECIFIC SIGNIFICANT IMPROVEMENTS BY HORIZON:
+-------------------------------------------------------
+90 min: Patient 6 (6.5%)
+120 min: Patient 6 (7.5%)
+
+KEY INSIGHTS:
+---------------
+• Best performing patient: Patient 4 (5.2% improvement)
+• Worst performing patient: Patient 7 (-5.7% change)
+• Best prediction horizon: 90 min (2.7% improvement)
+• Patient with most variable performance: Patient 4 (std: 48.6 mg/dL)
+• Patient with most consistent performance: Patient 7 (std: 14.4 mg/dL)
