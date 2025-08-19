@@ -1,6 +1,3 @@
-"""
-Shared parameters and constants for Glucovision project
-"""
 
 # Patient IDs
 PATIENTS_D1NAMO = ['001', '002', '004', '006', '007', '008']
@@ -12,19 +9,29 @@ PH_COLUMNS = [f'glucose_{h}' for h in PREDICTION_HORIZONS]
 
 # Feature sets for optimization
 OPTIMIZATION_FEATURES_D1NAMO = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'insulin']
-OPTIMIZATION_FEATURES_AZT1D = ['carbohydrates', 'insulin']
-OPTIMIZATION_FEATURES_BASELINE = ['insulin']  # For baseline models
+OPTIMIZATION_FEATURES_AZT1D = ['carbohydrates', 'insulin', 'correction']
 
 # LightGBM parameters
 LGB_PARAMS = {
     'random_state': 42,
     'deterministic': True,
     'num_threads': 1,
+    'n_estimators': 100,
+    'learning_rate': 0.1,
+    'reg_lambda': 10,
     'verbosity': -1,
-    'subsample': 0.8,
-    'early_stopping_rounds': 10,
-    'reg_lambda': 20,
+    'data_sample_strategy': 'goss',
     'max_depth': 3,
+}
+
+# Monotone constraints mapping for feature names
+MONOTONE_MAP = {
+    'simple_sugars': 1,
+    'complex_sugars': 1,
+    'carbohydrates': 1,
+    'dietary_fibers': -1,
+    'insulin': -1,
+    'correction': -1,
 }
 
 # Common feature sets to remove during prediction
@@ -37,22 +44,29 @@ DEFAULT_PREDICTION_HORIZON = 12
 # Glucose conversion factor (mmol/L to mg/dL)
 GLUCOSE_CONVERSION_FACTOR = 18.0182
 
-# AZT1D domain knowledge Bezier parameters
-AZT1D_BEZIER_PARAMS = {
-    'carbohydrates': [0.0, 0.0, 0.5, 1.0, 1.5, 0.0, 3.0, 0.0],  # Peak at 1.5 hours
-    'insulin': [0.0, 0.0, 0.25, 1.0, 0.75, 0.0, 2.0, 0.0]      # Peak at 0.75 hours
-}
-
 # File paths
-D1NAMO_DATA_PATH = "../diabetes_subset_pictures-glucose-food-insulin"
-AZT1D_DATA_PATH = "../AZT1D 2025/CGM Records"
-FOOD_DATA_PATH = "../food_data/pixtral-large-latest"
-RESULTS_PATH = "../results"
+D1NAMO_DATA_PATH = "diabetes_subset_pictures-glucose-food-insulin"
+AZT1D_DATA_PATH = "AZT1D 2025/CGM Records"
+FOOD_DATA_PATH = "food_data/pixtral-large-latest"
+RESULTS_PATH = "results"
 
 # AZT1D column mappings
 AZT1D_COLUMNS = {
     'datetime': 'EventDateTime',
     'glucose': 'CGM',
     'carbohydrates': 'CarbSize',
-    'insulin': 'TotalBolusInsulinDelivered'
+    'insulin': 'TotalBolusInsulinDelivered',
+    'correction': 'CorrectionDelivered'
 }
+
+# Training and evaluation parameters
+FAST_FEATURES = ['simple_sugars', 'insulin']
+LOAD_PARAMS = True
+N_TRIALS = 500
+RANDOM_SEED = 42
+N_JOBS = -1
+CURRENT_PATIENT_WEIGHT = 10
+VALIDATION_SIZE = 0.2
+MAX_X_VALUES_FAST = 4.0
+MAX_X_VALUES_SLOW = 8.0
+STEP_SIZE = 12

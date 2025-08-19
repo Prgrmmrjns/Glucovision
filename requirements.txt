@@ -6,3 +6,5 @@ lightgbm
 requests
 scikit-learn
 streamlit
+statsmodels
+torch

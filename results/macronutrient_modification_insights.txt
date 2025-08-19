@@ -1,0 +1,21 @@
+D1NAMO simple_sugars: +50 effect +1.47 mg/dL, -50 effect -2.47 mg/dL, range 3.93 mg/dL
+D1NAMO complex_sugars: +50 effect +1.67 mg/dL, -50 effect -0.73 mg/dL, range 2.40 mg/dL
+D1NAMO proteins: +50 effect +2.35 mg/dL, -50 effect -1.55 mg/dL, range 3.90 mg/dL
+D1NAMO fats: +50 effect -6.08 mg/dL, -50 effect +0.79 mg/dL, range -6.87 mg/dL
+D1NAMO dietary_fibers: +50 effect -1.09 mg/dL, -50 effect +1.35 mg/dL, range -2.44 mg/dL
+D1NAMO insulin: +50 effect -0.40 mg/dL, -50 effect +0.87 mg/dL, range -1.27 mg/dL
+AZT1D carbohydrates: +50 effect +4.17 mg/dL, -50 effect -3.09 mg/dL, range 7.26 mg/dL
+AZT1D insulin: +50 effect -3.57 mg/dL, -50 effect +3.42 mg/dL, range -7.00 mg/dL
+AZT1D correction: +50 effect -6.93 mg/dL, -50 effect +1.05 mg/dL, range -7.98 mg/dL
+D1NAMO simple_sugars +50 CV: 63.9%
+D1NAMO complex_sugars +50 CV: 62.6%
+D1NAMO proteins +50 CV: 62.8%
+D1NAMO fats +50 CV: 58.5%
+D1NAMO dietary_fibers +50 CV: 63.3%
+D1NAMO insulin +50 CV: 91.1%
+AZT1D carbohydrates +50 CV: 53.9%
+AZT1D insulin +50 CV: 37.5%
+AZT1D correction +50 CV: 25.9%
+Insulin +50: D1namo -0.40 mg/dL vs AZT1D -3.57 mg/dL
+D1NAMO most impactful: fats (range 6.87 mg/dL)
+AZT1D most impactful: correction (range 7.98 mg/dL)

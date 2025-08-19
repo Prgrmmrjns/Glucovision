@@ -5,8 +5,8 @@ import json
 import matplotlib.pyplot as plt
 from PIL import Image
 import lightgbm as lgb
-from params import *
-from processing_functions import *
+from analysis_scripts.params import *
+from analysis_scripts.processing_functions import *
 
 # Override paths for root-level deployment
 D1NAMO_DATA_PATH = "diabetes_subset_pictures-glucose-food-insulin"

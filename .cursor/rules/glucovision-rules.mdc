@@ -15,36 +15,10 @@ The primary challenge is the feature disparity between the D1namo and AZT1D data
 To robustly evaluate the impact of detailed macronutrient information and address concerns about spurious correlations, we will train and compare two generalized models on the combined D1namo and AZT1D datasets.
 
 1.  **Model 1 (Macronutrient-Aware)**: Trained on all available features, including detailed macronutrients. For AZT1D data, the macronutrient features (simple sugars, complex sugars, fats, proteins, dietary fibers) will be set to `NaN`, which LightGBM can handle.
-2.  **Model 2 (Carbs-Only)**: Trained using only carbohydrate estimates as the primary meal-related feature, providing a common baseline across both datasets.
+2.  **Model 2 (Baseline)**: Trained using only glucose and insulin features providing a common baseline across both datasets.
 
-For both models, the first day of data from each patient will be used to tune the patient-specific mechanistic model (Bezier curves), ensuring personalization.
+For both models, the first three days of data from each patient will be used to tune the patient-specific mechanistic model (Bezier curves), ensuring personalization.
 
-## Evaluation Plan & TODOs
-
-### 🧪 Evaluation: Generalized Model Showdown
-- **Goal**: Compare the performance of the Macronutrient-Aware model against the Carbs-Only model on both the D1namo and AZT1D datasets. This will help quantify the value of detailed nutritional data and test model generalizability.
-- **TODOs**:
-  1.  **[ ] Data Preprocessing**:
-      - Combine D1namo and AZT1D datasets.
-      - For AZT1D, introduce `NaN` values for the five detailed macronutrient columns.
-      - Ensure consistent feature sets for both models.
-  2.  **[ ] Patient-Specific Tuning**: Implement logic to use the first day of data for each patient to tune their individual Bezier curve parameters.
-  3.  **[ ] Train Generalized Models**:
-      - Train the Macronutrient-Aware LightGBM model on the combined dataset.
-      - Train the Carbs-Only LightGBM model on the combined dataset.
-  4.  **[ ] Performance Comparison**:
-      - Evaluate both models on the D1namo test set.
-      - Evaluate both models on the AZT1D test set.
-      - Analyze and compare RMSE, and investigate instances of counterintuitive predictions.
-
-## Current Status
-
-- **Previous Approaches**: The initial integration attempt and the two-separate-evaluation plan are now ABANDONED.
-- **Next Step**: Implement the new generalized model comparison pipeline.
 
 ## Implementation Notes
-
-- Delete `d1namo_eval.py` - integration approach abandoned
-- Use `main.py` for D1namo evaluation results
-- Create `azt1d_eval.py` for generalized model fine-tuning approach
-- Focus on single AZT1D patient initially (Subject 1) for proof of concept
+- In main.tex please only write about 200 characters per line so that I can see it properly without scrolling to the right.

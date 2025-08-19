@@ -1,0 +1,15 @@
+D1namo glucose: increases from 13.9% to 42.5% (+28.7%)
+D1namo glucose_change: decreases from 51.9% to 8.9% (-43.0%)
+D1namo glucose_change_projected: decreases from 10.5% to 5.1% (-5.4%)
+D1namo glucose_projected: decreases from 10.7% to 4.8% (-5.9%)
+D1namo time: increases from 6.1% to 18.1% (+12.0%)
+AZT1D glucose: increases from 32.4% to 80.1% (+47.7%)
+AZT1D glucose_change: decreases from 50.3% to 6.0% (-44.3%)
+60min glucose: D1namo 26.6% vs AZT1D 54.6% (diff: -28.0%)
+D1namo 60min top macronutrient: proteins (5.0%)
+D1namo 30min: Glucose features 86.9% of total importance
+D1namo 60min: Glucose features 75.0% of total importance
+D1namo 120min: Glucose features 61.3% of total importance
+AZT1D 30min: Glucose features 88.0% of total importance
+AZT1D 60min: Glucose features 85.3% of total importance
+AZT1D 120min: Glucose features 86.9% of total importance

@@ -1,5 +1,0 @@
-Configuration,RMSE (mg/dL),Optimization,Patient Weighting,Improvement vs Baseline (%)
-Baseline (no macronutrients),31.644532205902095,N/A,No,0.0
-Domain knowledge parameters,31.625272665485927,No,No,+0.1
-Optimized parameters,31.265771663824374,Yes,No,+1.2
-Optimized parameters + weighting,30.536907731789828,Yes,Yes,+3.5
