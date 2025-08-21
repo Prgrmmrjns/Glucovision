@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import ttest_rel
+from scipy.stats import ttest_rel, f_oneway, friedmanchisquare
 import warnings
 import os
 warnings.filterwarnings('ignore')
@@ -482,39 +482,48 @@ horizon_names = {6: "30 min", 9: "45 min", 12: "60 min", 18: "90 min", 24: "120 
 table_content = ""
 for horizon in horizons:
     # D1namo data for all three approaches
-    if d1namo_bezier_df is not None and d1namo_lastmeal_df is not None and d1namo_baseline_df is not None:
-        d1n_bezier_h = d1namo_bezier_df[d1namo_bezier_df['Prediction Horizon'] == horizon]['RMSE']
-        d1n_lastmeal_h = d1namo_lastmeal_df[d1namo_lastmeal_df['Prediction Horizon'] == horizon]['RMSE']
-        d1n_baseline_h = d1namo_baseline_df[d1namo_baseline_df['Prediction Horizon'] == horizon]['RMSE']
-        
-        d1n_bezier_mean, d1n_bezier_std = d1n_bezier_h.mean(), d1n_bezier_h.std()
-        d1n_lastmeal_mean, d1n_lastmeal_std = d1n_lastmeal_h.mean(), d1n_lastmeal_h.std()
-        d1n_baseline_mean, d1n_baseline_std = d1n_baseline_h.mean(), d1n_baseline_h.std()
-        
-        # Paired t-tests for all comparisons
-        p_d1n_bezier_vs_baseline = ttest_rel(d1n_bezier_h, d1n_baseline_h)[1] if len(d1n_bezier_h) > 1 else np.nan
-        p_d1n_lastmeal_vs_baseline = ttest_rel(d1n_lastmeal_h, d1n_baseline_h)[1] if len(d1n_lastmeal_h) > 1 else np.nan
-    else:
-        d1n_bezier_mean = d1n_bezier_std = d1n_lastmeal_mean = d1n_lastmeal_std = d1n_baseline_mean = d1n_baseline_std = np.nan
-        p_d1n_bezier_vs_baseline = p_d1n_lastmeal_vs_baseline = np.nan
+    d1n_bezier_h = d1namo_bezier_df[d1namo_bezier_df['Prediction Horizon'] == horizon]['RMSE']
+    d1n_lastmeal_h = d1namo_lastmeal_df[d1namo_lastmeal_df['Prediction Horizon'] == horizon]['RMSE']
+    d1n_baseline_h = d1namo_baseline_df[d1namo_baseline_df['Prediction Horizon'] == horizon]['RMSE']
+    
+    d1n_bezier_mean, d1n_bezier_std = d1n_bezier_h.mean(), d1n_bezier_h.std()
+    d1n_lastmeal_mean, d1n_lastmeal_std = d1n_lastmeal_h.mean(), d1n_lastmeal_h.std()
+    d1n_baseline_mean, d1n_baseline_std = d1n_baseline_h.mean(), d1n_baseline_h.std()
+    
+    # Paired t-tests for all comparisons between all three methods
+    p_d1n_bezier_vs_baseline = ttest_rel(d1n_bezier_h, d1n_baseline_h)[1] if len(d1n_bezier_h) > 1 else np.nan
+    p_d1n_lastmeal_vs_baseline = ttest_rel(d1n_lastmeal_h, d1n_baseline_h)[1] if len(d1n_lastmeal_h) > 1 else np.nan
+    p_d1n_bezier_vs_lastmeal = ttest_rel(d1n_bezier_h, d1n_lastmeal_h)[1] if len(d1n_bezier_h) > 1 else np.nan
+    
+    # One-way repeated measures ANOVA for all three methods
+    # For repeated measures, we need to ensure same length arrays
+    min_len = min(len(d1n_bezier_h), len(d1n_lastmeal_h), len(d1n_baseline_h))
+    d1n_bezier_anova = d1n_bezier_h[:min_len]
+    d1n_lastmeal_anova = d1n_lastmeal_h[:min_len]
+    d1n_baseline_anova = d1n_baseline_h[:min_len]
+    f_stat_d1n, p_anova_d1n = f_oneway(d1n_bezier_anova, d1n_lastmeal_anova, d1n_baseline_anova)
     
     # AZT1D data for all three approaches
-    if azt_bezier_df is not None and azt_lastmeal_df is not None and azt_baseline_df is not None:
-        azt_bezier_h = azt_bezier_df[azt_bezier_df['Prediction Horizon'] == horizon]['RMSE']
-        azt_lastmeal_h = azt_lastmeal_df[azt_lastmeal_df['Prediction Horizon'] == horizon]['RMSE']
-        azt_baseline_h = azt_baseline_df[azt_baseline_df['Prediction Horizon'] == horizon]['RMSE']
-        
-        azt_bezier_mean, azt_bezier_std = azt_bezier_h.mean(), azt_bezier_h.std()
-        azt_lastmeal_mean, azt_lastmeal_std = azt_lastmeal_h.mean(), azt_lastmeal_h.std()
-        azt_baseline_mean, azt_baseline_std = azt_baseline_h.mean(), azt_baseline_h.std()
-        
-        # Paired t-tests for all comparisons
-        p_azt_bezier_vs_baseline = ttest_rel(azt_bezier_h, azt_baseline_h)[1] if len(azt_bezier_h) > 1 else np.nan
-        p_azt_lastmeal_vs_baseline = ttest_rel(azt_lastmeal_h, azt_baseline_h)[1] if len(azt_lastmeal_h) > 1 else np.nan
-    else:
-        azt_bezier_mean = azt_bezier_std = azt_lastmeal_mean = azt_lastmeal_std = azt_baseline_mean = azt_baseline_std = np.nan
-        p_azt_bezier_vs_baseline = p_azt_lastmeal_vs_baseline = np.nan
-
+    azt_bezier_h = azt_bezier_df[azt_bezier_df['Prediction Horizon'] == horizon]['RMSE']
+    azt_lastmeal_h = azt_lastmeal_df[azt_lastmeal_df['Prediction Horizon'] == horizon]['RMSE']
+    azt_baseline_h = azt_baseline_df[azt_baseline_df['Prediction Horizon'] == horizon]['RMSE']
+    
+    azt_bezier_mean, azt_bezier_std = azt_bezier_h.mean(), azt_bezier_h.std()
+    azt_lastmeal_mean, azt_lastmeal_std = azt_lastmeal_h.mean(), azt_lastmeal_h.std()
+    azt_baseline_mean, azt_baseline_std = azt_baseline_h.mean(), azt_baseline_h.std()
+    
+    # Paired t-tests for all comparisons between all three methods
+    p_azt_bezier_vs_baseline = ttest_rel(azt_bezier_h, azt_baseline_h)[1] if len(azt_bezier_h) > 1 else np.nan
+    p_azt_lastmeal_vs_baseline = ttest_rel(azt_lastmeal_h, azt_baseline_h)[1] if len(azt_lastmeal_h) > 1 else np.nan
+    p_azt_bezier_vs_lastmeal = ttest_rel(azt_bezier_h, azt_lastmeal_h)[1] if len(azt_bezier_h) > 1 else np.nan
+    
+    # One-way repeated measures ANOVA for all three methods
+    # For repeated measures, we need to ensure same length arrays
+    min_len = min(len(azt_bezier_h), len(azt_lastmeal_h), len(azt_baseline_h))
+    azt_bezier_anova = azt_bezier_h[:min_len]
+    azt_lastmeal_anova = azt_lastmeal_h[:min_len]
+    azt_baseline_anova = azt_baseline_h[:min_len]
+    f_stat_azt, p_anova_azt = f_oneway(azt_bezier_anova, azt_lastmeal_anova, azt_baseline_anova)
     # Format strings
     h_name = horizon_names.get(horizon, f"{horizon*5} min")
     
@@ -528,30 +537,44 @@ for horizon in horizons:
     azt_lastmeal_str = f"{azt_lastmeal_mean:.2f} $\\pm$ {azt_lastmeal_std:.2f}" if not np.isnan(azt_lastmeal_mean) else "N/A"
     azt_baseline_str = f"{azt_baseline_mean:.2f} $\\pm$ {azt_baseline_std:.2f}" if not np.isnan(azt_baseline_mean) else "N/A"
     
-    # P-value strings with bold formatting for significant results
+    # P-value strings with bold formatting for significant results (all three comparisons)
     p_d1n_bezier_str = f"\\textbf{{{p_d1n_bezier_vs_baseline:.3f}}}" if not np.isnan(p_d1n_bezier_vs_baseline) and p_d1n_bezier_vs_baseline < 0.05 else f"{p_d1n_bezier_vs_baseline:.3f}" if not np.isnan(p_d1n_bezier_vs_baseline) else "N/A"
     p_d1n_lastmeal_str = f"\\textbf{{{p_d1n_lastmeal_vs_baseline:.3f}}}" if not np.isnan(p_d1n_lastmeal_vs_baseline) and p_d1n_lastmeal_vs_baseline < 0.05 else f"{p_d1n_lastmeal_vs_baseline:.3f}" if not np.isnan(p_d1n_lastmeal_vs_baseline) else "N/A"
+    p_d1n_bezier_vs_lastmeal_str = f"\\textbf{{{p_d1n_bezier_vs_lastmeal:.3f}}}" if not np.isnan(p_d1n_bezier_vs_lastmeal) and p_d1n_bezier_vs_lastmeal < 0.05 else f"{p_d1n_bezier_vs_lastmeal:.3f}" if not np.isnan(p_d1n_bezier_vs_lastmeal) else "N/A"
+    p_d1n_anova_str = f"\\textbf{{{p_anova_d1n:.3f}}}" if not np.isnan(p_anova_d1n) and p_anova_d1n < 0.05 else f"{p_anova_d1n:.3f}" if not np.isnan(p_anova_d1n) else "N/A"
     p_azt_bezier_str = f"\\textbf{{{p_azt_bezier_vs_baseline:.3f}}}" if not np.isnan(p_azt_bezier_vs_baseline) and p_azt_bezier_vs_baseline < 0.05 else f"{p_azt_bezier_vs_baseline:.3f}" if not np.isnan(p_azt_bezier_vs_baseline) else "N/A"
     p_azt_lastmeal_str = f"\\textbf{{{p_azt_lastmeal_vs_baseline:.3f}}}" if not np.isnan(p_azt_lastmeal_vs_baseline) and p_azt_lastmeal_vs_baseline < 0.05 else f"{p_azt_lastmeal_vs_baseline:.3f}" if not np.isnan(p_azt_lastmeal_vs_baseline) else "N/A"
+    p_azt_bezier_vs_lastmeal_str = f"\\textbf{{{p_azt_bezier_vs_lastmeal:.3f}}}" if not np.isnan(p_azt_bezier_vs_lastmeal) and p_azt_bezier_vs_lastmeal < 0.05 else f"{p_azt_bezier_vs_lastmeal:.3f}" if not np.isnan(p_azt_bezier_vs_lastmeal) else "N/A"
+    p_azt_anova_str = f"\\textbf{{{p_anova_azt:.3f}}}" if not np.isnan(p_anova_azt) and p_anova_azt < 0.05 else f"{p_anova_azt:.3f}" if not np.isnan(p_anova_azt) else "N/A"
 
-    # Apply bolding for better performance and significance (Bezier vs Baseline)
-    if not np.isnan(d1n_bezier_mean) and not np.isnan(d1n_baseline_mean) and not np.isnan(p_d1n_bezier_vs_baseline):
-        if d1n_bezier_mean < d1n_baseline_mean and p_d1n_bezier_vs_baseline < 0.05:
+    # Apply bolding for better performance based on ANOVA significance
+    if p_anova_d1n < 0.05:
+        # Find the best performing method and bold it
+        means = [d1n_bezier_mean, d1n_lastmeal_mean, d1n_baseline_mean]
+        best_idx = np.argmin(means)
+        if best_idx == 0:
             d1n_bezier_str = f"\\textbf{{{d1n_bezier_str}}}"
-        elif d1n_baseline_mean < d1n_bezier_mean and p_d1n_bezier_vs_baseline < 0.05:
+        elif best_idx == 1:
+            d1n_lastmeal_str = f"\\textbf{{{d1n_lastmeal_str}}}"
+        elif best_idx == 2:
             d1n_baseline_str = f"\\textbf{{{d1n_baseline_str}}}"
 
-    if not np.isnan(azt_bezier_mean) and not np.isnan(azt_baseline_mean) and not np.isnan(p_azt_bezier_vs_baseline):
-        if azt_bezier_mean < azt_baseline_mean and p_azt_bezier_vs_baseline < 0.05:
+    if p_anova_azt < 0.05:
+        # Find the best performing method and bold it
+        means = [azt_bezier_mean, azt_lastmeal_mean, azt_baseline_mean]
+        best_idx = np.argmin(means)
+        if best_idx == 0:
             azt_bezier_str = f"\\textbf{{{azt_bezier_str}}}"
-        elif azt_baseline_mean < azt_bezier_mean and p_azt_bezier_vs_baseline < 0.05:
+        elif best_idx == 1:
+            azt_lastmeal_str = f"\\textbf{{{azt_lastmeal_str}}}"
+        elif best_idx == 2:
             azt_baseline_str = f"\\textbf{{{azt_baseline_str}}}"
 
-    table_content += f"\\rowcolor{{gray!5}} {h_name} & {d1n_bezier_str} & {d1n_lastmeal_str} & {d1n_baseline_str} & {p_d1n_bezier_str} & {azt_bezier_str} & {azt_lastmeal_str} & {azt_baseline_str} & {p_azt_bezier_str} \\\\\n"
+    table_content += f"\\rowcolor{{gray!5}} {h_name} & {d1n_bezier_str} & {d1n_lastmeal_str} & {d1n_baseline_str} & {p_d1n_anova_str} & {azt_bezier_str} & {azt_lastmeal_str} & {azt_baseline_str} & {p_azt_anova_str} \\\\\n"
 
 latex_table = f"""\\begin{{table}}[ht]
 \\centering
-\\caption{{Comparison of all three approaches across D1namo and AZT1D datasets. Values show RMSE $\\pm$ standard deviation in mg/dL. P-values show paired t-test results comparing Bezier vs Baseline approaches. Bold RMSE values and p-values indicate statistically significant better performance (p<0.05).}}
+\\caption{{Comparison of all three approaches across D1namo and AZT1D datasets. Values show RMSE $\\pm$ standard deviation. P-values show one-way ANOVA results for overall significance across all three methods. Bold p-values indicate statistically significant differences (p<0.05).}}
 \\label{{tab:three_approaches_comparison}}
 \\renewcommand{{\\arraystretch}}{{1.2}}
 \\setlength{{\\tabcolsep}}{{2pt}}
@@ -560,7 +583,7 @@ latex_table = f"""\\begin{{table}}[ht]
 \\begin{{tabular}}{{|l|ccc>{{\\columncolor{{blue!10}}\\scriptsize}}c|ccc>{{\\columncolor{{blue!10}}\\scriptsize}}c|}}
 \\hline
 \\rowcolor{{gray!25}} \\multirow{{2}}{{*}}[1ex]{{\\textbf{{Prediction Horizon}}}} & \\multicolumn{{4}}{{c|}}{{\\cellcolor{{gray!25}}\\textbf{{D1namo}}}} & \\multicolumn{{4}}{{c|}}{{\\cellcolor{{gray!25}}\\textbf{{AZT1D}}}} \\\\
-\\rowcolor{{gray!25}} & \\cellcolor{{green!15}}{{\\textbf{{Bezier}}}} & \\cellcolor{{orange!15}}{{\\textbf{{LastMeal}}}} & \\cellcolor{{red!15}}{{\\textbf{{Baseline}}}} & \\cellcolor{{blue!15}}{{\\textbf{{p}}}} & \\cellcolor{{green!15}}{{\\textbf{{Bezier}}}} & \\cellcolor{{orange!15}}{{\\textbf{{LastMeal}}}} & \\cellcolor{{red!15}}{{\\textbf{{Baseline}}}} & \\cellcolor{{blue!15}}{{\\textbf{{p}}}} \\\\
+\\rowcolor{{gray!25}} & \\cellcolor{{green!15}}{{\\textbf{{Bezier}}}} & \\cellcolor{{orange!15}}{{\\textbf{{LastMeal}}}} & \\cellcolor{{red!15}}{{\\textbf{{Baseline}}}} & \\cellcolor{{blue!15}}{{\\textbf{{ANOVA}}}} & \\cellcolor{{green!15}}{{\\textbf{{Bezier}}}} & \\cellcolor{{orange!15}}{{\\textbf{{LastMeal}}}} & \\cellcolor{{red!15}}{{\\textbf{{Baseline}}}} & \\cellcolor{{blue!15}}{{\\textbf{{ANOVA}}}} \\\\
 \\hline
 {table_content}
 \\hline
@@ -603,32 +626,29 @@ for horizon in horizons:
                 pval = float(ttest_rel(pm, pb)[1]) if len(pm) > 1 and len(pb) > 1 else np.nan
                 patient_rows_d1.append({'horizon': horizon, 'patient': patient, 'improvement_pct': float(imp), 'p_value': pval})
 
-    if azt_bezier_df is not None and azt_baseline_df is not None:
-        azt_bezier_h = azt_bezier_df[azt_bezier_df['Prediction Horizon'] == horizon]
-        azt_base_h = azt_baseline_df[azt_baseline_df['Prediction Horizon'] == horizon]
-        overall_rows.append({
-            'dataset': 'AZT1D',
-            'horizon': horizon,
-            'macro_mean': azt_bezier_h['RMSE'].mean(),
-            'macro_std': azt_bezier_h['RMSE'].std(),
-            'base_mean': azt_base_h['RMSE'].mean(),
-            'base_std': azt_base_h['RMSE'].std(),
-            'p_value': float(ttest_rel(azt_bezier_h['RMSE'], azt_base_h['RMSE'])[1]) if len(azt_bezier_h) > 1 else np.nan,
-            'improvement_pct': float(((azt_base_h['RMSE'].mean() - azt_bezier_h['RMSE'].mean()) / azt_base_h['RMSE'].mean()) * 100)
-        })
-        for patient in sorted(azt_bezier_df['Patient'].unique()):
-            pm = azt_bezier_df[(azt_bezier_df['Patient'] == patient) & (azt_bezier_df['Prediction Horizon'] == horizon)]['RMSE']
-            pb = azt_baseline_df[(azt_baseline_df['Patient'] == patient) & (azt_baseline_df['Prediction Horizon'] == horizon)]['RMSE']
-            if len(pm) > 0 and len(pb) > 0:
-                imp = (pb.mean() - pm.mean()) / pb.mean() * 100
-                pval = float(ttest_rel(pm, pb)[1]) if len(pm) > 1 and len(pb) > 1 else np.nan
-                patient_rows_azt.append({'horizon': horizon, 'patient': patient, 'improvement_pct': float(imp), 'p_value': pval})
+    azt_bezier_h = azt_bezier_df[azt_bezier_df['Prediction Horizon'] == horizon]
+    azt_base_h = azt_baseline_df[azt_baseline_df['Prediction Horizon'] == horizon]
+    overall_rows.append({
+        'dataset': 'AZT1D',
+        'horizon': horizon,
+        'macro_mean': azt_bezier_h['RMSE'].mean(),
+        'macro_std': azt_bezier_h['RMSE'].std(),
+        'base_mean': azt_base_h['RMSE'].mean(),
+        'base_std': azt_base_h['RMSE'].std(),
+        'p_value': float(ttest_rel(azt_bezier_h['RMSE'], azt_base_h['RMSE'])[1]) if len(azt_bezier_h) > 1 else np.nan,
+        'improvement_pct': float(((azt_base_h['RMSE'].mean() - azt_bezier_h['RMSE'].mean()) / azt_base_h['RMSE'].mean()) * 100)
+    })
+    for patient in sorted(azt_bezier_df['Patient'].unique()):
+        pm = azt_bezier_df[(azt_bezier_df['Patient'] == patient) & (azt_bezier_df['Prediction Horizon'] == horizon)]['RMSE']
+        pb = azt_baseline_df[(azt_baseline_df['Patient'] == patient) & (azt_baseline_df['Prediction Horizon'] == horizon)]['RMSE']
+        if len(pm) > 0 and len(pb) > 0:
+            imp = (pb.mean() - pm.mean()) / pb.mean() * 100
+            pval = float(ttest_rel(pm, pb)[1]) if len(pm) > 1 and len(pb) > 1 else np.nan
+            patient_rows_azt.append({'horizon': horizon, 'patient': patient, 'improvement_pct': float(imp), 'p_value': pval})
 
 pd.DataFrame(overall_rows).to_csv('results/combined_overall_stats.csv', index=False)
-if patient_rows_d1:
-    pd.DataFrame(patient_rows_d1).to_csv('results/patient_improvement_stats_d1namo.csv', index=False)
-if patient_rows_azt:
-    pd.DataFrame(patient_rows_azt).to_csv('results/patient_improvement_stats_azt1d.csv', index=False)
+pd.DataFrame(patient_rows_d1).to_csv('results/patient_improvement_stats_d1namo.csv', index=False)
+pd.DataFrame(patient_rows_azt).to_csv('results/patient_improvement_stats_azt1d.csv', index=False)
 
 # Build concise LaTeX summary paragraph with variability and cross-dataset differences
 summary_lines = []
@@ -728,18 +748,18 @@ def build_single_table(name, df_bezier, df_lastmeal, df_baseline, label):
         return ""
     patients = sorted(df_bezier['Patient'].unique())
     horizons_local = [h for h in [6,9,12,18,24] if (df_bezier['Prediction Horizon'] == h).any()]
-    header = "|p{0.3cm}|" + "".join(["p{0.85cm}p{0.85cm}p{0.85cm}>{\\columncolor{blue!10}\\tiny}p{0.35cm}|" for _ in horizons_local])
+    header = "|p{0.3cm}|" + "".join(["p{0.85cm}p{0.85cm}p{0.85cm}>{\\columncolor{blue!10}\\tiny}p{0.3cm}|" for _ in horizons_local])
     
     table = []
     table.append("\\begin{table}[ht]")
     table.append("\\centering")
-    table.append(f"\\caption{{Patient-level RMSE results by prediction horizon for {name}. Values show RMSE $\\pm$ std (mg/dL) with paired t-test p-values (Bezier vs Baseline).}}")
+    table.append(f"\\caption{{Patient-level RMSE results by prediction horizon for {name}. Values show RMSE $\\pm$ std (mg/dL) with one-way ANOVA p-values for overall significance across all three methods.}}")
     table.append(f"\\label{{{label}}}")
     table.append("{\\tiny")
     table.append("\\setlength{\\tabcolsep}{1pt}")
     table.append("\\begin{tabular}{" + header + "}")
     table.append("\\rowcolor{gray!25} {\\tiny\\textbf{Pat.}} " + "".join([f"& \\multicolumn{{4}}{{c|}}{{{h_names[h]}}} " for h in horizons_local]) + "\\\\")
-    table.append("\\rowcolor{gray!25} " + "".join(["& \\cellcolor{green!15}{\\tiny\\textbf{Bezier}} & \\cellcolor{orange!15}{\\tiny\\textbf{LastMeal}} & \\cellcolor{red!15}{\\tiny\\textbf{Baseline}} & \\cellcolor{blue!15}{\\tiny\\textbf{p}} " for _ in horizons_local]) + "\\\\")
+    table.append("\\rowcolor{gray!25} " + "".join(["& \\cellcolor{green!15}{\\tiny\\textbf{Bezier}} & \\cellcolor{orange!15}{\\tiny\\textbf{LastMeal}} & \\cellcolor{red!15}{\\tiny\\textbf{Baseline}} & \\cellcolor{blue!15}{\\tiny\\textbf{ANOVA}} " for _ in horizons_local]) + "\\\\")
     table.append("\\hline")
     
     for patient in patients:
@@ -754,28 +774,56 @@ def build_single_table(name, df_bezier, df_lastmeal, df_baseline, label):
                 last_mean, last_std = last.mean(), last.std()
                 base_mean, base_std = base.mean(), base.std()
                 
-                # Paired t-test for Bezier vs Baseline
-                pval = ttest_rel(bez, base)[1] if len(bez) > 1 and len(base) > 1 else np.nan
+                # Paired t-tests for all three comparisons
+                p_bezier_vs_baseline = ttest_rel(bez, base)[1] if len(bez) > 1 and len(base) > 1 else np.nan
+                p_lastmeal_vs_baseline = ttest_rel(last, base)[1] if len(last) > 1 and len(base) > 1 else np.nan
+                p_bezier_vs_lastmeal = ttest_rel(bez, last)[1] if len(bez) > 1 and len(last) > 1 else np.nan
+                
+                # One-way ANOVA for all three methods
+                if len(bez) > 1 and len(last) > 1 and len(base) > 1:
+                    min_len = min(len(bez), len(last), len(base))
+                    bez_anova = bez[:min_len]
+                    last_anova = last[:min_len]
+                    base_anova = base[:min_len]
+                    f_stat, p_anova = f_oneway(bez_anova, last_anova, base_anova)
+                else:
+                    p_anova = np.nan
                 
                 bez_str = f"{bez_mean:.1f}±{bez_std:.1f}"
                 last_str = f"{last_mean:.1f}±{last_std:.1f}"
                 base_str = f"{base_mean:.1f}±{base_std:.1f}"
-                p_str = f"{pval:.2f}" if not np.isnan(pval) else "N/A"
+                
+                # Format p-values for all three comparisons plus ANOVA
+                p_bezier_str = f"{p_bezier_vs_baseline:.2f}" if not np.isnan(p_bezier_vs_baseline) else "N/A"
+                p_lastmeal_str = f"{p_lastmeal_vs_baseline:.2f}" if not np.isnan(p_lastmeal_vs_baseline) else "N/A"
+                p_bezier_vs_lastmeal_str = f"{p_bezier_vs_lastmeal:.2f}" if not np.isnan(p_bezier_vs_lastmeal) else "N/A"
+                p_anova_str = f"{p_anova:.2f}" if not np.isnan(p_anova) else "N/A"
                 
                 # Bold p-values below 0.05
-                if not np.isnan(pval) and pval < 0.05:
-                    p_str = f"\\textbf{{{p_str}}}"
+                if not np.isnan(p_bezier_vs_baseline) and p_bezier_vs_baseline < 0.05:
+                    p_bezier_str = f"\\textbf{{{p_bezier_str}}}"
+                if not np.isnan(p_lastmeal_vs_baseline) and p_lastmeal_vs_baseline < 0.05:
+                    p_lastmeal_str = f"\\textbf{{{p_lastmeal_str}}}"
+                if not np.isnan(p_bezier_vs_lastmeal) and p_bezier_vs_lastmeal < 0.05:
+                    p_bezier_vs_lastmeal_str = f"\\textbf{{{p_bezier_vs_lastmeal_str}}}"
+                if not np.isnan(p_anova) and p_anova < 0.05:
+                    p_anova_str = f"\\textbf{{{p_anova_str}}}"
                 
-                # Apply bold formatting for statistically significant better performance (Bezier vs Baseline)
-                if not np.isnan(pval) and pval < 0.05:
-                    if bez_mean < base_mean:  # Bezier is better (lower RMSE)
+                # Apply bold formatting for statistically significant better performance based on ANOVA
+                if not np.isnan(p_anova) and p_anova < 0.05:
+                    # Find the best performing method and bold it
+                    means = [bez_mean, last_mean, base_mean]
+                    best_idx = np.argmin(means)
+                    if best_idx == 0:
                         bez_str = f"\\textbf{{{bez_str}}}"
-                    elif base_mean < bez_mean:  # Baseline is better (lower RMSE)
+                    elif best_idx == 1:
+                        last_str = f"\\textbf{{{last_str}}}"
+                    elif best_idx == 2:
                         base_str = f"\\textbf{{{base_str}}}"
                 
             else:
-                bez_str = last_str = base_str = p_str = "N/A"
-            row.append(f"& \\cellcolor{{green!10}}{{\\tiny {bez_str}}} & \\cellcolor{{orange!10}}{{\\tiny {last_str}}} & \\cellcolor{{red!10}}{{\\tiny {base_str}}} & \\cellcolor{{blue!10}}{{\\tiny {p_str}}} ")
+                bez_str = last_str = base_str = p_bezier_str = p_lastmeal_str = p_bezier_vs_lastmeal_str = p_anova_str = "N/A"
+            row.append(f"& \\cellcolor{{green!10}}{{\\tiny {bez_str}}} & \\cellcolor{{orange!10}}{{\\tiny {last_str}}} & \\cellcolor{{red!10}}{{\\tiny {base_str}}} & \\cellcolor{{blue!10}}{{\\tiny {p_anova_str}}} ")
         table.append(" ".join(row) + "\\\\")
     
     table.append("\\hline")

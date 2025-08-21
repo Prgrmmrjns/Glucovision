@@ -1,8 +1,0 @@
-\subsection{Time Complexity Analysis of mLLM-based Macronutrient Estimations}
-\label{sec:time_complexity}
-
-To assess the computational requirements and practical feasibility of deploying mLLM-based macronutrient estimation in clinical settings, we conducted a time complexity analysis using 10 randomly selected meal images from the D1namo dataset. Each image was processed once using the Pixtral Large model with identical prompts and parameters.
-
-The analysis revealed that macronutrient estimation requires an average of 3.8 ± 0.7 seconds per image, with processing times ranging from 2.7 to 5.1 seconds. Token usage averaged 3375 ± 643 tokens per estimation, with 3190 prompt tokens and 186 completion tokens.
-
-These computational requirements demonstrate that mLLM-based macronutrient estimation is feasible for real-time clinical applications, with processing times well under the typical 5-minute window for postprandial glucose prediction. The consistent token usage patterns suggest predictable computational costs, enabling efficient resource allocation in clinical deployment scenarios.

@@ -43,20 +43,10 @@ def analyze_overall_feature_importances(dataset_name, params, optimization_featu
     
     for patient in patients:
         glucose_data, combined_data = load_data_func(patient)
-        if glucose_data is not None and combined_data is not None:
-            try:
-                patient_data = add_temporal_features(params, optimization_features, glucose_data, combined_data, prediction_horizon=0)
-                patient_data['patient_id'] = patient
-                all_data_list.append(patient_data)
-                successful_patients.append(patient)
-            except Exception as e:
-                print(f"Error processing patient {patient}: {e}")
-        else:
-            print(f"Skipping patient {patient} due to data loading issues")
-    
-    if not all_data_list:
-        print(f"No valid patient data for {dataset_name}")
-        return pd.DataFrame()
+        patient_data = add_temporal_features(params, optimization_features, glucose_data, combined_data, prediction_horizon=0)
+        patient_data['patient_id'] = patient
+        all_data_list.append(patient_data)
+        successful_patients.append(patient)
     
     all_data = pd.concat(all_data_list, ignore_index=True)
     
@@ -80,11 +70,7 @@ def analyze_overall_feature_importances(dataset_name, params, optimization_featu
                 train_days = patient_subset['datetime'].dt.day.unique()[:training_days]
                 train_subset = patient_subset[patient_subset['datetime'].dt.day.isin(train_days)]
             
-            if len(train_subset) > 0:
-                train_data.append(train_subset)
-        
-        if not train_data:
-            continue
+            train_data.append(train_subset)
             
         # Combine training data
         X_train_all = pd.concat(train_data, ignore_index=True)

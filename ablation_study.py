@@ -72,29 +72,56 @@ def evaluate_generic_optimization(dataset='d1namo'):
             df = df.dropna(subset=[f'glucose_24'])
             all_patients.append(df)
         
-        # Collect training data (same as azt1d.py)
-        all_train_data = []
-        for df in all_patients:
-            first_14_dates = sorted(df['datetime'].dt.normalize().unique())[:14]
-            g_train = df[df['datetime'].dt.normalize().isin(first_14_dates)].copy()
-            c_train = g_train[['datetime', 'carbohydrates', 'insulin', 'correction']].copy()
-            all_train_data.append((g_train, c_train))
+        # For AZT1D, we don't do generic optimization - each patient uses their own data only
+        # This is consistent with azt1d.py approach
+        all_train_data = []  # Will be populated per patient during evaluation
     
     # Check if generic parameters already exist, otherwise optimize
-    param_file = f'results/bezier_params/{dataset}_generic_all_patients_bezier_params.json'
-    if os.path.exists(param_file):
-        with open(param_file, 'r') as f:
-            params = json.load(f)
-        print(f"Loaded existing generic parameters for {dataset}")
-    else:
-        # Generic optimization using all patient data at once
-        try:
-            params = optimize_params(f'{dataset}_generic_all_patients', 
-                                   opt_features, fast_features, all_train_data, features_to_remove, 
-                                   prediction_horizon=DEFAULT_PREDICTION_HORIZON, n_trials=N_TRIALS)
-        except Exception as e:
-            print(f"Generic optimization failed: {e}")
-            return float('nan'), float('nan')
+    if dataset == 'd1namo':
+        param_file = f'results/bezier_params/{dataset}_generic_all_patients_bezier_params.json'
+        if os.path.exists(param_file):
+            with open(param_file, 'r') as f:
+                params = json.load(f)
+            print(f"Loaded existing generic parameters for {dataset}")
+        else:
+            # Generic optimization using all patient data at once
+            try:
+                params = optimize_params(f'{dataset}_generic_all_patients', 
+                                       opt_features, fast_features, all_train_data, features_to_remove, 
+                                       prediction_horizon=DEFAULT_PREDICTION_HORIZON, n_trials=N_TRIALS)
+            except Exception as e:
+                print(f"Generic optimization failed: {e}")
+                return float('nan'), float('nan')
+    else:  # azt1d - use generic parameters for all patients
+        # Load or create generic parameters optimized on all patients combined
+        param_file = f'results/bezier_params/{dataset}_generic_all_patients_bezier_params.json'
+        if os.path.exists(param_file):
+            with open(param_file, 'r') as f:
+                params = json.load(f)
+            print(f"Loaded existing generic parameters for {dataset}")
+        else:
+            # Create generic optimization using all patients' data combined
+            print("Creating generic parameters using all patients' data")
+            all_train_data = []
+        for df in all_patients:
+                first_14_dates = sorted(df['datetime'].dt.normalize().unique())[:14]
+                g_train = df[df['datetime'].dt.normalize().isin(first_14_dates)].copy()
+                c_train = g_train[['datetime', 'carbohydrates', 'insulin', 'correction']].copy()
+                all_train_data.append((g_train, c_train))
+            
+            try:
+                params = optimize_params(f'{dataset}_generic_all_patients', 
+                                       opt_features, fast_features, all_train_data, features_to_remove, 
+                                       prediction_horizon=DEFAULT_PREDICTION_HORIZON, n_trials=N_TRIALS)
+                
+                # Save generic parameters
+                os.makedirs('results/bezier_params', exist_ok=True)
+                with open(param_file, 'w') as f:
+                    json.dump(params, f, indent=2)
+                print("Saved generic Bezier parameters")
+            except Exception as e:
+                print(f"Generic optimization failed: {e}")
+                return float('nan'), float('nan')
 
     results = []
     prediction_horizon = 24  # 120 minutes
@@ -105,13 +132,16 @@ def evaluate_generic_optimization(dataset='d1namo'):
     for p in patients:
         if dataset == 'd1namo':
             g_df, c_df = patient_to_data[p]
-        else:
+            # Apply feature engineering with generic parameters
+            d3 = add_temporal_features(params, opt_features, g_df, c_df, prediction_horizon)
+        else:  # azt1d
             df = next(df for df in all_patients if int(df['patient'].iloc[0]) == p)
             g_df = df.copy()
             c_df = g_df[['datetime', 'carbohydrates', 'insulin', 'correction']].copy()
+            
+            # For AZT1D Generic approach, use the same generic parameters for all patients
+            d3 = add_temporal_features(params, opt_features, g_df, c_df, prediction_horizon)
         
-        # Apply feature engineering with generic parameters
-        d3 = add_temporal_features(params, opt_features, g_df, c_df, prediction_horizon)
         d3['patient_id'] = f"patient_{p}"
         frames_bezier.append(d3)
 
@@ -235,7 +265,7 @@ def evaluate_individual_optimization(dataset='d1namo'):
     frames_bezier = []
     for p in patients:
         if dataset == 'd1namo':
-            g_df, c_df = patient_to_data[p]
+        g_df, c_df = patient_to_data[p]
         else:
             df = next(df for df in all_patients if int(df['patient'].iloc[0]) == p)
             g_df = df.copy()
@@ -344,7 +374,6 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
     if dataset == 'd1namo':
         patients = PATIENTS_D1NAMO
         opt_features = OPTIMIZATION_FEATURES_D1NAMO
-        fast_features = FAST_FEATURES
         features_to_remove = FEATURES_TO_REMOVE_D1NAMO + [f'glucose_{h}' for h in PREDICTION_HORIZONS] + ['patient_id']
         
         # Cache patient data (same as d1namo.py)
@@ -355,7 +384,6 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
     else:  # azt1d
         patients = PATIENTS_AZT1D[:5]  # First 5 for ablation
         opt_features = OPTIMIZATION_FEATURES_AZT1D
-        fast_features = FAST_FEATURES
         features_to_remove = FEATURES_TO_REMOVE_AZT1D + [f'glucose_{h}' for h in PREDICTION_HORIZONS] + ['patient_id']
         
         # Build training data (same as azt1d.py)
@@ -384,12 +412,12 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
     results = []
     prediction_horizon = 24  # 120 minutes
     target_feature = f'glucose_{prediction_horizon}'
-    
+
     # Build PH-aligned datasets per patient (same as main scripts)
     frames_bezier = []
     for p in patients:
         if dataset == 'd1namo':
-            g_df, c_df = patient_to_data[p]
+        g_df, c_df = patient_to_data[p]
         else:
             df = next(df for df in all_patients if int(df['patient'].iloc[0]) == p)
             g_df = df.copy()
@@ -416,6 +444,7 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
     print("Training and predicting with stepwise retraining")
     for p in patients:
         # Get test data (same as main scripts)
+        print(f"Evaluating patient {p}")
         mask3 = all_bezier['patient_id'] == f"patient_{p}"
         
         if dataset == 'd1namo':
