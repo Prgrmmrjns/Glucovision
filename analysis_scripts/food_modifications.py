@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -58,14 +59,14 @@ def run_modification_analysis(dataset='d1namo'):
         optimization_features = OPTIMIZATION_FEATURES_D1NAMO
         features_to_remove = FEATURES_TO_REMOVE_D1NAMO
         load_data_func = get_d1namo_data
-        params_file = f'results/bezier_params/d1namo_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json')
         training_days = 3
     else:  # azt1d
         patients = PATIENTS_AZT1D  # Use all AZT1D subjects
         meal_features = ['carbohydrates', 'insulin', 'correction']
         optimization_features = OPTIMIZATION_FEATURES_AZT1D
         features_to_remove = FEATURES_TO_REMOVE_AZT1D
-        params_file = f'results/bezier_params/azt1d_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json')
         training_days = 14
         
         def load_azt1d_data(patient):
@@ -378,7 +379,7 @@ def create_combined_modification_plot(results_df):
     plt.subplots_adjust(bottom=0.1)
     
     # Save figure
-    plt.savefig('manuscript/images/results/combined_macronutrient_modifications.eps', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(MANUSCRIPT_DIR, 'images', 'results', 'combined_macronutrient_modifications.eps'), dpi=300, bbox_inches='tight')
     plt.close()
     
     return d1namo_avg, azt1d_avg
@@ -426,8 +427,8 @@ if __name__ == "__main__":
                 print(f"  Total range: {max_positive - max_negative:.2f} mg/dL")
     
     # Save detailed results
-    all_results.to_csv('results/macronutrient_modification_results.csv', index=False)
-    print(f"\nResults saved to results/macronutrient_modification_results.csv")
+    all_results.to_csv(os.path.join(RESULTS_PATH, 'macronutrient_modification_results.csv'), index=False)
+    print(f"\nResults saved to {os.path.join(RESULTS_PATH, 'macronutrient_modification_results.csv')}")
 
     # ==========================
     # Macronutrient Modification Insights
@@ -582,12 +583,12 @@ if __name__ == "__main__":
         print(f"- {insight}")
     
     # Save insights
-    with open('results/macronutrient_modification_insights.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'macronutrient_modification_insights.txt'), 'w') as f:
         f.write('\n'.join(insights))
     
     # Generate LaTeX insights
     latex_insights = generate_latex_insights(all_results)
-    with open('results/macronutrient_modification_latex.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'macronutrient_modification_latex.txt'), 'w') as f:
         f.write(latex_insights + '\n')
     
     print(f"\nLaTeX insights: {latex_insights}")

@@ -45,7 +45,7 @@ features_to_remove = FEATURES_TO_REMOVE_AZT1D + PH_COLUMNS + ['patient_id']
 if LOAD_PARAMS:
     print("Loading existing Bezier parameters")
     patient_params = {}
-    param_file = 'results/bezier_params/azt1d_all_patient_bezier_params.json'
+    param_file = os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json')
     if os.path.exists(param_file):
         with open(param_file, 'r') as f:
             all_patient_params = json.load(f)
@@ -77,9 +77,9 @@ if not LOAD_PARAMS:
         )
 
     # Save all patient Bezier parameters in nested dict
-    os.makedirs('results/bezier_params', exist_ok=True)
+    os.makedirs(os.path.join(RESULTS_PATH, 'bezier_params'), exist_ok=True)
     all_patient_params = {f"patient_{p}": patient_params[p] for p in patient_params.keys()}
-    with open('results/bezier_params/azt1d_all_patient_bezier_params.json', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json'), 'w') as f:
         json.dump(all_patient_params, f, indent=2)
     print("Saved all patient Bezier parameters to azt1d_all_patient_bezier_params.json")
 
@@ -207,5 +207,5 @@ for result in results_bezier:
     all_results.append(result + ['Bezier'])
 
 # Save combined results
-pd.DataFrame(all_results, columns=['Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE', 'Approach']).to_csv('results/azt1d_comparison.csv', index=False)
+pd.DataFrame(all_results, columns=['Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE', 'Approach']).to_csv(os.path.join(RESULTS_PATH, 'azt1d_comparison.csv'), index=False)
 print("Saved all results to azt1d_comparison.csv")

@@ -68,14 +68,14 @@ def analyze_time_effect(dataset):
         optimization_features = OPTIMIZATION_FEATURES_D1NAMO
         features_to_remove = FEATURES_TO_REMOVE_D1NAMO
         get_data_func = get_d1namo_data
-        params_file = 'results/bezier_params/d1namo_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json')
         training_days = 3
     else:  # azt1d
         patients = PATIENTS_AZT1D
         optimization_features = OPTIMIZATION_FEATURES_AZT1D
         features_to_remove = FEATURES_TO_REMOVE_AZT1D
         get_data_func = get_azt1d_data
-        params_file = 'results/bezier_params/azt1d_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json')
         training_days = 14
     
     # Load all patient Bézier parameters  
@@ -261,7 +261,7 @@ def create_combined_visualization(results_df):
         ax2.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig('manuscript/images/supplementary_data/combined_time_effect_analysis.eps', 
+    plt.savefig(os.path.join(MANUSCRIPT_DIR, 'images', 'supplementary_data', 'combined_time_effect_analysis.eps'), 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
@@ -345,9 +345,9 @@ combined_results = pd.concat(all_results, ignore_index=True)
 stats = create_combined_visualization(combined_results)
 
 # Save results
-combined_results.to_csv('results/combined_time_effect_results.csv', index=False)
-d1namo_results.to_csv('results/d1namo_time_effect_results.csv', index=False)
-azt1d_results.to_csv('results/azt1d_time_effect_results.csv', index=False)
+combined_results.to_csv(os.path.join(RESULTS_PATH, 'combined_time_effect_results.csv'), index=False)
+d1namo_results.to_csv(os.path.join(RESULTS_PATH, 'd1namo_time_effect_results.csv'), index=False)
+azt1d_results.to_csv(os.path.join(RESULTS_PATH, 'azt1d_time_effect_results.csv'), index=False)
 
 # Print summary
 print("\n=== Combined Time Effect Analysis Summary ===")

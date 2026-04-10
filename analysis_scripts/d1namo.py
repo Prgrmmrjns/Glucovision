@@ -16,28 +16,47 @@ for patient in PATIENTS_D1NAMO:
     g_df, c_df = get_d1namo_data(patient)
     patient_to_data[patient] = (g_df, c_df)
 
-# Optimize Bezier params separately for every patient
-print("Optimizing params per patient")
+# Bezier params: prefer consolidated JSON, then per-patient *_bezier_params.json, else Optuna
 patient_params = {}
-for p in PATIENTS_D1NAMO:
-    g_df, c_df = patient_to_data[p]
-    train_days = g_df['datetime'].dt.day.unique()[:3]
-    g_train = g_df[g_df['datetime'].dt.day.isin(train_days)]
-    c_train = c_df[c_df['datetime'].dt.day.isin(train_days)]
-    patient_params[p] = optimize_params(
-        f'd1namo_p{p}',
-        OPTIMIZATION_FEATURES_D1NAMO,
-        FAST_FEATURES,
-        [(g_train, c_train)],
-        features_to_remove,
-        prediction_horizon=DEFAULT_PREDICTION_HORIZON,
-        n_trials=N_TRIALS,
-    )
+consolidated_path = os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json')
+if LOAD_PARAMS and os.path.isfile(consolidated_path):
+    with open(consolidated_path) as fp:
+        consolidated = json.load(fp)
+    for patient in PATIENTS_D1NAMO:
+        key = f'patient_{patient}'
+        if key in consolidated:
+            patient_params[patient] = consolidated[key]
+    if len(patient_params) == len(PATIENTS_D1NAMO):
+        print(f"Loaded Bezier parameters for all {len(PATIENTS_D1NAMO)} patients from {consolidated_path}")
+
+missing_patients = [p for p in PATIENTS_D1NAMO if p not in patient_params]
+if missing_patients:
+    if LOAD_PARAMS and len(patient_params) == 0:
+        print("Optimizing params per patient (no consolidated cache; checking per-patient files next)")
+    elif LOAD_PARAMS:
+        print(f"Running Optuna for patients missing from consolidated cache: {', '.join(missing_patients)}")
+    else:
+        print("Optimizing params per patient (LOAD_PARAMS=False)")
+    for p in missing_patients:
+        g_df, c_df = patient_to_data[p]
+        train_days = g_df['datetime'].dt.day.unique()[:3]
+        g_train = g_df[g_df['datetime'].dt.day.isin(train_days)]
+        c_train = c_df[c_df['datetime'].dt.day.isin(train_days)]
+        patient_params[p] = optimize_params(
+            f'd1namo_p{p}',
+            OPTIMIZATION_FEATURES_D1NAMO,
+            FAST_FEATURES,
+            [(g_train, c_train)],
+            features_to_remove,
+            prediction_horizon=DEFAULT_PREDICTION_HORIZON,
+            n_trials=N_TRIALS,
+            verbose_load=LOAD_PARAMS,
+        )
 
 # Save all patient Bezier parameters in nested dict
-os.makedirs('results/bezier_params', exist_ok=True)
+os.makedirs(os.path.join(RESULTS_PATH, 'bezier_params'), exist_ok=True)
 all_patient_params = {f"patient_{p}": patient_params[p] for p in PATIENTS_D1NAMO}
-with open('results/bezier_params/d1namo_all_patient_bezier_params.json', 'w') as f:
+with open(os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json'), 'w') as f:
     json.dump(all_patient_params, f, indent=2)
 print("Saved all patient Bezier parameters to d1namo_all_patient_bezier_params.json")
 results_glucose_insulin = []
@@ -159,5 +178,5 @@ for result in results_bezier:
     all_results.append(result + ['Bezier'])
 
 # Save combined results
-pd.DataFrame(all_results, columns=['Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE', 'Approach']).to_csv('results/d1namo_comparison.csv', index=False)
+pd.DataFrame(all_results, columns=['Prediction Horizon', 'Patient', 'Day', 'Hour', 'RMSE', 'Approach']).to_csv(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'), index=False)
 print("Saved all results to d1namo_comparison.csv")

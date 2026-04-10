@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -84,7 +85,7 @@ def run_modification_analysis_with_constraints(dataset='d1namo', use_monotonic=T
         optimization_features = OPTIMIZATION_FEATURES_D1NAMO
         features_to_remove = FEATURES_TO_REMOVE_D1NAMO
         load_data_func = get_d1namo_data
-        params_file = f'results/bezier_params/d1namo_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json')
         training_days = 3
     else:  # azt1d
         patients = PATIENTS_AZT1D[:5]  # First 5 patients for AZT1D
@@ -92,7 +93,7 @@ def run_modification_analysis_with_constraints(dataset='d1namo', use_monotonic=T
         optimization_features = OPTIMIZATION_FEATURES_AZT1D
         features_to_remove = FEATURES_TO_REMOVE_AZT1D
         load_data_func = get_azt1d_data
-        params_file = f'results/bezier_params/azt1d_all_patient_bezier_params.json'
+        params_file = os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json')
         training_days = 14  # 2 weeks for AZT1D
     
     # Load global Bézier parameters
@@ -460,7 +461,7 @@ def create_combined_modification_plot(results_df):
     plt.subplots_adjust(bottom=0.12)
     
     # Save figure
-    plt.savefig('manuscript/images/supplementary_data/monotonic_constraints_comparison.eps', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(MANUSCRIPT_DIR, 'images', 'supplementary_data', 'monotonic_constraints_comparison.eps'), dpi=300, bbox_inches='tight')
     plt.close()
     
     return with_constraints_avg, without_constraints_avg
@@ -534,6 +535,6 @@ if __name__ == "__main__":
                 print(f"  Monotonicity: With constraints {'✓' if with_monotonic else '✗'}, Without constraints {'✓' if without_monotonic else '✗'}")
     
     # Save detailed results
-    combined_results.to_csv('results/monotonic_constraints_comparison_results.csv', index=False)
-    print(f"\nResults saved to results/monotonic_constraints_comparison_results.csv")
+    combined_results.to_csv(os.path.join(RESULTS_PATH, 'monotonic_constraints_comparison_results.csv'), index=False)
+    print(f"\nResults saved to {os.path.join(RESULTS_PATH, 'monotonic_constraints_comparison_results.csv')}")
     print("\nAnalysis complete. Visualization saved to manuscript/images/supplementary_data/monotonic_constraints_comparison.eps")

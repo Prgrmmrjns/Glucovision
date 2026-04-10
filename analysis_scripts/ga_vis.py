@@ -25,7 +25,8 @@ glucose_data, combined_data = get_d1namo_data(patient)
 patient_data = add_temporal_features(global_params, OPTIMIZATION_FEATURES_D1NAMO, glucose_data, combined_data, prediction_horizon)
 
 # Create output directory
-os.makedirs('../manuscript/images/graphical_abstract', exist_ok=True)
+_ga_dir = os.path.join(MANUSCRIPT_DIR, 'images', 'graphical_abstract')
+os.makedirs(_ga_dir, exist_ok=True)
 
 # Select time period for visualization (3 days of test data)
 test_days = patient_data['datetime'].dt.day.unique()[3:6]  # Last 3 days
@@ -64,7 +65,7 @@ plt.gca().spines['left'].set_visible(False)
 # Simple legend
 plt.legend(loc='upper right', fontsize=14, frameon=False)
 plt.tight_layout()
-plt.savefig('../manuscript/images/graphical_abstract/glucose_only.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(_ga_dir, 'glucose_only.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Plot 2: Individual macronutrient features
@@ -94,7 +95,7 @@ plt.gca().spines['left'].set_visible(False)
 legend_labels = ['Glucose'] + feature_names
 plt.legend(legend_labels, loc='upper right', fontsize=10, frameon=False)
 plt.tight_layout()
-plt.savefig('../manuscript/images/graphical_abstract/glucose_with_individual_features.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(_ga_dir, 'glucose_with_individual_features.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Generate predictions using d1namo logic
@@ -196,7 +197,7 @@ plt.gca().spines['left'].set_visible(False)
 # Simple legend
 plt.legend(loc='upper right', fontsize=10, frameon=False)
 plt.tight_layout()
-plt.savefig('../manuscript/images/graphical_abstract/predictions_vs_ground_truth.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(_ga_dir, 'predictions_vs_ground_truth.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 print(f"Generated predictions plot with {len(pred_df)} data points")

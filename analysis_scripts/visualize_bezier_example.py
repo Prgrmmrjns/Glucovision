@@ -1,6 +1,9 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import comb
+
+from params import MANUSCRIPT_DIR
 
 # --- Bezier Curve Functions ---
 
@@ -220,7 +223,9 @@ ax2.set_xticklabels(hour_labels)
 ax1.set_xlim(left=-0.1, right=3.6) # Adjust limits slightly
 
 plt.tight_layout(rect=[0, 0, 1, 0.97]) # Adjust layout to prevent title overlap
-plt.savefig('manuscript/images/methods/example_bezier.eps') # Save the plot
+_methods_img = os.path.join(MANUSCRIPT_DIR, 'images', 'methods')
+os.makedirs(_methods_img, exist_ok=True)
+plt.savefig(os.path.join(_methods_img, 'example_bezier.eps')) # Save the plot
 plt.close()
 
 print("--- Calculated Values ---")

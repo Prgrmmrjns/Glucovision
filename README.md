@@ -13,38 +13,46 @@ Glucovision is a cutting-edge machine learning project that combines **multimoda
 - 📈 **Temporal Modeling**: Optimized Bézier curves for nutrient absorption dynamics
 - 🧠 **Cross-Patient Learning**: Learn from multiple patients with intelligent weighting
 - ⏰ **Multiple Horizons**: Predict glucose changes at 30, 60, 90, and 120 minutes
-- 📊 **Feature Importance**: Real-time analysis of prediction drivers
-
-## 🌟 Interactive Demo App
-
-**Try our live Streamlit app!** 🎉
-
-```bash
-cd analysis_scripts
-streamlit run app.py
-```
-
-The `app.py` provides an intuitive web interface where you can:
-- 📱 Select patient data and meal images
-- 🍎 View mLLM-estimated macronutrients
-- 🎛️ Modify nutrient values interactively
-- 📈 Get real-time glucose predictions
-- 🧩 Explore feature importances and Bézier curves
+- 📊 **Feature Importance**: Analysis of prediction drivers
 
 ## 📊 Datasets
 
-Glucovision works with two complementary datasets:
+Glucovision uses two complementary datasets. **AZT1D is not in git** (see `.gitignore`); you must download it. **D1NAMO** raw CGM data comes from Zenodo; **meal macronutrients for the pipeline** are shipped as CSV snapshots in this repo for full reproducibility without any API.
 
-### 🔹 D1namo Dataset (Primary)
-- **6 Type 1 Diabetes patients** with meal images + CGM data
-- **Essential for mLLM training and validation**
-- Downloaded from: [https://zenodo.org/records/5651217](https://zenodo.org/records/5651217) 
+### 🔹 D1NAMO (primary)
 
-### 🔹 AZT1D Dataset (Validation)
-- **25 Type 1 Diabetes patients** for model generalizability testing
-- **Validates mechanistic modeling without images**
-- Download from: [https://data.mendeley.com/datasets/gk9m674wcx/1](https://data.mendeley.com/datasets/gk9m674wcx/1)
-- Extract to: `AZT1D 2025/`
+1. **Raw records (CGM, insulin, meal images, `food.csv` timestamps)**  
+   Download from [Zenodo record 5651217](https://zenodo.org/records/5651217) and extract at the **repository root** so you have:
+   - `diabetes_subset_pictures-glucose-food-insulin/<patient>/glucose.csv`
+   - `diabetes_subset_pictures-glucose-food-insulin/<patient>/insulin.csv`  
+   Patient ids must match `PATIENTS_D1NAMO` in `analysis_scripts/params.py` (e.g. `001`, `002`, …).
+
+2. **Macronutrients used by `analysis_scripts/` (Pixtral / mLLM estimates)**  
+   The pipelines read **fixed CSVs** under `food_data/pixtral-large-latest/<patient>.csv` (columns include `datetime`, `simple_sugars`, `complex_sugars`, `proteins`, `fats`, `dietary_fibers`). **These files are intended to be version-controlled** so anyone can run `d1namo.py` and related scripts **without** calling Mistral.
+
+3. **Optional: regenerate macronutrients from meal images**  
+   If you want to reproduce or vary the vision step yourself:
+   - Copy `.env.example` to `.env` at the repo root.
+   - Set `MISTRAL_API_KEY` (create a key in the [Mistral AI console](https://console.mistral.ai)).
+   - Run `food_annotations/food_annotations.ipynb` from the **repository root** (it uses `load_dotenv()`, model `pixtral-large-latest`, and writes `food_data/pixtral-large-latest/<patient>.csv`).  
+   **Note:** API outputs are not guaranteed to be bit-identical to the committed CSVs (model updates, sampling, etc.). For **paper/exact reproduction**, use the committed `food_data` files.
+
+### 🔹 AZT1D (validation, local only)
+
+1. Download the dataset from [Mendeley Data (gk9m674wcx)](https://data.mendeley.com/datasets/gk9m674wcx/1).
+2. At the **repository root**, create this layout (names and spacing matter — this is what `analysis_scripts/azt1d.py` expects):
+
+```
+AZT1D 2025/
+  CGM Records/
+    Subject 1/Subject 1.csv
+    Subject 2/Subject 2.csv
+    …
+```
+
+3. Include every subject id listed in `PATIENTS_AZT1D` inside `analysis_scripts/params.py` (e.g. `1` … `25` with `14` omitted). If your archive uses different folder names, rename to match `Subject <n>/Subject <n>.csv`.
+
+4. Override path if needed: set environment variable `GLUCOVISION_AZT1D_DATA` to the absolute path of the `CGM Records` directory (the folder that directly contains `Subject 1`, `Subject 2`, …).
 
 ## 🛠️ Setup & Installation
 
@@ -59,41 +67,34 @@ cd Glucovision
 pip install -r requirements.txt
 ```
 
-3. **Download datasets** (see links above)
+3. **Data layout** (see the **Datasets** section above):
+   - **D1NAMO Zenodo** → `diabetes_subset_pictures-glucose-food-insulin/` at repo root.
+   - **D1NAMO meal macros for pipelines** → use tracked `food_data/pixtral-large-latest/*.csv`, or regenerate with `.env` + `MISTRAL_API_KEY` and `food_annotations/food_annotations.ipynb`.
+   - **AZT1D** → `AZT1D 2025/CGM Records/Subject n/Subject n.csv` at repo root (not in git).
 
-4. **Run the models**
+   Optional path overrides (absolute paths): `GLUCOVISION_D1NAMO_DATA`, `GLUCOVISION_FOOD_DATA`, `GLUCOVISION_AZT1D_DATA`, `GLUCOVISION_RESULTS`.
+
+4. **Run analyses** (paths are resolved from the repo root regardless of your current directory)
 ```bash
-# Train D1namo model
-cd eval_scripts
-python d1namo.py
-
-# Train baseline comparison
-python baseline.py
-
-# Run ablation study
-python ablation_study.py
-```
-
-5. **Launch interactive app** 🚀
-```bash
-cd analysis_scripts
-streamlit run app.py
+python analysis_scripts/d1namo.py
+python analysis_scripts/azt1d.py   # requires AZT1D data
+# Optional: full paper-style outputs
+python analysis_scripts/rmse_comparison.py
+python analysis_scripts/ablation_study.py
 ```
 
 ## 🧪 Analysis Scripts
 
 ### Core Evaluation
-- `eval_scripts/d1namo.py` - Main mLLM-enhanced model
-- `eval_scripts/baseline.py` - Baseline without mLLM features
-- `eval_scripts/ablation_study.py` - Component contribution analysis
-- `eval_scripts/approach_comparison.py` - Temporal mapping validation
+- `analysis_scripts/d1namo.py` - D1NAMO evaluation (Bezier vs baselines)
+- `analysis_scripts/azt1d.py` - AZT1D evaluation
+- `analysis_scripts/ablation_study.py` - Component contribution analysis
+- `analysis_scripts/rmse_comparison.py` - RMSE tables and stats
 
 ### Feature Analysis
 - `analysis_scripts/feature_importance.py` - Model interpretability
 - `analysis_scripts/food_modifications.py` - Macronutrient sensitivity
-- `analysis_scripts/combined_time_impact.py` - Circadian effects
-- `analysis_scripts/combined_correlation_analysis.py` - Sugar-glucose relationships
-- `analysis_scripts/app.py` - **🌟 Interactive Streamlit dashboard**
+- `analysis_scripts/time_impact.py` - Circadian effects
 - `analysis_scripts/ga_vis.py` - Graphical abstract generation
 - `analysis_scripts/combined_metabolic_vis.py` - Metabolic visualizations
 
@@ -154,4 +155,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**🎯 Transform meal photos into glucose insights with Glucovision!** 📱➡️📈
+**Glucovision** — meal-image macronutrients and mechanistic modeling for glucose forecasting.

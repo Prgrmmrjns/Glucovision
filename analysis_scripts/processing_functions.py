@@ -101,9 +101,25 @@ def get_projected_value(window, prediction_horizon):
 
 def get_d1namo_data(patient):
     """Load D1namo data for a patient"""
-    glucose_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/glucose.csv")
-    insulin_data = pd.read_csv(f"{D1NAMO_DATA_PATH}/{patient}/insulin.csv")
-    food_data = pd.read_csv(f"{FOOD_DATA_PATH}/{patient}.csv")
+    g_path = os.path.join(D1NAMO_DATA_PATH, patient, "glucose.csv")
+    if not os.path.isfile(g_path):
+        raise FileNotFoundError(
+            f"Missing D1NAMO file: {g_path}\n"
+            "Download the D1NAMO subset from https://zenodo.org/records/5651217 and extract it "
+            f"so each patient folder (e.g. {patient}/) contains glucose.csv under the dataset root. "
+            "By default that root is <repo>/diabetes_subset_pictures-glucose-food-insulin. "
+            "Set env GLUCOVISION_D1NAMO_DATA to point at your extracted folder."
+        )
+    glucose_data = pd.read_csv(g_path)
+    insulin_data = pd.read_csv(os.path.join(D1NAMO_DATA_PATH, patient, "insulin.csv"))
+    food_path = os.path.join(FOOD_DATA_PATH, f"{patient}.csv")
+    if not os.path.isfile(food_path):
+        raise FileNotFoundError(
+            f"Missing food macro file: {food_path}\n"
+            "Expected Pixtral (or equivalent) outputs per patient. "
+            "Set GLUCOVISION_FOOD_DATA if macros live elsewhere."
+        )
+    food_data = pd.read_csv(food_path)
     
     glucose_data["datetime"] = pd.to_datetime(glucose_data["date"] + ' ' + glucose_data["time"])
     glucose_data = glucose_data.drop(['type', 'comments', 'date', 'time'], axis=1)
@@ -222,11 +238,16 @@ def optimize_params(
     features_to_remove,
     prediction_horizon=12,
     n_trials=N_TRIALS,
+    verbose_load=False,
 ):
     if LOAD_PARAMS:
-        path = f"results/bezier_params/{approach_name}_bezier_params.json"
+        bezier_dir = os.path.join(RESULTS_PATH, "bezier_params")
+        path = os.path.join(bezier_dir, f"{approach_name}_bezier_params.json")
         if os.path.exists(path):
-            return json.load(open(path))
+            if verbose_load:
+                print(f"Loaded cached Bezier params: {os.path.basename(path)}")
+            with open(path) as f:
+                return json.load(f)
 
     max_x_values = np.where(np.isin(features, fast_features), MAX_X_VALUES_FAST, MAX_X_VALUES_SLOW)
 
@@ -256,6 +277,9 @@ def optimize_params(
                 study.best_params[f"{f}_x2"], study.best_params[f"{f}_y2"],
                 study.best_params[f"{f}_x3"], study.best_params[f"{f}_y3"],
                 study.best_params[f"{f}_x4"], 0.0] for f in features}
-    json.dump(best, open(f"results/bezier_params/{approach_name}_bezier_params.json", 'w'), indent=2)
+    bezier_dir = os.path.join(RESULTS_PATH, "bezier_params")
+    os.makedirs(bezier_dir, exist_ok=True)
+    out_path = os.path.join(bezier_dir, f"{approach_name}_bezier_params.json")
+    json.dump(best, open(out_path, 'w'), indent=2)
     return best
 

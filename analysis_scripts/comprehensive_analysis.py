@@ -3,14 +3,18 @@ import numpy as np
 from scipy.stats import ttest_rel, f_oneway
 import warnings
 import os
+
+from params import MANUSCRIPT_DIR, RESULTS_PATH
+
 warnings.filterwarnings('ignore')
 
 def load_and_analyze_data():
     """Load and analyze the comparison data for both datasets"""
     
     # Load data
-    d1namo_df = pd.read_csv('results/d1namo_comparison.csv')
-    azt_df = pd.read_csv('results/azt1d_comparison.csv') if os.path.exists('results/azt1d_comparison.csv') else None
+    d1namo_df = pd.read_csv(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'))
+    azt_path = os.path.join(RESULTS_PATH, 'azt1d_comparison.csv')
+    azt_df = pd.read_csv(azt_path) if os.path.exists(azt_path) else None
     
     # Extract approaches
     approaches = ['Glucose+Insulin', 'LastMeal', 'Bezier']
@@ -378,19 +382,20 @@ def main():
     findings = generate_key_findings(results)
     
     # Save tables
-    os.makedirs('manuscript/tables', exist_ok=True)
+    tables_dir = os.path.join(MANUSCRIPT_DIR, 'tables')
+    os.makedirs(tables_dir, exist_ok=True)
     
-    with open('manuscript/tables/comparison_table.tex', 'w') as f:
+    with open(os.path.join(tables_dir, 'comparison_table.tex'), 'w') as f:
         f.write(main_table)
     
-    with open('manuscript/tables/patient_individual_d1namo.tex', 'w') as f:
+    with open(os.path.join(tables_dir, 'patient_individual_d1namo.tex'), 'w') as f:
         f.write(d1namo_table)
     
-    with open('manuscript/tables/patient_individual_azt1d.tex', 'w') as f:
+    with open(os.path.join(tables_dir, 'patient_individual_azt1d.tex'), 'w') as f:
         f.write(azt1d_table)
     
     # Save findings
-    with open('results/key_findings.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'key_findings.txt'), 'w') as f:
         f.write('\n'.join(findings))
     
     print("Analysis complete!")

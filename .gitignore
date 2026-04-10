@@ -1,5 +1,16 @@
+# Local secrets — never commit real keys (see .env.example)
 .env
-manuscript
+
+# Large third-party datasets: download and unpack locally (see README)
+# Expected after setup: AZT1D 2025/CGM Records/Subject <n>/Subject <n>.csv
 AZT1D 2025
+
+# Python
 __pycache__
+
+# Editor / local tooling
 .cursor
+
+# Manuscript outputs (generate with analysis scripts if needed)
+manuscript
+.DS_Store

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,10 +13,10 @@ from params import *
 from processing_functions import *
 
 # Load global Bézier parameters for both datasets
-with open('results/bezier_params/d1namo_all_patient_bezier_params.json', 'r') as f:
+with open(os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json'), 'r') as f:
     d1namo_all_patient_params = json.load(f)
 
-with open('results/bezier_params/azt1d_all_patient_bezier_params.json', 'r') as f:
+with open(os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json'), 'r') as f:
     azt1d_all_patient_params = json.load(f)
 
 # Calculate global parameters as average across all patients
@@ -206,7 +207,7 @@ def create_cumulative_bar_chart(importance_df):
     fig.legend(handles, labels, loc='center right', bbox_to_anchor=(0.98, 0.5), fontsize=10)
     plt.tight_layout()
     plt.subplots_adjust(right=0.8)  # Make room for shared legend
-    plt.savefig('manuscript/images/results/feature_importances.eps', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(MANUSCRIPT_DIR, 'images', 'results', 'feature_importances.eps'), dpi=300, bbox_inches='tight')
     plt.close()
 
 def load_azt1d_patient_data(patient):
@@ -306,7 +307,7 @@ for feature in common_features:
     print(f"  {feature.replace('_', ' ').title()}: D1namo {d1n_val:.1f}% vs AZT1D {azt_val:.1f}%")
 
 # Save results
-all_results.to_csv('results/feature_importance_analysis.csv', index=False)
+all_results.to_csv(os.path.join(RESULTS_PATH, 'feature_importance_analysis.csv'), index=False)
 
 # ==========================
 # Feature Importance Insights
@@ -435,12 +436,12 @@ for insight in insights:
     print(f"- {insight}")
 
 # Save insights
-with open('results/feature_importance_insights.txt', 'w') as f:
+with open(os.path.join(RESULTS_PATH, 'feature_importance_insights.txt'), 'w') as f:
     f.write('\n'.join(insights))
 
 # Generate LaTeX insights
 latex_insights = generate_latex_insights(all_results)
-with open('results/feature_importance_latex.txt', 'w') as f:
+with open(os.path.join(RESULTS_PATH, 'feature_importance_latex.txt'), 'w') as f:
     f.write(latex_insights + '\n')
 
 print(f"\nLaTeX insights: {latex_insights}")

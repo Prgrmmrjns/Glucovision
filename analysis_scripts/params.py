@@ -1,3 +1,17 @@
+import os
+
+# analysis_scripts/ -> repo root (paths work regardless of cwd)
+_ANALYSIS_SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(_ANALYSIS_SCRIPTS_DIR, ".."))
+
+
+def _repo_path(relative: str, env_var: str | None = None) -> str:
+    if env_var and os.environ.get(env_var):
+        return os.path.abspath(os.environ[env_var])
+    return os.path.join(REPO_ROOT, relative)
+
+
+MANUSCRIPT_DIR = os.path.join(REPO_ROOT, "manuscript")
 
 # Patient IDs
 PATIENTS_D1NAMO = ['001', '002', '004', '006', '007', '008']
@@ -44,11 +58,17 @@ DEFAULT_PREDICTION_HORIZON = 12
 # Glucose conversion factor (mmol/L to mg/dL)
 GLUCOSE_CONVERSION_FACTOR = 18.0182
 
-# File paths
-D1NAMO_DATA_PATH = "diabetes_subset_pictures-glucose-food-insulin"
-AZT1D_DATA_PATH = "AZT1D 2025/CGM Records"
-FOOD_DATA_PATH = "food_data/pixtral-large-latest"
-RESULTS_PATH = "results"
+# File paths (absolute under REPO_ROOT; override with GLUCOVISION_* env vars)
+D1NAMO_DATA_PATH = _repo_path(
+    "diabetes_subset_pictures-glucose-food-insulin",
+    "GLUCOVISION_D1NAMO_DATA",
+)
+AZT1D_DATA_PATH = _repo_path("AZT1D 2025/CGM Records", "GLUCOVISION_AZT1D_DATA")
+FOOD_DATA_PATH = _repo_path(
+    "food_data/pixtral-large-latest",
+    "GLUCOVISION_FOOD_DATA",
+)
+RESULTS_PATH = _repo_path("results", "GLUCOVISION_RESULTS")
 
 # AZT1D column mappings
 AZT1D_COLUMNS = {

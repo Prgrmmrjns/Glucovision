@@ -1,4 +1,5 @@
 import json
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +9,7 @@ from params import *
 from processing_functions import *
 
 # Load Bézier parameters
-with open('results/bezier_params/d1namo_all_patient_bezier_params.json', 'r') as f:
+with open(os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json'), 'r') as f:
     all_patient_params = json.load(f)
 
 # Calculate global parameters as average across all patients for visualization
@@ -110,7 +111,7 @@ fig.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.
 
 plt.tight_layout()
 plt.subplots_adjust(bottom=0.15)  # Make room for legend
-plt.savefig('manuscript/images/results/combined_metabolic_visualization.eps', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(MANUSCRIPT_DIR, 'images', 'results', 'combined_metabolic_visualization.eps'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Extract peak times for analysis
@@ -203,11 +204,11 @@ try:
     d1_features = ['simple_sugars', 'complex_sugars', 'proteins', 'fats', 'dietary_fibers', 'insulin']
     azt_features = ['carbohydrates', 'insulin']
 
-    d1_bez = _summarize_patient_beziers('results/bezier_params/d1namo_all_patient_bezier_params.json', d1_features)
-    azt_bez = _summarize_patient_beziers('results/bezier_params/azt1d_all_patient_bezier_params.json', azt_features)
+    d1_bez = _summarize_patient_beziers(os.path.join(RESULTS_PATH, 'bezier_params', 'd1namo_all_patient_bezier_params.json'), d1_features)
+    azt_bez = _summarize_patient_beziers(os.path.join(RESULTS_PATH, 'bezier_params', 'azt1d_all_patient_bezier_params.json'), azt_features)
 
-    d1_imp = _patient_improvement_at_60('results/d1namo_comparison.csv')
-    azt_imp = _patient_improvement_at_60('results/azt1d_comparison.csv')
+    d1_imp = _patient_improvement_at_60(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'))
+    azt_imp = _patient_improvement_at_60(os.path.join(RESULTS_PATH, 'azt1d_comparison.csv'))
 
     d1_corr = _compute_correlations(d1_bez, d1_imp, {
         'Simple sugars': 'simple_sugars',
@@ -261,13 +262,13 @@ try:
     ).reset_index()
 
     # Save outputs
-    d1_corr.to_csv('results/d1namo_bezier_correlations.csv', index=False)
-    azt_corr.to_csv('results/azt1d_bezier_correlations.csv', index=False)
-    d1_summary.to_csv('results/d1namo_bezier_temporal_summary.csv', index=False)
-    azt_summary.to_csv('results/azt1d_bezier_temporal_summary.csv', index=False)
+    d1_corr.to_csv(os.path.join(RESULTS_PATH, 'd1namo_bezier_correlations.csv'), index=False)
+    azt_corr.to_csv(os.path.join(RESULTS_PATH, 'azt1d_bezier_correlations.csv'), index=False)
+    d1_summary.to_csv(os.path.join(RESULTS_PATH, 'd1namo_bezier_temporal_summary.csv'), index=False)
+    azt_summary.to_csv(os.path.join(RESULTS_PATH, 'azt1d_bezier_temporal_summary.csv'), index=False)
 
     # Human-readable insights
-    with open('results/new_insights_from_combined.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'new_insights_from_combined.txt'), 'w') as f:
         f.write('D1namo temporal summary (mean±std):\n')
         if not d1_summary.empty:
             for _, row in d1_summary.iterrows():
@@ -331,7 +332,7 @@ try:
         para_lines.append(
             f"On AZT1D, insulin–carbohydrate peak alignment shows an association with improvement (r={azt_align_res[0]:.2f}, p={azt_align_res[1]:.3f})."
         )
-    with open('results/new_insights_latex_from_combined.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'new_insights_latex_from_combined.txt'), 'w') as f:
         f.write(' '.join(para_lines) + '\n')
 except Exception as e:
     print(f"[Insights] Skipped due to error: {e}")

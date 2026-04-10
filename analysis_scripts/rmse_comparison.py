@@ -3,12 +3,18 @@ import numpy as np
 from scipy.stats import ttest_rel, f_oneway, friedmanchisquare
 import warnings
 import os
+
+from params import MANUSCRIPT_DIR, RESULTS_PATH
+
 warnings.filterwarnings('ignore')
+
+_TABLES_DIR = os.path.join(MANUSCRIPT_DIR, "tables")
 
 def generate_detailed_analysis():
     """Generate detailed analysis of RMSE differences by prediction horizon and patient"""
-    d1namo_df = pd.read_csv('results/d1namo_comparison.csv')
-    azt_df = pd.read_csv('results/azt1d_comparison.csv') if os.path.exists('results/azt1d_comparison.csv') else None
+    d1namo_df = pd.read_csv(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'))
+    _azt = os.path.join(RESULTS_PATH, 'azt1d_comparison.csv')
+    azt_df = pd.read_csv(_azt) if os.path.exists(_azt) else None
     
     # Extract different approaches for D1namo
     d1namo_bezier = d1namo_df[d1namo_df['Approach'] == 'Bezier']
@@ -220,8 +226,8 @@ def generate_detailed_analysis():
 
 def generate_latex_table():
     """Generate LaTeX table and save to manuscript/tables/"""
-    d1namo_df = pd.read_csv('results/d1namo_comparison.csv')
-    azt_df = pd.read_csv('results/azt1d_comparison.csv')
+    d1namo_df = pd.read_csv(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'))
+    azt_df = pd.read_csv(os.path.join(RESULTS_PATH, 'azt1d_comparison.csv'))
     
     # Extract different approaches for D1namo
     d1namo_bezier = d1namo_df[d1namo_df['Approach'] == 'Bezier']
@@ -344,11 +350,11 @@ def generate_latex_table():
 \\end{table}"""
 
     # Create directories if they don't exist
-    os.makedirs('../manuscript/tables', exist_ok=True)
-    os.makedirs('../results', exist_ok=True)
+    os.makedirs(_TABLES_DIR, exist_ok=True)
+    os.makedirs(RESULTS_PATH, exist_ok=True)
     
     # Save LaTeX table
-    with open('../manuscript/tables/comparison_table.tex', 'w') as f:
+    with open(os.path.join(_TABLES_DIR, 'comparison_table.tex'), 'w') as f:
         f.write(latex_table)
     
     # Also add AZT1D table if available
@@ -435,17 +441,17 @@ def generate_latex_table():
 \\end{table}"""
 
         # Note: we will overwrite comparison_table.tex below with a single combined table
-        with open('../manuscript/tables/azt1d_comparison_detail.tex', 'w') as f:
+        with open(os.path.join(_TABLES_DIR, 'azt1d_comparison_detail.tex'), 'w') as f:
             f.write(latex_table_azt)
     
     # Generate and save analysis
     analysis = generate_detailed_analysis()
-    with open('../results/rmse_analysis.txt', 'w') as f:
+    with open(os.path.join(RESULTS_PATH, 'rmse_analysis.txt'), 'w') as f:
         f.write(analysis)
 
-os.makedirs('manuscript/tables', exist_ok=True)
-d1_df = pd.read_csv('results/d1namo_comparison.csv')
-azt_path = 'results/azt1d_comparison.csv'
+os.makedirs(_TABLES_DIR, exist_ok=True)
+d1_df = pd.read_csv(os.path.join(RESULTS_PATH, 'd1namo_comparison.csv'))
+azt_path = os.path.join(RESULTS_PATH, 'azt1d_comparison.csv')
 azt_df = pd.read_csv(azt_path) if os.path.exists(azt_path) else None
 
 # Extract Bezier approach RMSE for overall stats
@@ -456,14 +462,16 @@ lines.append("% Auto-generated overall summary for D1namo and AZT1D")
 overall_line = f"Overall macro-model RMSE: D1namo {d1_bezier_overall:.2f} mg/dL; AZT1D " + (f"{azt_bezier_overall:.2f} mg/dL" if azt_bezier_overall == azt_bezier_overall else "N/A") + "."
 lines.append(overall_line)
 lines.append("Across patients, we observe clear interpatient variability. Macronutrient features benefit some patients while slightly deteriorating performance in others, reflecting heterogeneous meal handling, insulin timing, and adherence patterns.")
-with open('manuscript/tables/overall_summary.tex', 'w') as f:
+with open(os.path.join(_TABLES_DIR, 'overall_summary.tex'), 'w') as f:
     f.write('\n'.join(lines))
 
 # Build single combined table (horizons as rows; columns: D1namo macro, D1namo baseline, AZT1D macro, AZT1D baseline, with p-values)
-os.makedirs('manuscript/tables', exist_ok=True)
+os.makedirs(_TABLES_DIR, exist_ok=True)
 
-d1namo_df = pd.read_csv('results/d1namo_comparison.csv') if os.path.exists('results/d1namo_comparison.csv') else None
-azt_df = pd.read_csv('results/azt1d_comparison.csv') if os.path.exists('results/azt1d_comparison.csv') else None
+_d1c = os.path.join(RESULTS_PATH, 'd1namo_comparison.csv')
+_aztc = os.path.join(RESULTS_PATH, 'azt1d_comparison.csv')
+d1namo_df = pd.read_csv(_d1c) if os.path.exists(_d1c) else None
+azt_df = pd.read_csv(_aztc) if os.path.exists(_aztc) else None
 
 # Extract approach data for all three approaches
 d1namo_bezier_df = d1namo_df[d1namo_df['Approach'] == 'Bezier'] if d1namo_df is not None else None
@@ -592,7 +600,7 @@ latex_table = f"""\\begin{{table}}[ht]
 }}
 \\end{{table}}"""
 
-with open('manuscript/tables/three_approaches_comparison.tex', 'w') as f:
+with open(os.path.join(_TABLES_DIR, 'three_approaches_comparison.tex'), 'w') as f:
     f.write(latex_table)
 
 # Write per-horizon overall stats and patient-level improvement insights
@@ -646,9 +654,9 @@ for horizon in horizons:
             pval = float(ttest_rel(pm, pb)[1]) if len(pm) > 1 and len(pb) > 1 else np.nan
             patient_rows_azt.append({'horizon': horizon, 'patient': patient, 'improvement_pct': float(imp), 'p_value': pval})
 
-pd.DataFrame(overall_rows).to_csv('results/combined_overall_stats.csv', index=False)
-pd.DataFrame(patient_rows_d1).to_csv('results/patient_improvement_stats_d1namo.csv', index=False)
-pd.DataFrame(patient_rows_azt).to_csv('results/patient_improvement_stats_azt1d.csv', index=False)
+pd.DataFrame(overall_rows).to_csv(os.path.join(RESULTS_PATH, 'combined_overall_stats.csv'), index=False)
+pd.DataFrame(patient_rows_d1).to_csv(os.path.join(RESULTS_PATH, 'patient_improvement_stats_d1namo.csv'), index=False)
+pd.DataFrame(patient_rows_azt).to_csv(os.path.join(RESULTS_PATH, 'patient_improvement_stats_azt1d.csv'), index=False)
 
 # Build concise LaTeX summary paragraph with variability and cross-dataset differences
 summary_lines = []
@@ -739,13 +747,11 @@ for h in h_order:
     if parts:
         text_lines.append(f"{h_names[h]}: " + "; ".join(parts) + ".")
 
-with open('manuscript/tables/performance_summary.tex', 'w') as f:
+with open(os.path.join(_TABLES_DIR, 'performance_summary.tex'), 'w') as f:
     f.write(" ".join(text_lines))
 
 # Helper to build a single dataset table with three-way comparison
-def build_single_table(name, df_bezier, df_lastmeal, df_baseline, label):
-    if df_bezier is None or df_lastmeal is None or df_baseline is None:
-        return ""
+def build_latex_table(name, df_bezier, df_lastmeal, df_baseline, label):
     patients = sorted(df_bezier['Patient'].unique())
     horizons_local = [h for h in [6,9,12,18,24] if (df_bezier['Prediction Horizon'] == h).any()]
     header = "|p{0.3cm}|" + "".join(["p{0.85cm}p{0.85cm}p{0.85cm}>{\\columncolor{blue!10}\\tiny}p{0.3cm}|" for _ in horizons_local])
@@ -759,9 +765,9 @@ def build_single_table(name, df_bezier, df_lastmeal, df_baseline, label):
     table.append("\\setlength{\\tabcolsep}{1pt}")
     table.append("\\begin{tabular}{" + header + "}")
     table.append("\\rowcolor{gray!25} {\\tiny\\textbf{Pat.}} " + "".join([f"& \\multicolumn{{4}}{{c|}}{{{h_names[h]}}} " for h in horizons_local]) + "\\\\")
-    table.append("\\rowcolor{gray!25} " + "".join(["& \\cellcolor{green!15}{\\tiny\\textbf{Bezier}} & \\cellcolor{orange!15}{\\tiny\\textbf{LastMeal}} & \\cellcolor{red!15}{\\tiny\\textbf{Baseline}} & \\cellcolor{blue!15}{\\tiny\\textbf{ANOVA}} " for _ in horizons_local]) + "\\\\")
+    table.append("""\\rowcolor{gray!25} " + "".join(["& \\cellcolor{green!15}{\\tiny\\textbf{Bezier}} & \\cellcolor{orange!15}{\\tiny\\textbf{LastMeal}} & 
+                 \\cellcolor{red!15}{\\tiny\\textbf{Baseline}} & \\cellcolor{blue!15}{\\tiny\\textbf{ANOVA}} " for _ in horizons_local]) + "\\\\""")
     table.append("\\hline")
-    
     for patient in patients:
         row = [f"\\rowcolor{{gray!5}} {{\\tiny {patient}}}"]
         for h in horizons_local:
@@ -834,13 +840,13 @@ def build_single_table(name, df_bezier, df_lastmeal, df_baseline, label):
     return "\n".join(table)
 
 # Build separate tables for D1namo and AZT1D
-d1namo_table = build_single_table("D1namo", d1namo_bezier_df, d1namo_lastmeal_df, d1namo_baseline_df, "tab:patient_individual_d1namo")
-azt1d_table = build_single_table("AZT1D", azt_bezier_df, azt_lastmeal_df, azt_baseline_df, "tab:patient_individual_azt1d")
+d1namo_table = build_latex_table("D1namo", d1namo_bezier_df, d1namo_lastmeal_df, d1namo_baseline_df, "tab:patient_individual_d1namo")
+azt1d_table = build_latex_table("AZT1D", azt_bezier_df, azt_lastmeal_df, azt_baseline_df, "tab:patient_individual_azt1d")
 
 # Save D1namo table
-with open('manuscript/tables/patient_individual_d1namo.tex', 'w') as f:
+with open(os.path.join(_TABLES_DIR, 'patient_individual_d1namo.tex'), 'w') as f:
     f.write(d1namo_table)
 
 # Save AZT1D table  
-with open('manuscript/tables/patient_individual_azt1d.tex', 'w') as f:
+with open(os.path.join(_TABLES_DIR, 'patient_individual_azt1d.tex'), 'w') as f:
     f.write(azt1d_table)

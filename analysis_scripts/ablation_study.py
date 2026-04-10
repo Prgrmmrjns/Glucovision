@@ -14,7 +14,7 @@ def evaluate_generic_optimization(dataset='d1namo'):
     print(f"Evaluating {dataset.upper()}: Generic Optimization (All Patients)")
     
     # Check if results already exist
-    result_file = f'results/ablation_generic_{dataset}_ph24.csv'
+    result_file = os.path.join(RESULTS_PATH, f'ablation_generic_{dataset}_ph24.csv')
     if os.path.exists(result_file):
         df = pd.read_csv(result_file)
         mean_rmse = df['RMSE'].mean()
@@ -78,7 +78,7 @@ def evaluate_generic_optimization(dataset='d1namo'):
     
     # Check if generic parameters already exist, otherwise optimize
     if dataset == 'd1namo':
-        param_file = f'results/bezier_params/{dataset}_generic_all_patients_bezier_params.json'
+        param_file = os.path.join(RESULTS_PATH, 'bezier_params', f'{dataset}_generic_all_patients_bezier_params.json')
         if os.path.exists(param_file):
             with open(param_file, 'r') as f:
                 params = json.load(f)
@@ -94,7 +94,7 @@ def evaluate_generic_optimization(dataset='d1namo'):
                 return float('nan'), float('nan')
     else:  # azt1d - use generic parameters for all patients
         # Load or create generic parameters optimized on all patients combined
-        param_file = f'results/bezier_params/{dataset}_generic_all_patients_bezier_params.json'
+        param_file = os.path.join(RESULTS_PATH, 'bezier_params', f'{dataset}_generic_all_patients_bezier_params.json')
         if os.path.exists(param_file):
             with open(param_file, 'r') as f:
                 params = json.load(f)
@@ -115,7 +115,7 @@ def evaluate_generic_optimization(dataset='d1namo'):
                                        prediction_horizon=DEFAULT_PREDICTION_HORIZON, n_trials=N_TRIALS)
                 
                 # Save generic parameters
-                os.makedirs('results/bezier_params', exist_ok=True)
+                os.makedirs(os.path.join(RESULTS_PATH, 'bezier_params'), exist_ok=True)
                 with open(param_file, 'w') as f:
                     json.dump(params, f, indent=2)
                 print("Saved generic Bezier parameters")
@@ -208,7 +208,7 @@ def evaluate_individual_optimization(dataset='d1namo'):
     print(f"Evaluating {dataset.upper()}: Individual Optimization (No Monotonic)")
     
     # Check if results already exist
-    result_file = f'results/ablation_individual_no_monotonic_{dataset}_ph24.csv'
+    result_file = os.path.join(RESULTS_PATH, f'ablation_individual_no_monotonic_{dataset}_ph24.csv')
     if os.path.exists(result_file):
         df = pd.read_csv(result_file)
         mean_rmse = df['RMSE'].mean()
@@ -286,7 +286,7 @@ def evaluate_individual_optimization(dataset='d1namo'):
         
         # Load existing individual patient parameters (no need to reoptimize)
         try:
-            param_file = f'results/bezier_params/{dataset}_all_patient_bezier_params.json'
+            param_file = os.path.join(RESULTS_PATH, 'bezier_params', f'{dataset}_all_patient_bezier_params.json')
             with open(param_file, 'r') as f:
                 all_patient_params = json.load(f)
             params = all_patient_params[f'patient_{p}']
@@ -362,7 +362,7 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
     print(f"Evaluating {dataset.upper()}: Individual + Monotonic Constraints")
     
     # Check if results already exist
-    result_file = f'results/ablation_individual_with_monotonic_{dataset}_ph24.csv'
+    result_file = os.path.join(RESULTS_PATH, f'ablation_individual_with_monotonic_{dataset}_ph24.csv')
     if os.path.exists(result_file):
         df = pd.read_csv(result_file)
         mean_rmse = df['RMSE'].mean()
@@ -425,7 +425,7 @@ def evaluate_with_monotonic_constraints(dataset='d1namo'):
         
         # Load existing individual patient parameters
         try:
-            param_file = f'results/bezier_params/{dataset}_all_patient_bezier_params.json'
+            param_file = os.path.join(RESULTS_PATH, 'bezier_params', f'{dataset}_all_patient_bezier_params.json')
             with open(param_file, 'r') as f:
                 all_patient_params = json.load(f)
             params = all_patient_params[f'patient_{p}']
@@ -524,7 +524,7 @@ results_df = pd.DataFrame({
 })
 
 os.makedirs('results', exist_ok=True)
-results_df.to_csv('results/ablation_study_ph24.csv', index=False)
+results_df.to_csv(os.path.join(RESULTS_PATH, 'ablation_study_ph24.csv'), index=False)
 
 # Print summary
 print("\n=== SUMMARY (Prediction Horizon: 120 minutes) ===")
